@@ -1,0 +1,44 @@
+#+TITLE: Unsupervised lesion detection with multi view MRI and autoencoders
+#+AUTHOR: Linas Vidziunas & Ørjan Thoresen
+#+EMAIL: linasvidz@gmail.com
+#+DESCRIPTION: Using UIS's GPU cluster for training autoencoders to detect and classify cancer tumors
+#+KEYWORDS: tensorflow, lesion detection, autoencoder
+#+LANGUAGE: en
+
+** Progress of testing the GPU cluster
+- [X] Environment Setup
+- [X] SLURM variables set
+- [X] Run on GPU
+
+** Files
+*** ~setup.sh~
+Is responsible to /create an enviroment/ with the correct requirements *without* using GPUs.
+
+*** ~run.sh~
+Is responsible to activate the previously created enviroment and run the python script *using GPUs*.
+
+*** ~vae_mnist.py~
+An [[https://keras.io/examples/generative/vae/][example]] of a variational autoencoder for testing the GPU cluster.
+
+*** ~requirements.txt~
+Generated using [[https://github.com/Damnever/pigar][pigar]]. Includes a list of dependencies for the ~vae_mnist.py~ python script.
+This file will get used, in the previously mentioned ~setup.sh~, to install the required dependencies on the server using Conda.
+
+
+** Usage
+1) SSH into the server
+2) Clone this GitHub repository
+3) Cd into the repository
+4) Run ~setup.sh~ and read it's output with the following command
+#+begin_src sh
+  sbatch setup.sh
+  tail -f vae_mnist_setup.out
+#+end_src
+Finally run the deep neural network
+ #+begin_src sh
+   sbatch run.sh
+   tail -f vae_mnist_01.out
+#+end_src  
+
+** Resources
+- [[https://github.com/tlinjordet/gpu_ux_uis][gpu_ux_uis]]
