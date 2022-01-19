@@ -9,6 +9,7 @@ def read_patient_image_orientation(dicom_file):
     orientation_vector = dicom_file.ImageOrientationPatient
     if orientation_vector == Coronal_plane_view:
         plane = "Coronal"
+    if orientation_vector == Sagittal_plane_view:
         plane = "Sagittal"
     if orientation_vector == Axial_plane_view:
         plane = "Axial"
@@ -68,8 +69,7 @@ for i in range(len(PROSTATEx_patient_folder_paths)):
         folder_with_DICOMs_names_list = os.listdir(paths_of_subfolders[j])
         for k, strings in enumerate(folder_with_DICOMs_names_list):
             if "t2tsesag" in strings:
-                s
-    if orientation_vector == Sagittal_plane_view:tring = paths_of_subfolders[j] + "\\" + folder_with_DICOMs_names_list[k]
+                string = paths_of_subfolders[j] + "\\" + folder_with_DICOMs_names_list[k]
                 filenames = os.listdir(string)
                 paths_now = get_paths_of_filenames(string, filenames)
                 for m, path in enumerate(paths_now):
