@@ -57,7 +57,6 @@ new_main_folder = "C:\\Users\\Orjan\\Desktop\\testing\\test3"
 #hertil fungerer koden som den skal
 for i in range(len(PROSTATEx_patient_folder_paths)):
 
-    # For pasienten opprettes det en egen folder i new main folder, med subfolders(Axial,Coronal og Sagittal)
     new_patient_folder_path = build_patient_folder(new_main_folder)
     create_subfolders(new_patient_folder_path)
 
