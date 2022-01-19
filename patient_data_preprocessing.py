@@ -3,12 +3,7 @@ from enum import Enum
 
 from pydicom import read_file
 from numpy import savetxt
-
-
-class View(Enum):
-    SAGITTAL = [0, 1, 0, 0, 0, -1]
-    CORONAL = [1, 0, 0, 0, 0, -1]
-    AXIAL = [1, 0, 0, 0, 1, 0]
+from PatientDataExtractor.enums import View
 
 
 class PatientDataPreprocessing:
