@@ -69,7 +69,7 @@ def keep_columns(data, columns: [Column]):
 
 
 if __name__ == "__main__":
-    data = PatientDataExtractor("/home/linas/Downloads/ProstateX-2-Images-Train.csv")
+    data = PatientDataExtractor("C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\cancer_excel\\ProstateX-2-Images-Train.csv")
     filtered_data = keep_columns(data.filter_by_column(Column.DCMSerDescr, "t2_tse_sag"),
                                  [Column.ProxID, Column.ijk, Column.DCMSerDescr, Column.DCMSerUID])
-    print(filtered_data)
+    print(filtered_data[0][1].split(" ")[2])
