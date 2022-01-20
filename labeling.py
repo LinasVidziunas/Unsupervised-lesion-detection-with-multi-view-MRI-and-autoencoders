@@ -3,12 +3,13 @@ from patient_data_preprocessing import get_paths_of_filenames
 from os import listdir, path, rename
 
 
+cancer = []
+list_of_all = []
 
 
+ProstateX_Images_Train = "C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\cancer_excel\\prostate_train.csv"
 
-ProstateX_Images_Train = "C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\cancer_excel\\ProstateX-2-Images-Train.csv"
-
-new_main_folder = "C:\\Users\\Orjan\\Desktop\\testing\\test3"
+new_main_folder = "C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\testing\\test3"
 list_of_patient_folders = listdir(new_main_folder)
 paths_of_patient_folder = get_paths_of_filenames(new_main_folder, list_of_patient_folders)
 
@@ -17,24 +18,27 @@ paths_of_patient_folder = get_paths_of_filenames(new_main_folder, list_of_patien
 data = PatientDataExtractor(ProstateX_Images_Train)
 sagittal_data = keep_columns(data.filter_by_column(Column.DCMSerDescr, "t2_tse_sag"),
                              [Column.ProxID, Column.ijk, Column.DCMSerDescr, Column.DCMSerUID])
+print(sagittal_data)
 coronal_data = keep_columns(data.filter_by_column(Column.DCMSerDescr, "t2_tse_cor"),
                              [Column.ProxID, Column.ijk, Column.DCMSerDescr, Column.DCMSerUID])
 axial_data = keep_columns(data.filter_by_column(Column.DCMSerDescr, "t2_tse_tra"),
                              [Column.ProxID, Column.ijk, Column.DCMSerDescr, Column.DCMSerUID])
 
-cancer = []
-not_cancer = []
 
+cancer = []
+list_of_all = []
 def check_for_cancer(orientation_folder, orientation_data):
     dicom_file_name = listdir(orientation_folder)
     for string in dicom_file_name:
         list_of_info = string.split("-")
         current_filename_path = path.join(orientation_folder, string)
+        list_of_all.append(current_filename_path) #Adding all filenames paths to list of all
         for arrays in orientation_data:
             if list_of_info[0] == arrays[3] and list_of_info[1] == arrays[1].split(" ")[2]:
                 cancer.append(current_filename_path)
-            else:
-                not_cancer.append(current_filename_path)
+
+
+
 
 def label_files(list_cancer, list_not_cancer):
     for files in list_cancer:
@@ -46,11 +50,8 @@ def label_files(list_cancer, list_not_cancer):
         sa_mye_kode = "0-" + file_split[-1]
         rename(path.join(file_split[0], file_split[1]), path.join(file_split[0], sa_mye_kode))
 
-# directory = '\some\folder\elsewhere'
-# os.rename(os.path.join(directory, 'filename.txt'), os.path.join(directory, 'filename2.txt'))
 
-
-
+"""dette er på en måte main koden"""
 for patient_file_path in paths_of_patient_folder:
     list_of_orientation_folders = listdir(patient_file_path)
     for string_name in list_of_orientation_folders:
@@ -64,18 +65,14 @@ for patient_file_path in paths_of_patient_folder:
             folder_path = path.join(patient_file_path, "AXIAL")
             check_for_cancer(folder_path, axial_data)
 
+#Removing duplicates from list's
+    cancer = list(dict.fromkeys(cancer))
+    list_of_all = list(dict.fromkeys(list_of_all))
+    #Removing the cancer files from list of all
+    for cancer_files in cancer:
+        if cancer_files in list_of_all:
+            list_of_all.remove(cancer_files)
 
-# test_list =["a","a","b","b"]
-# mylist = list(dict.fromkeys(test_list))
-# print(mylist)
-list_cancer = list(dict.fromkeys(cancer))
-list_not_cancer = list(dict.fromkeys(not_cancer))
-for items in list_cancer:
-    if items in list_not_cancer:
-        list_not_cancer.remove(items)
-for tokens in list_not_cancer:
-    if tokens in list_cancer:
-        list_cancer.remove(tokens)
-
-label_files(list_cancer, list_not_cancer)
-
+print(cancer)
+#Label the files
+#label_files(cancer, list_of_all)

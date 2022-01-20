@@ -11,11 +11,11 @@ class View(Enum):
 class Column(Enum):
     ProxID = 0  # Patient Id
     Name = 1
-    studydate = 2
-    fid = 3
-    pos = 4
-    WorldMatrix = 5
-    ijk = 6
+    fid = 2 #studydate = 2
+    pos = 3
+    WorldMatrix = 4
+    ijk = 5
+    toplevel = 6
     SpacingBetweenSlices = 7
     VoxelSpacing = 8
     Dim = 9
@@ -33,7 +33,7 @@ class PatientDataExtractor:
         return __data
 
 
-    def __init__(self, file_location: str ="ProstateX-2-Images-Train.csv"):
+    def __init__(self, file_location: str ="prostate_train.csv"):
         with open(file_location, 'r', newline='') as csvfile:
             for row_num, row in enumerate(reader(csvfile, delimiter=",")):
 
@@ -69,7 +69,7 @@ def keep_columns(data, columns: [Column]):
 
 
 if __name__ == "__main__":
-    data = PatientDataExtractor("C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\cancer_excel\\ProstateX-2-Images-Train.csv")
+    data = PatientDataExtractor("C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\cancer_excel\\prostate_train.csv")
     filtered_data = keep_columns(data.filter_by_column(Column.DCMSerDescr, "t2_tse_sag"),
                                  [Column.ProxID, Column.ijk, Column.DCMSerDescr, Column.DCMSerUID])
-    print(filtered_data[0][1].split(" ")[2])
+    print(filtered_data)

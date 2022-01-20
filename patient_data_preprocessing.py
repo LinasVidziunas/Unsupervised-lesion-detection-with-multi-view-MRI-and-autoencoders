@@ -107,8 +107,14 @@ if __name__ == "__main__":
     patient_folder_list.remove("LICENSE")
     PROSTATEx_patient_folder_paths = get_paths_of_filenames(PROSTATEx_path, patient_folder_list)
     
-    new_main_folder = "C:\\Users\\Orjan\\Desktop\\testing\\test3"
+    new_main_folder = "C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\testing\\test3"
     
-    for i, folder_path in enumerate(PROSTATEx_patient_folder_paths):
-        patients.append(PatientDataPreprocessing(folder_path))
-        patients[i].extract(path.join(new_main_folder, str(i)))
+    # for i, folder_path in enumerate(PROSTATEx_patient_folder_paths):
+    #     patients.append(PatientDataPreprocessing(folder_path))
+    #     patients[i].extract(path.join(new_main_folder, str(i)))
+#testfile
+testpath ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\6.000000-t2tsesag-69918\\1-01.dcm"
+testpath2 ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\3.000000-t2tsesag-46088\\1-01.dcm"
+dicom_test = read_file(testpath)
+dicom_test2 =read_file(testpath2)
+print(dicom_test2.SeriesNumber)
