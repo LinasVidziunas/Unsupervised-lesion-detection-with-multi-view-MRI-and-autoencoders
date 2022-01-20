@@ -21,7 +21,6 @@ class Column(Enum):
     Dim = 9
     DCMSerDescr = 10  # Some type of description
     DCMSerNum = 11
-    DCMSerUID = 12
 
 
 class PatientDataExtractor:
@@ -46,11 +45,15 @@ class PatientDataExtractor:
 
                 self.__data.append(row)
 
-    def filter_by_column(self, column: Column, keyword: str = ""):
-        """Filter rows by keyword in a specific column."""
-        return [patient_data for patient_data in self.__data
-           if keyword in patient_data[column.value]]
+    def filter_by_column(self, column: Column, keywords: [str] = [""]):
+        """Filter rows by keyword in a specific column. BIG FUNCTION MISTAKE. DO NOT USE"""
+        rows = []
 
+        for patient_data in self.__data:
+            for keyword in keywords:
+                if keyword in patient_data[column.value]:
+                    rows.append(patient_data)
+        return rows
 
 def keep_columns(data, columns: [Column]):
     return_data = []

@@ -43,18 +43,9 @@ class PatientDataPreprocessing:
     def __init__(self, patient_folder_path: str):
         self.preprocessed_patient_folder_path = path.join(patient_folder_path, listdir(patient_folder_path)[0])
 
-    def __create_subfolders(self):
+    def create_subfolders(self):
         for view in View:
             makedirs(path.join(self.processed_patient_folder_path, view.name))
-
-    def read_patient_image_orientation(self, dicom_file):
-        orientation_vector = dicom_file.ImageOrientationPatient
-        if orientation_vector == View.CORONAL.value:
-            return "Coronal"
-        if orientation_vector == View.SAGITTAL.value:
-            return "Sagittal"
-        if orientation_vector == View.AXIAL.value:
-            return "Axial"
 
     def __read_DICOMs(self, folder_path: str):
         DICOMS = []
@@ -66,31 +57,36 @@ class PatientDataPreprocessing:
 
         return DICOMS
 
-    def __save_DICOM_as_txt(self, DICOM, folder_path):
-        filename = str(DICOM.SeriesInstanceUID) + "-" + str(DICOM.InstanceNumber) + "-" + str(DICOM.PatientID) + ".csv"
+    def __save_DICOM_as_txt(self, DICOM, folder_path, cancer_list):
+        abnormal_variable = 0
+
+        if [DICOM.PatientID, DICOM.InstanceNumber, DICOM.SeriesNumber] in cancer_list:
+            abnormal_variable = 1
+
+        filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".csv"
         savetxt(path.join(folder_path, filename), DICOM.pixel_array, delimiter=',')
 
-    def extract(self, extract_to: str):
+    def extract(self, extract_to: str, list_of_cancer_patients):
         self.processed_patient_folder_path = extract_to
-        self.__create_subfolders()
+        self.create_subfolders()
         for folder_name in listdir(self.preprocessed_patient_folder_path):
             if "t2tsesag" in folder_name:
                 DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
 
                 for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "SAGITTAL"))
+                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "SAGITTAL"), list_of_cancer_patients)
                     
             if "t2tsetra" in folder_name:
                 DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
                 
                 for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "AXIAL"))
+                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "AXIAL"), list_of_cancer_patients)
                    
             if "t2tsecor" in folder_name:
                 DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
                 
                 for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "CORONAL"))
+                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "CORONAL"), list_of_cancer_patients)
 
 def get_paths_of_filenames(folder_path, list_of_filenames):
     folder_paths = []
@@ -112,9 +108,19 @@ if __name__ == "__main__":
     # for i, folder_path in enumerate(PROSTATEx_patient_folder_paths):
     #     patients.append(PatientDataPreprocessing(folder_path))
     #     patients[i].extract(path.join(new_main_folder, str(i)))
-#testfile
-testpath ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\6.000000-t2tsesag-69918\\1-01.dcm"
-testpath2 ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\3.000000-t2tsesag-46088\\1-01.dcm"
-dicom_test = read_file(testpath)
-dicom_test2 =read_file(testpath2)
-print(dicom_test2.SeriesNumber)
+    #testfile
+    testpath ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\6.000000-t2tsesag-69918\\1-01.dcm"
+    testpath2 ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\3.000000-t2tsesag-46088\\1-01.dcm"
+    dicom_test = read_file(testpath)
+    dicom_test2 =read_file(testpath2)
+    print(dicom_test2.SeriesNumber)
+
+# def read_patient_image_orientation(self, dicom_file):
+#     orientation_vector = dicom_file.ImageOrientationPatient
+#     if orientation_vector == View.CORONAL.value:
+#         return "Coronal"
+#     if orientation_vector == View.SAGITTAL.value:
+#         return "Sagittal"
+#     if orientation_vector == View.AXIAL.value:
+#         return "Axial"
+
