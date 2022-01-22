@@ -66,6 +66,16 @@ class PatientDataPreprocessing:
         filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".csv"
         savetxt(path.join(folder_path, filename), DICOM.pixel_array, delimiter=',')
 
+    def __save_DICOM_as_DICOM(self, DICOM, folder_path, cancer_list):
+        abnormal_variable = 0
+
+        if [DICOM.PatientID, DICOM.InstanceNumber, DICOM.SeriesNumber] in cancer_list:
+            abnormal_variable = 1
+
+        filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".dcm"
+        DICOM.add_new([0x0051, 0x1014], 'US', abnormal_variable)
+        DICOM.save_as(path.join(folder_path, filename), write_like_original=False)
+
     def extract(self, extract_to: str, list_of_cancer_patients):
         self.processed_patient_folder_path = extract_to
         self.__create_subfolders()
