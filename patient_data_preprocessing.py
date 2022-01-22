@@ -43,7 +43,7 @@ class PatientDataPreprocessing:
     def __init__(self, patient_folder_path: str):
         self.preprocessed_patient_folder_path = path.join(patient_folder_path, listdir(patient_folder_path)[0])
 
-    def create_subfolders(self):
+    def __create_subfolders(self):
         for view in View:
             makedirs(path.join(self.processed_patient_folder_path, view.name))
 
@@ -68,7 +68,7 @@ class PatientDataPreprocessing:
 
     def extract(self, extract_to: str, list_of_cancer_patients):
         self.processed_patient_folder_path = extract_to
-        self.create_subfolders()
+        self.__create_subfolders()
 
         # use this instead of stupid for loop
         orientation = {
