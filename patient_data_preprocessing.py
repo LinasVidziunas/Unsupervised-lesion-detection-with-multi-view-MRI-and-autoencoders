@@ -38,7 +38,7 @@ class PatientDataPreprocessing:
     def __init__(self, patient_folder_path: str):
         self.preprocessed_patient_folder_path = path.join(patient_folder_path, listdir(patient_folder_path)[0])
 
-    def create_subfolders(self):
+    def __create_subfolders(self):
         for view in View:
             makedirs(path.join(self.processed_patient_folder_path, view.name))
 
@@ -61,27 +61,34 @@ class PatientDataPreprocessing:
         filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".csv"
         savetxt(path.join(folder_path, filename), DICOM.pixel_array, delimiter=',')
 
+    def __save_DICOM_as_DICOM(self, DICOM, folder_path, cancer_list):
+        abnormal_variable = 0
+
+        if [DICOM.PatientID, DICOM.InstanceNumber, DICOM.SeriesNumber] in cancer_list:
+            abnormal_variable = 1
+
+        filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".dcm"
+        DICOM.add_new([0x0051, 0x1014], 'US', abnormal_variable)
+        DICOM.save_as(path.join(folder_path, filename), write_like_original=False)
+
     def extract(self, extract_to: str, list_of_cancer_patients):
         self.processed_patient_folder_path = extract_to
-        self.create_subfolders()
-        for folder_name in listdir(self.preprocessed_patient_folder_path):
-            if "t2tsesag" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
+        self.__create_subfolders()
 
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "SAGITTAL"), list_of_cancer_patients)
+        # use this instead of stupid for loop
+        orientation = {
+            "t2tsesag": "SAGITTAL",
+            "t2tsetra": "AXIAL",
+            "t2tsecor": "CORONAL"}
+
+        for folder_name in listdir(self.preprocessed_patient_folder_path):
+            for key, value in orientation.items():
+                if key in folder_name:
+                    DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
                     
-            if "t2tsetra" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
-                
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "AXIAL"), list_of_cancer_patients)
-                   
-            if "t2tsecor" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
-                
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "CORONAL"), list_of_cancer_patients)
+                    for DICOM in DICOMS:
+                        self.__save_DICOM_as_DICOM(DICOM, path.join(self.processed_patient_folder_path, value), list_of_cancer_patients)
+
 
 def get_paths_of_filenames(folder_path, list_of_filenames):
     folder_paths = []

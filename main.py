@@ -16,4 +16,4 @@ patients = []
 PROSTATEx_path="/home/linas/Projects/Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/PROSTATEx"
 for i, folder_path in enumerate(listdir(PROSTATEx_path)):
     patients.append(PatientDataPreprocessing(path.join(PROSTATEx_path, folder_path)))
-    patients[i].extract(path.join("tets1", folder_path), abnormal_list)
+    patients[i].extract(path.join("test1", folder_path), abnormal_list)
