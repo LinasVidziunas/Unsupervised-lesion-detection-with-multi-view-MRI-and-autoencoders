@@ -69,24 +69,21 @@ class PatientDataPreprocessing:
     def extract(self, extract_to: str, list_of_cancer_patients):
         self.processed_patient_folder_path = extract_to
         self.create_subfolders()
-        for folder_name in listdir(self.preprocessed_patient_folder_path):
-            if "t2tsesag" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
 
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "SAGITTAL"), list_of_cancer_patients)
+        # use this instead of stupid for loop
+        orientation = {
+            "t2tsesag": "SAGITTAL",
+            "t2tsetra": "AXIAL",
+            "t2tsecor": "CORONAL"}
+
+        for folder_name in listdir(self.preprocessed_patient_folder_path):
+            for key, value in orientation.items():
+                if key in folder_name:
+                    DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
                     
-            if "t2tsetra" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
-                
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "AXIAL"), list_of_cancer_patients)
-                   
-            if "t2tsecor" in folder_name:
-                DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
-                
-                for DICOM in DICOMS:
-                    self.__save_DICOM_as_txt(DICOM, path.join(self.processed_patient_folder_path, "CORONAL"), list_of_cancer_patients)
+                    for DICOM in DICOMS:
+                        self.__save_DICOM_as_DICOM(DICOM, path.join(self.processed_patient_folder_path, value), list_of_cancer_patients)
+
 
 def get_paths_of_filenames(folder_path, list_of_filenames):
     folder_paths = []
