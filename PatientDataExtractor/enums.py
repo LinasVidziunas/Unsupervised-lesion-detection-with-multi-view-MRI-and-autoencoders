@@ -10,7 +10,7 @@ class View(Enum):
 class Column(Enum):
     ProxID = 0  # Patient Id
     Name = 1
-    fid = 2 #studydate = 2
+    fid = 2  # studydate = 2
     pos = 3
     WorldMatrix = 4
     ijk = 5

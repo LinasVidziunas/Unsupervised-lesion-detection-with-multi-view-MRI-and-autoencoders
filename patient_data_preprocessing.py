@@ -10,6 +10,12 @@ class PatientDataPreprocessing:
     __preprocessed_patient_folder_path = ""
     __processed_patient_folder_path = ""
 
+    def __init__(self, patient_folder_path: str):
+        # Between patient folder path and the folder that contains DICOMs there is a middle folder, skipping over this:
+        self.preprocessed_patient_folder_path = path.join(
+            patient_folder_path,
+            listdir(patient_folder_path)[0])
+
     @property
     def preprocessed_patient_folder_path(self):
         return self.__preprocessed_patient_folder_path
@@ -17,7 +23,9 @@ class PatientDataPreprocessing:
     @preprocessed_patient_folder_path.setter
     def preprocessed_patient_folder_path(self, directory_path):
         if not path.exists(directory_path):
-            raise OSError(f"Trying to set an invalid patient folder path: {directory_path}")
+            raise OSError(
+                f"Trying to set an invalid patient folder path: {directory_path}"
+            )
 
         self.__preprocessed_patient_folder_path = directory_path
 
@@ -31,14 +39,13 @@ class PatientDataPreprocessing:
             try:
                 makedirs(directory_path, exist_ok=True)
             except OSError:
-                raise OSError(f"Could not create a directory for processed patient information: {directory_path}")
+                raise OSError(
+                    f"Could not create a directory for processed patient information: {directory_path}"
+                )
 
         self.__processed_patient_folder_path = directory_path
 
-    def __init__(self, patient_folder_path: str):
-        self.preprocessed_patient_folder_path = path.join(patient_folder_path, listdir(patient_folder_path)[0])
-
-    def __create_subfolders(self):
+    def __create_sub_folders(self):
         for view in View:
             makedirs(path.join(self.processed_patient_folder_path, view.name))
 
@@ -52,42 +59,42 @@ class PatientDataPreprocessing:
 
         return DICOMS
 
-    def __save_DICOM_as_txt(self, DICOM, folder_path, cancer_list):
-        abnormal_variable = 0
-
-        if [DICOM.PatientID, DICOM.InstanceNumber, DICOM.SeriesNumber] in cancer_list:
-            abnormal_variable = 1
-
-        filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".csv"
-        savetxt(path.join(folder_path, filename), DICOM.pixel_array, delimiter=',')
-
     def __save_DICOM_as_DICOM(self, DICOM, folder_path, cancer_list):
         abnormal_variable = 0
 
-        if [DICOM.PatientID, DICOM.InstanceNumber, DICOM.SeriesNumber] in cancer_list:
+        if [DICOM.PatientID, DICOM.InstanceNumber,
+                DICOM.SeriesNumber] in cancer_list:
             abnormal_variable = 1
 
-        filename = str(abnormal_variable) + "-" + str(DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(DICOM.InstanceNumber) + ".dcm"
+        filename = str(abnormal_variable) + "-" + str(
+            DICOM.PatientID) + "-" + str(DICOM.SeriesNumber) + "-" + str(
+                DICOM.InstanceNumber) + ".dcm"
         DICOM.add_new([0x0051, 0x1014], 'US', abnormal_variable)
-        DICOM.save_as(path.join(folder_path, filename), write_like_original=False)
+        DICOM.save_as(path.join(folder_path, filename),
+                      write_like_original=False)
 
-    def extract(self, extract_to: str, list_of_cancer_patients):
+    def extract(self, extract_to: str, list_of_patients_abnormal):
         self.processed_patient_folder_path = extract_to
-        self.__create_subfolders()
+        self.__create_sub_folders()
 
-        # use this instead of stupid for loop
         orientation = {
             "t2tsesag": "SAGITTAL",
             "t2tsetra": "AXIAL",
-            "t2tsecor": "CORONAL"}
+            "t2tsecor": "CORONAL"
+        }
 
         for folder_name in listdir(self.preprocessed_patient_folder_path):
             for key, value in orientation.items():
                 if key in folder_name:
-                    DICOMS = self.__read_DICOMs(path.join(self.preprocessed_patient_folder_path, folder_name))
-                    
+                    DICOMS = self.__read_DICOMs(
+                        path.join(self.preprocessed_patient_folder_path,
+                                  folder_name))
+
                     for DICOM in DICOMS:
-                        self.__save_DICOM_as_DICOM(DICOM, path.join(self.processed_patient_folder_path, value), list_of_cancer_patients)
+                        self.__save_DICOM_as_DICOM(
+                            DICOM,
+                            path.join(self.processed_patient_folder_path,
+                                      value), list_of_patients_abnormal)
 
 
 def get_paths_of_filenames(folder_path, list_of_filenames):
@@ -95,34 +102,3 @@ def get_paths_of_filenames(folder_path, list_of_filenames):
     for filename in list_of_filenames:
         folder_paths.append(path.join(folder_path, filename))
     return folder_paths
-
-
-if __name__ == "__main__":
-    patients = []
-
-    PROSTATEx_path="C:\\Users\\Orjan\\Desktop\\manifest-1642204867087\PROSTATEx"
-    patient_folder_list = listdir(PROSTATEx_path)
-    patient_folder_list.remove("LICENSE")
-    PROSTATEx_patient_folder_paths = get_paths_of_filenames(PROSTATEx_path, patient_folder_list)
-    
-    new_main_folder = "C:\\Users\\Orjan\\Desktop\\Bakkelor2022\\testing\\test3"
-    
-    # for i, folder_path in enumerate(PROSTATEx_patient_folder_paths):
-    #     patients.append(PatientDataPreprocessing(folder_path))
-    #     patients[i].extract(path.join(new_main_folder, str(i)))
-    #testfile
-    testpath ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\6.000000-t2tsesag-69918\\1-01.dcm"
-    testpath2 ="F:\\Bakkelor2022\\manifest-A3Y4AE4o5818678569166032044\\PROSTATEx\\ProstateX-0008\\10-21-2011-NA-MR prostaat kanker detectie WDSmc MCAPRODETW-64134\\3.000000-t2tsesag-46088\\1-01.dcm"
-    dicom_test = read_file(testpath)
-    dicom_test2 =read_file(testpath2)
-    print(dicom_test2.SeriesNumber)
-
-# def read_patient_image_orientation(self, dicom_file):
-#     orientation_vector = dicom_file.ImageOrientationPatient
-#     if orientation_vector == View.CORONAL.value:
-#         return "Coronal"
-#     if orientation_vector == View.SAGITTAL.value:
-#         return "Sagittal"
-#     if orientation_vector == View.AXIAL.value:
-#         return "Axial"
-
