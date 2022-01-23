@@ -1,5 +1,5 @@
 from csv import reader
-from PatientDataExtractor.enums import View, Column
+from PatientDataExtractor.enums import Column
 
 
 class PatientDataExtractor:
@@ -8,7 +8,7 @@ class PatientDataExtractor:
     @property
     def data(self):
         """All the data read when instance is initialized."""
-        return __data
+        return self.__data
 
     def __init__(self, file_location: str = "prostate_train.csv"):
         with open(file_location, 'r', newline='') as csvfile:
@@ -23,7 +23,8 @@ class PatientDataExtractor:
                 self.__data.append(row)
 
     def filter_by_column(self, column: Column, keywords: [str] = [""]):
-        """Filter rows by keyword in a specific column. BIG FUNCTION MISTAKE. DO NOT USE"""
+        """Filter rows by keyword in a specific column.
+        BIG FUNCTION MISTAKE. DO NOT USE"""
         rows = []
 
         for patient_data in self.__data:

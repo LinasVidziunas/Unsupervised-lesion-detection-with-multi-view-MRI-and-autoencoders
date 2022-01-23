@@ -1,8 +1,6 @@
-from os import path, makedirs, listdir, path, makedirs
-from enum import Enum
+from os import path, makedirs, listdir
 
 from pydicom import read_file
-from numpy import savetxt
 from PatientDataExtractor.enums import View
 
 
