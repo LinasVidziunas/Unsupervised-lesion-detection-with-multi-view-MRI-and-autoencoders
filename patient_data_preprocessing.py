@@ -9,7 +9,8 @@ class PatientDataPreprocessing:
     __processed_patient_folder_path = ""
 
     def __init__(self, patient_folder_path: str):
-        # Between patient folder path and the folder that contains DICOMs there is a middle folder, skipping over this:
+        # Between patient folder path and the folder that contains DICOMs
+        # there is a middle folder, skipping over this
         self.preprocessed_patient_folder_path = path.join(
             patient_folder_path,
             listdir(patient_folder_path)[0])
@@ -76,9 +77,9 @@ class PatientDataPreprocessing:
         self.__create_sub_folders()
 
         orientation = {
-            "t2tsesag": "SAGITTAL",
-            "t2tsetra": "AXIAL",
-            "t2tsecor": "CORONAL"
+            "t2tsesag": "Sagittal",
+            "t2tsetra": "Axial",
+            "t2tsecor": "Coronal"
         }
 
         for folder_name in listdir(self.preprocessed_patient_folder_path):

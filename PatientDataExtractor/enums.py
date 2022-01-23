@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class View(Enum):
-    SAGITTAL = [0, 1, 0, 0, 0, -1]
-    CORONAL = [1, 0, 0, 0, 0, -1]
-    AXIAL = [1, 0, 0, 0, 1, 0]
+    Sagittal = [0, 1, 0, 0, 0, -1]
+    Coronal = [1, 0, 0, 0, 0, -1]
+    Axial = [1, 0, 0, 0, 1, 0]
 
 
 class Column(Enum):
