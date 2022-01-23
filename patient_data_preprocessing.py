@@ -17,7 +17,7 @@ class Patient:
             listdir(patient_folder_path)[0])
 
         # If folder name includes any of the oriantation protocol names,
-        # add to list of slices
+        # add to dictionary of slices, where dict key is the orientation
         for folder_name in listdir(self.preprocessed_patient_folder_path):
             for view in View:
                 if view.value in folder_name:
@@ -25,7 +25,7 @@ class Patient:
                         path.join(self.preprocessed_patient_folder_path,
                                   folder_name))
 
-        # Foreach slice check whether it is abnormal_list
+        # Foreach slice check whether it is in abnormal_list
         # and label it correspondigly
         for view, slices in self.__slices.items():
             for slice in self.__slices[view]:

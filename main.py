@@ -29,8 +29,8 @@ abnormal_list = keep_columns(
                           ["t2_tse_sag", "t2_tse_cor", "t2_tse_tra"]),
     [Column.ProxID, Column.DCMSerNum, Column.ijk])
 
+# from ijk, keeping only k (the slice no)
 for i, patient in enumerate(abnormal_list):
-    # from ijk, keeping only k (the slice no)
     abnormal_list[i][1] = str(abnormal_list[i][1]).split(" ")[2]
 
 patients = []
