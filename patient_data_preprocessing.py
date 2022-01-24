@@ -5,11 +5,11 @@ from PatientDataExtractor.enums import View
 
 
 class Patient:
-    __preprocessed_patient_folder_path = ""
-    __processed_patient_folder_path = ""
-    __slices = {}
-
     def __init__(self, patient_folder_path: str, abnormal_list):
+        self.__preprocessed_patient_folder_path = ""
+        self.__processed_patient_folder_path = ""
+        self.__slices = {}
+
         # Between patient folder path and the folder that contains DICOMs
         # there is a middle folder, skipping over this
         self.preprocessed_patient_folder_path = path.join(
