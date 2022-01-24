@@ -23,13 +23,13 @@ class PatientDataExtractor:
                 self.__data.append(row)
 
     def filter_by_column(self, column: Column, keywords: [str] = [""]):
-        """Filter rows by keyword in a specific column.
-        BIG FUNCTION MISTAKE. DO NOT USE"""
+        """Filter rows by keyword in a specific column."""
         rows = []
 
         for patient_data in self.__data:
             for keyword in keywords:
-                if keyword in patient_data[column.value]:
+                if keyword in patient_data[
+                        column.value] and patient_data not in rows:
                     rows.append(patient_data)
         return rows
 
