@@ -1,5 +1,5 @@
-from PatientDataExtractor.dataextractor import Column, PatientDataExtractor,keep_columns
-from patient_data_preprocessing import PatientDataPreprocessing
+from PatientDataExtractor.dataextractor import Column, PatientDataExtractor, keep_columns
+from patient_data_preprocessing import Patient
 
 from os import listdir, path
 
