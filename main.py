@@ -17,5 +17,5 @@ patients = []
 PROSTATEx_path = "PROSTATEx"
 for i, folder_path in enumerate(listdir(PROSTATEx_path)):
     patients.append(
-        PatientDataPreprocessing(path.join(PROSTATEx_path, folder_path)))
-    patients[i].extract(path.join("test", folder_path), abnormal_list)
+        Patient(path.join(PROSTATEx_path, folder_path), abnormal_list))
+    patients[i].extract(path.join("test", folder_path))
