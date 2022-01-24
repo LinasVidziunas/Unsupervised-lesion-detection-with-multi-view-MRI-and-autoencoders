@@ -10,7 +10,7 @@ class PatientDataExtractor:
         """All the data read when instance is initialized."""
         return self.__data
 
-    def __init__(self, file_location: str = "prostate_train.csv"):
+    def __init__(self, file_location: str = "ProstateX-Images-Train.csv"):
         with open(file_location, 'r', newline='') as csvfile:
             for row_num, row in enumerate(reader(csvfile, delimiter=",")):
                 # Continue on first row (the header)
