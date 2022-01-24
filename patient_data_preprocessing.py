@@ -112,3 +112,7 @@ class Slice:
             filename = f"{int(self.abnormal)}-{self.patientID}-{self.seriesNumber}-{self.instanceNumber}.dcm"
             self.dicom.save_as(path.join(directory_path, filename),
                                write_like_original=False)
+
+    def normalized_pixel_array(self):
+        pixel_array = self.dicom.pixel_array
+        return pixel_array / self.dicom.LargestImagePixelValue
