@@ -24,7 +24,6 @@ An [[https://keras.io/examples/generative/vae/][example]] of a variational autoe
 Generated using [[https://github.com/Damnever/pigar][pigar]]. Includes a list of dependencies for the ~vae_mnist.py~ python script.
 This file will get used, in the previously mentioned ~setup.sh~, to install the required dependencies on the server using Conda.
 
-
 ** Usage
 1) SSH into the server
 2) Clone this GitHub repository
