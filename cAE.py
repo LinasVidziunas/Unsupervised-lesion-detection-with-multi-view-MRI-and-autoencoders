@@ -108,14 +108,14 @@ loss_normal = losses.mae(decoded_normal, test_normal)
 plt.hist(loss_normal[None, :], bins=50)
 plt.xlabel("Train loss")
 plt.ylabel("No of images")
-plt.savefig("normal.png")
+plt.savefig("figure_normal.png")
 
 decoded_abnormal = autoencoder.pedict(test_abnormal)
 loss_abnormal = loss_normal.mae(decoded_abnormal, test_abnormal)
 plt.hist(loss_abnormal[None, :], bins=50)
 plt.xlabel("Train loss")
 plt.ylabel("No of images")
-plt.savefig("abnormal.png")
+plt.savefig("figure_abnormal.png")
 
 decoded_images = autoencoder.predict(x_test)
 
@@ -136,4 +136,4 @@ for i in range(1, n + 1):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
-plt.savefig("bigsave.png")
+plt.savefig("figure_bigsave.png")
