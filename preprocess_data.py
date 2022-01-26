@@ -27,5 +27,10 @@ sets = split_set_by_patients(patients, 1, 1, 0)
 
 # After splitting set, extract patient dicoms to new directory
 for set_name, patients in sets.items():
-    for i, patient in enumerate(patients):
-        patient.extract(path.join("sets", set_name))
+    if set_name == "train":
+        for i, patient in enumerate(patients):
+            patient.extract(path.join("sets", set_name),
+                            remove_abnormal_slices=True)
+    else:
+        for i, patient in enumerate(patients):
+            patient.extract(path.join("sets", set_name))

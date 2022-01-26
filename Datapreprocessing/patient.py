@@ -79,11 +79,14 @@ class Patient:
             for filename in listdir(folder_path)
         ]
 
-    def extract(self, extract_to: str):
+    def extract(self, extract_to: str, remove_abnormal_slices: bool = False):
         """Saves slices"""
         self.processed_patient_folder_path = extract_to
 
         for view, slices in self.__slices.items():
             for slice in slices:
+                if remove_abnormal_slices is True and slice.get_abnormality() is True:
+                    continue
+
                 slice.save_as_dicom(
                     path.join(self.processed_patient_folder_path, view))
