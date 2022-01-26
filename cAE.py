@@ -1,4 +1,4 @@
-from Dataprocessing.patient_data_preprocessing import Slice
+from Datapreprocessing.slice import Slice
 
 from keras import layers, Model
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization

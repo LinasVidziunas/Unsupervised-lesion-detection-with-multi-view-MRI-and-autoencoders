@@ -1,4 +1,5 @@
-from Datapreprocessing.dataextractor import Column, PatientDataExtractor, keep_columns
+from Datapreprocessing.dataextractor import Column, PatientDataExtractor
+from Datapreprocessing.dataextractor import keep_columns
 from Datapreprocessing.splitset import split_set_by_patients
 from Datapreprocessing.patient import Patient
 
