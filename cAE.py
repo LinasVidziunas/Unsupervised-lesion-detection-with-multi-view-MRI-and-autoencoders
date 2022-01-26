@@ -1,6 +1,6 @@
 from Datapreprocessing.slice import Slice
 
-from keras import layers, Model
+from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D
 from matplotlib import pyplot as plt
@@ -23,10 +23,10 @@ for i, s in enumerate(train_slices):
     except:
         x_train[i][:][:] = x_train[i - 1][:][:]
 
-for i, slice in enumerate(test_slices):
+for i, s in enumerate(test_slices):
     try:
         x_test[i][:][:] = Slice(path.join("sets/x_test",
-                                          slice)).normalized_pixel_array()
+                                          s)).normalized_pixel_array()
     except:
         x_test[i][:][:] = x_test[i - 1][:][:]
 
@@ -91,6 +91,31 @@ autoencoder.fit(
     batch_size=32,
     validation_data=(x_test, x_test),
 )
+
+test_abnormal = []
+test_normal = []
+
+for a in test_slices:
+    if Slice(path.join("sets/x_test", a)).get_abnormality() is True:
+        test_abnormal.append(Slice(path.join("sets/x_test", a)).normalized_pixel_array())
+    elif Slice(path.join("sets/x_test", a)).get_abnormality() is False:
+        test_normal.append(Slice(path.join("sets/x_test", a)).normalized_pixel_array())
+
+
+decoded_normal = autoencoder.predict(test_normal)
+loss_normal = losses.mae(decoded_normal, test_normal)
+
+plt.hist(loss_normal[None, :], bins=50)
+plt.xlabel("Train loss")
+plt.ylabel("No of images")
+plt.savefig("normal.png")
+
+decoded_abnormal = autoencoder.pedict(test_abnormal)
+loss_abnormal = loss_normal.mae(decoded_abnormal, test_abnormal)
+plt.hist(loss_abnormal[None, :], bins=50)
+plt.xlabel("Train loss")
+plt.ylabel("No of images")
+plt.savefig("abnormal.png")
 
 decoded_images = autoencoder.predict(x_test)
 
