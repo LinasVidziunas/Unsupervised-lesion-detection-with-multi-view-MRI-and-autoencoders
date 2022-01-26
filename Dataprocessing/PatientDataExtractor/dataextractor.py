@@ -1,5 +1,5 @@
 from csv import reader
-from PatientDataExtractor.enums import Column
+from Dataprocessing.PatientDataExtractor.enums import Column
 
 
 class PatientDataExtractor:

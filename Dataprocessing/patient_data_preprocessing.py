@@ -1,7 +1,7 @@
 from os import path, makedirs, listdir
 
 from pydicom import read_file
-from PatientDataExtractor.enums import View
+from Dataprocessing.PatientDataExtractor.enums import View
 
 
 class Patient:
