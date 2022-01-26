@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:4
 #SBATCH --partition=gpuA100 
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --job-name=cAE
 #SBATCH --output=cAE_01.out
  
