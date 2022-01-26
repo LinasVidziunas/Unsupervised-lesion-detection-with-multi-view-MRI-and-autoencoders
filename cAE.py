@@ -1,84 +1,98 @@
 # import keras
 from keras import layers, Model
 # from keras.datasets import mnist
-# import numpy as np
+import numpy as np
 from keras.layers import Flatten, Dense, Reshape
 from matplotlib import pyplot as plt
 from os import listdir, path
 
 from Dataprocessing.patient_data_preprocessing import Slice
 
-x_train = []
-x_test = []
-
-sagital_slices = []
 train_slices = listdir("sets/x_train")
 test_slices = listdir("sets/x_test")
 
-for slice in train_slices:
-    x_train.append(
-        Slice(path.join("sets/x_train", slice)).normalized_pixel_array())
+x_train = np.zeros((len(train_slices), 320, 320))
+x_test = np.zeros((len(test_slices), 320, 320))
 
-for slice in test_slices:
-    x_test.append(
-        Slice(path.join("sets/x_test", slice)).normalized_pixel_array())
+sagital_slices = []
+
+for i, s in enumerate(train_slices):
+    try:
+        x_train[i][:][:] = Slice(path.join("sets/x_train",
+                                           s)).normalized_pixel_array()
+    except:
+        x_train[i][:][:] = x_train[i - 1][:][:]
+
+for i, slice in enumerate(test_slices):
+    try:
+        x_test[i][:][:] = Slice(path.join("sets/x_test",
+                                          s)).normalized_pixel_array()
+    except:
+        x_test[i][:][:] = x_test[i - 1][:][:]
 
 input = layers.Input(shape=(320, 320, 1))
 
 # Encoder
-x = layers.Conv2D(50, (9, 9), activation="relu", padding="same")(input)
+x = layers.Conv2D(120, (12, 12), activation="relu", padding="same")(input)
+x = layers.Conv2D(120, (12, 12), activation="relu", padding="same")(x)
 x = layers.MaxPooling2D((2, 2), padding="same")(x)
-x = layers.Conv2D(40, (7, 7), activation="relu", padding="same")(x)
+x = layers.Conv2D(140, (7, 7), activation="relu", padding="same")(x)
+x = layers.Conv2D(140, (7, 7), activation="relu", padding="same")(x)
 x = layers.MaxPooling2D((2, 2), padding="same")(x)
-x = layers.Conv2D(30, (5, 5), activation="relu", padding="same")(x)
+x = layers.Conv2D(160, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2D(160, (3, 3), activation="relu", padding="same")(x)
 x = layers.MaxPooling2D((2, 2), padding="same")(x)
-x = layers.Conv2D(15, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2D(180, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2D(180, (3, 3), activation="relu", padding="same")(x)
 x = layers.MaxPooling2D((2, 2), padding="same")(x)
-x = Flatten()(x)
-encoded = Dense(400, activation='softmax')(x)
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
+x = layers.MaxPooling2D((2, 2), padding="same")(x)
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
 
-# Decoder
-x = Reshape((20, 20, 1))(encoded)
-x = layers.Conv2DTranspose(15, (3, 3),
+x = layers.Conv2DTranspose(200, (3, 3),
                            strides=2,
                            activation="relu",
                            padding="same")(x)
-x = layers.Conv2DTranspose(30, (4, 4),
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2DTranspose(180, (3, 3),
                            strides=2,
                            activation="relu",
                            padding="same")(x)
-x = layers.Conv2DTranspose(40, (5, 5),
+x = layers.Conv2DTranspose(180, (3, 3),
                            strides=2,
                            activation="relu",
                            padding="same")(x)
-x = layers.Conv2DTranspose(50, (7, 7),
+x = layers.Conv2D(200, (3, 3), activation="relu", padding="same")(x)
+x = layers.Conv2DTranspose(160, (3, 3),
                            strides=2,
                            activation="relu",
                            padding="same")(x)
-decoded = layers.Conv2D(1, (9, 9), activation="sigmoid", padding="same")(x)
+x = layers.Conv2D(160, (7, 7), activation="relu", padding="same")(x)
+x = layers.Conv2DTranspose(140, (5, 5),
+                           strides=2,
+                           activation="relu",
+                           padding="same")(x)
+x = layers.Conv2D(140, (12, 12), activation="relu", padding="same")(x)
+x = layers.Conv2D(140, (12, 12), activation="sigmoid", padding="same")(x)
+decoded = layers.Conv2D(100, (7, 7), activation="relu", padding="same")(x)
 
 # Autoencoder
 autoencoder = Model(input, decoded)
 autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 autoencoder.summary()
 
-# Det vil si at x_train = axial_set[0](som skal inneholde "training"),
-# og x_test = [2](som skal inneholdet "testing").
-# Derfor må det først lagres som en streng.
-
-# Må også normalize data før setter inn.
-
-# x_train =
-# x_test =
-
-autoencoder.fit(x_train, x_train,
-                epochs=15,
-                batch_size=128,
-                shuffle=True,
-                validation_data=(x_test, x_test),)
+autoencoder.fit(
+    x_train,
+    x_train,
+    epochs=1000,
+    batch_size=32,
+    shuffle=True,
+    validation_data=(x_test, x_test),
+)
 
 decoded_images = autoencoder.predict(x_test)
-
 
 n = 10
 plt.figure(figsize=(20, 4))
@@ -96,4 +110,5 @@ for i in range(1, n + 1):
     plt.gray()
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
+
 plt.savefig("bigsave.png")
