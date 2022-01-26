@@ -20,14 +20,14 @@ for i, s in enumerate(train_slices):
     try:
         x_train[i][:][:] = Slice(path.join("sets/x_train",
                                            s)).normalized_pixel_array()
-    except:
+    except ValueError:
         x_train[i][:][:] = x_train[i - 1][:][:]
 
 for i, s in enumerate(test_slices):
     try:
         x_test[i][:][:] = Slice(path.join("sets/x_test",
                                           s)).normalized_pixel_array()
-    except:
+    except ValueError:
         x_test[i][:][:] = x_test[i - 1][:][:]
 
 input = layers.Input(shape=(320, 320, 1))
