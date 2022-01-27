@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from os import listdir, path
 
-
+#
 train_files = listdir("sets/x_train")
 test_files = listdir("sets/x_test")
 
@@ -37,14 +37,20 @@ for i, slice_file in enumerate(test_files):
 input = layers.Input(shape=(320, 320, 1))
 
 # Encoder
-x = Conv2D(64, (5, 5), activation='relu', padding='same')(input)
+x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
+x = BatchNormalization()(x)
+x = Conv2D(64, (7, 7), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
 x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
+x = Conv2D(128, (5, 5), activation='relu', padding='same')(input)
+x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
+x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
+x = BatchNormalization()(x)
 x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
@@ -53,34 +59,33 @@ x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
-# Alternative 1: latent space (spatial)
 x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
 
-# Alternative 2: latent space (dense) ->
-# In order to use this must remove one up-sampling layer from the decoder.
 
-# x = Flatten()(x)
-# x = Dense(1600, activation='softmax')(x)
-# DECODER
-# d = Reshape((40, 40, 1))(x)
+
+
 
 # decoder
 x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
+x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
+x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)
 
+x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
+x = BatchNormalization()(x)
 x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)
 
 x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
-x = UpSampling2D((2, 2))(x)
-
-x = Conv2D(32, (5, 5), activation='relu', padding='same')(x)
+x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)
 
+x = Conv2D(64, (7, 7), activation='relu', padding='same')(x)
+x = BatchNormalization()(x)
 decoded = Conv2D(1, (5, 5), activation='sigmoid', padding='same')(x)
 
 # Autoencoder
@@ -92,7 +97,7 @@ autoencoder.summary()
 autoencoder.fit(
     x_train,
     x_train,
-    epochs=150,
+    epochs=1000,
     batch_size=32,
     validation_data=(x_test, x_test),
 )
@@ -119,19 +124,18 @@ for i, _slice in enumerate(test_normal_l):
 decoded_normal = autoencoder.predict(test_normal)
 loss_normal = losses.mae(decoded_normal.reshape(
     len(test_normal), 320 * 320), test_normal.reshape(len(test_normal), 320*320))
-plt.hist(loss_normal[None, :], bins=100)
+
+decoded_abnormal = autoencoder.predict(test_abnormal)
+loss_abnormal = losses.mae(decoded_abnormal.reshape(
+    len(test_abnormal), 320 * 320), test_abnormal.reshape(len(test_abnormal), 320*320))
+
+print(loss_abnormal)
+
+plt.hist([loss_normal[:], loss_abnormal[:]], bins=15)
 plt.xlabel("Train loss")
 plt.ylabel("No. of images normal")
 plt.savefig("figure_abnormal.png")
 
-# plotting the MSE distribution of abnormal slices
-decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(decoded_abnormal.reshape(len(
-    test_abnormal), 320 * 320), test_abnormal.reshape(len(test_abnormal), 320*320))
-plt.hist(loss_abnormal[None, :], bins=100)
-plt.xlabel("Train loss")
-plt.ylabel("No. of images abnormal")
-plt.savefig("figure_abnormal.png")
 
 decoded_images = autoencoder.predict(x_test)
 
