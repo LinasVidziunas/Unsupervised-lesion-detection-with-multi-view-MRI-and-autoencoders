@@ -5,9 +5,7 @@ from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D
 from matplotlib import pyplot as plt
 import numpy as np
-
 from os import listdir, path
-
 
 
 train_slices = listdir("sets/x_train")
@@ -16,12 +14,9 @@ test_slices = listdir("sets/x_test")
 x_train = np.zeros((len(train_slices), 320, 320))
 x_test = np.zeros((len(test_slices), 320, 320))
 
-sagital_slices = []
-
 for i, s in enumerate(train_slices):
     try:
-        x_train[i][:][:] = Slice(path.join("sets/x_train",
-                                           s)).normalized_pixel_array()
+        x_train[i][:][:] = Slice(path.join("sets/x_train", s)).normalized_pixel_array()
     except:
         x_train[i][:][:] = x_train[i - 1][:][:]
 
@@ -39,50 +34,55 @@ x = Conv2D(64, (5, 5), activation='relu', padding='same')(input)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)  # 160 x 160 x 64
+x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)  # 7 x 7 x 64
 
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)  # 80 x 80 x 128 (small and thick)
+x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)  # 7 x 7 x 64
 
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)  # 80 x 80 x 128 (small and thick)
+x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
-#latent space
-x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)  # 80 x 80 x 128 (small and thick)
+#latent space(sAE)
+x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
+#latent space(AE) Da må også en "up sampling fjernes"
+#x = Flatten()(x)
+#x = Dense(1600, activation='softmax')(x)
+#DECODER
+#d = Reshape((40, 40, 1))(x)
 
 #decoder
-x = Conv2D(512, (5, 5), activation='relu' ,padding='same')(x)  # 160 x 160 x 32
+x = Conv2D(512, (5, 5), activation='relu' ,padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)  # 28 x 28 x 64
 
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)  # 160 x 160 x 32
+x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)  # 28 x 28 x 64
 
-x = Conv2D(128, (5, 5), activation='relu',padding='same')(x)  # 160 x 160 x 32
+x = Conv2D(128, (5, 5), activation='relu',padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)  # 28 x 28 x 64
 
-x = Conv2D(32, (5, 5), activation='relu', padding='same')(x)  # 160 x 160 x 32
+x = Conv2D(32, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = UpSampling2D((2, 2))(x)
 
-decoded = Conv2D(1, (5, 5), activation='sigmoid',padding='same')(x)  # 320 x 320 x 1
+decoded = Conv2D(1, (5, 5), activation='sigmoid',padding='same')(x)
 
 # Autoencoder
 autoencoder = Model(input, decoded)
 autoencoder.compile(
-    optimizer="adam", loss="mean_squared_error", metrics=["mae"])
+    optimizer="adam", loss="binary_crossentropy", metrics=["mae"])
 autoencoder.summary()
 
 autoencoder.fit(
     x_train,
     x_train,
-    epochs=15,
+    epochs=150,
     batch_size=32,
     validation_data=(x_test, x_test),
 )
