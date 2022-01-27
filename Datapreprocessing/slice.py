@@ -19,7 +19,7 @@ class Slice:
     def get_abnormality(self):
         if [0x0051, 0x1014] in self.dicom:
             self.abnormal = self.dicom[0x0051, 0x1014].value
-            return self.abnormal
+            return int(self.abnormal)
         return None
 
     def save_as_dicom(self, directory_path):
