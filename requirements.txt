@@ -4,11 +4,12 @@
 keras == 2.8.0rc0
 
 # Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/cAE.py: 6
+# Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/plotting.py: 1
 matplotlib == 3.5.1
 
 # Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/cAE.py: 7
+# Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/plotting.py: 2
 numpy == 1.22.0
 
-# Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/Datapreprocessing/patient_data_preprocessing.py: 3
 # Unsupervised-lesion-detection-with-multi-view-MRI-and-autoencoders/Datapreprocessing/slice.py: 1
 pydicom == 2.2.2
