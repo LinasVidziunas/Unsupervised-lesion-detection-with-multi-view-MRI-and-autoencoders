@@ -2,12 +2,12 @@ from Datapreprocessing.slice import Slice
 
 from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
-from keras.layers import MaxPooling2D, UpSampling2D
+from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
+
 from matplotlib import pyplot as plt
 import numpy as np
 from os import listdir, path
 
-#
 train_files = listdir("sets/x_train")
 test_files = listdir("sets/x_test")
 
@@ -39,18 +39,12 @@ input = layers.Input(shape=(320, 320, 1))
 # Encoder
 x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
 x = BatchNormalization()(x)
-x = Conv2D(64, (7, 7), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
 x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(input)
-x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
 x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
 x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
@@ -60,33 +54,32 @@ x = BatchNormalization()(x)
 x = MaxPooling2D(pool_size=(2, 2))(x)
 
 x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
+x = Flatten()(x)
+# units = x.shape[1]
 
+# bottleneck
 
+x = Dense(4800)(x)
+x = LeakyReLU(alpha=0.2)(x)
 
+# Decoder
 
+x = Reshape((40, 40, 3))(x)
 
-# decoder
 x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = UpSampling2D((2, 2))(x)
 
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
+x = UpSampling2D((2, 2))(x)
 x = BatchNormalization()(x)
 x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = UpSampling2D((2, 2))(x)
 
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
+x = UpSampling2D((2, 2))(x)
 x = BatchNormalization()(x)
 x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = UpSampling2D((2, 2))(x)
 
-x = Conv2D(64, (7, 7), activation='relu', padding='same')(x)
+x = UpSampling2D((2, 2))(x)
 x = BatchNormalization()(x)
-decoded = Conv2D(1, (5, 5), activation='sigmoid', padding='same')(x)
+decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
+
 
 # Autoencoder
 autoencoder = Model(input, decoded)
@@ -101,6 +94,7 @@ autoencoder.fit(
     batch_size=32,
     validation_data=(x_test, x_test),
 )
+
 
 test_abnormal_l = []
 test_normal_l = []
@@ -120,7 +114,7 @@ for i, _slice in enumerate(test_abnormal_l):
 for i, _slice in enumerate(test_normal_l):
     test_normal[i][:][:] = _slice.normalized_pixel_array()
 
-# plotting the MSE distrubution of normal slices
+# Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
 loss_normal = losses.mae(decoded_normal.reshape(
     len(test_normal), 320 * 320), test_normal.reshape(len(test_normal), 320*320))
@@ -129,14 +123,13 @@ decoded_abnormal = autoencoder.predict(test_abnormal)
 loss_abnormal = losses.mae(decoded_abnormal.reshape(
     len(test_abnormal), 320 * 320), test_abnormal.reshape(len(test_abnormal), 320*320))
 
-print(loss_abnormal)
-
 plt.hist([loss_normal[:], loss_abnormal[:]], bins=15)
 plt.xlabel("Train loss")
 plt.ylabel("No. of images normal")
 plt.savefig("figure_abnormal.png")
 
 
+# Plotting input and reconstructed images
 decoded_images = autoencoder.predict(x_test)
 
 n = 10
