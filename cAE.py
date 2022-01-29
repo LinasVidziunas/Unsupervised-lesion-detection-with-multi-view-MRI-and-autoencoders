@@ -59,12 +59,12 @@ x = Flatten()(x)
 
 # bottleneck
 
-x = Dense(4800)(x)
+x = Dense(1600)(x)
 x = LeakyReLU(alpha=0.2)(x)
 
 # Decoder
 
-x = Reshape((40, 40, 3))(x)
+x = Reshape((40, 40, 1))(x)
 
 x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 
