@@ -22,6 +22,7 @@ def histogram_mae_loss(losses_normal, losses_abnormal, bins=15,
     plt.hist([losses_normal[:], losses_abnormal[:]], bins=bins)
     plt.xlabel("MAE loss")
     plt.ylabel("No. of images")
+    plt.legend(['Normal', 'Abnormal'], loc='upper left')
     plt.savefig(save_as)
 
 
@@ -68,3 +69,37 @@ def plot_input_vs_reconstructed_images(
         ax.get_yaxis().set_visible(False)
 
         plt.savefig(save_as)
+
+
+def plot_mae_train_vs_val(
+        history,
+        save_as=f"fig_mae_train_vs_val-{timestamp_string()}.png"):
+
+    plt.plot(history.history['mae'])
+    plt.plot(history.history['val_mae'])
+    plt.title('Model MAE')
+    plt.ylabel('MAE')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.savefig(save_as)
+
+
+def plot_loss_train_vs_val(
+        history,
+        save_as=f"fig_loss_train_vs_val-{timestamp_string()}.png"):
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.savefig(save_as)
+
+
+def save_summary(
+        summary,
+        save_as=f"model_summary-{timestamp_string()}.png"):
+
+    with open(save_as, 'w') as file:
+        file.write(summary)
