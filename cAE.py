@@ -1,10 +1,10 @@
 from Datapreprocessing.slice import Slice
+from plotting import ModelPlotting
 
 from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 
-from matplotlib import pyplot as plt
 import numpy as np
 from os import listdir, path
 
@@ -83,11 +83,12 @@ decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
 
 # Autoencoder
 autoencoder = Model(input, decoded)
-autoencoder.compile(
-    optimizer="adam", loss="binary_crossentropy", metrics=["mae"])
+autoencoder.compile(optimizer="adam",
+                    loss="binary_crossentropy",
+                    metrics=["mae"])
 autoencoder.summary()
 
-autoencoder.fit(
+history = autoencoder.fit(
     x_train,
     x_train,
     epochs=1000,
@@ -116,37 +117,25 @@ for i, _slice in enumerate(test_normal_l):
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mae(decoded_normal.reshape(
-    len(test_normal), 320 * 320), test_normal.reshape(len(test_normal), 320*320))
+loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 320 * 320),
+                         test_normal.reshape(len(test_normal), 320 * 320))
 
 decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(decoded_abnormal.reshape(
-    len(test_abnormal), 320 * 320), test_abnormal.reshape(len(test_abnormal), 320*320))
+loss_abnormal = losses.mae(
+    decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
+    test_abnormal.reshape(len(test_abnormal), 320 * 320))
 
-plt.hist([loss_normal[:], loss_abnormal[:]], bins=15)
-plt.xlabel("Train loss")
-plt.ylabel("No. of images normal")
-plt.savefig("figure_abnormal.png")
+plot = ModelPlotting(history, save_in_dir="sets")
 
+plot.plot_mae_train_vs_val()
+plot.plot_loss_train_vs_val()
 
-# Plotting input and reconstructed images
-decoded_images = autoencoder.predict(x_test)
+plot.histogram_mae_loss(loss_normal, loss_abnormal)
+plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
 
-n = 10
-plt.figure(figsize=(20, 4))
-for i in range(1, n + 1):
-    # Display original
-    ax = plt.subplot(2, n, i)
-    plt.imshow(x_test[i].reshape(320, 320))
-    plt.gray()
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
+reconstructed_images = autoencoder.predict(x_test)
 
-    # Display reconstruction
-    ax = plt.subplot(2, n, i + n)
-    plt.imshow(decoded_images[i].reshape(320, 320))
-    plt.gray()
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-
-plt.savefig("figure_bigsave.png")
+plot.input_vs_reconstructed_images(
+    [el.reshape(320, 320) for el in x_test],
+    [el.reshape(320, 320) for el in reconstructed_images]
+)
