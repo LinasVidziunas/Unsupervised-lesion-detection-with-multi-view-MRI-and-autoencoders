@@ -1,105 +1,120 @@
 import matplotlib.pyplot as plt
-# import numpy as np
 from datetime import datetime
 
-# # Create a random number generator with a fixed seed for reproducibility
-# rng = np.random.default_rng(19680801)
 
-# N_points = 1000
+class ModelPlotting:
+    def __init__(
+            self,
+            history,
+            save_in_dir: str = "",
+            timestamp: bool = True):
+        """
+        Easier plotting without having to worry about naming, timestamping,
+        and so on.
 
-# # Generate two normal distributions
-# dist1 = rng.standard_normal(N_points)
-# dist2 = 0.4 * rng.standard_normal(N_points) + 5
+        :param history: The history that Model.fit returns
+        :param save_in_dir: Directory where to save figures (Default: "")
+        :param timestamp: Boolean value whether to timestamp figure names
+        :type timestamp: bool
+        :return: Instance of ModelPlotting,
+        from where you can call plotting functions.
+        """
+
+        self.history = history
+        self.save_in_dir = save_in_dir
+        self.timestamp = timestamp
+
+    def __timestamp_string(self):
+        today = datetime.today()
+        return f"{today.day}-{today.month}-{today.hour}-{today.minute}"
+
+    def __naming(self, plotname: str):
+        name = f"{self.save_in_dir}/fig_{plotname}"
+        if self.timestamp:
+            name += f"-{self.__timestamp_string()}"
+        name += ".png"
+        return name
+
+    def plot_mae_train_vs_val(self):
+        """Plot MAE loss for train and validation in the same graph"""
+
+        plt.plot(self.history.history['mae'])
+        plt.plot(self.history.history['val_mae'])
+        plt.title('Model MAE loss')
+        plt.ylabel('MAE loss')
+        plt.xlabel('Epoch')
+        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.savefig(self.__naming("MAE_train_vs_val"))
+        plt.clf()
+
+    def plot_loss_train_vs_val(self):
+        """Plot loss for train and validation in the same graph"""
+
+        plt.plot(self.history.history['loss'])
+        plt.plot(self.history.history['val_loss'])
+        plt.title('Model loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.savefig(self.__naming("loss_train_vs_val"))
+        plt.clf()
+
+    def histogram_mae_loss(self, losses_normal,
+                           losses_abnormal, n_bins: int = 15):
+        """Plot MAE loss for normal and abnormal in the same histogram"""
+
+        plt.hist([losses_normal[:], losses_abnormal[:]], bins=n_bins)
+        plt.xlabel("MAE loss")
+        plt.ylabel("No. of slices")
+        plt.legend(['Normal', 'Abnormal'], loc='upper left')
+        plt.savefig(self.__naming("MAE_loss_hist"))
+        plt.clf()
+
+    def histogram_mae_loss_seperate(self, losses_normal,
+                                    losses_abnormal, n_bins: int = 7):
+        """Plot MAE loss for normal and abnormal in seperate histograms"""
+
+        fig, axs = plt.subplots(1, 2, tight_layout=True)
+
+        axs[0].hist([losses_normal[:]], bins=n_bins)
+        axs[0].set_title("Normal")
+        axs[0].set_xlabel("MAE loss")
+        axs[0].set_ylabel("No. of slices")
+        axs[1].hist([losses_abnormal[:]], bins=n_bins)
+        axs[1].set_title("Abnormal")
+        axs[1].set_xlabel("MAE loss")
+        axs[1].set_ylabel("No. of slices")
+        plt.savefig(self.__naming("MAE_loss_hist_seperate"))
+        plt.clf()
+
+    def input_vs_reconstructed_images(self, input_images,
+                                      reconstructed_images, n: int = 10):
+
+        plt.figure(figsize=(20, 4))
+
+        for i in range(1, n + 1):
+            # Display original
+            ax = plt.subplot(2, n, i)
+            plt.imshow(input_images[i])
+            plt.gray()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+            # Display reconstructed
+            ax = plt.subplot(2, n, i + n)
+            plt.imshow(reconstructed_images[i])
+            plt.gray()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+
+        plt.savefig(self.__naming("input_and_reconstructed_images"))
+        plt.clf()
 
 
-def timestamp_string():
-    today = datetime.today()
-    return f"{today.day}-{today.month}-{today.hour}-{today.minute}"
+# Not how one does it, but keeping the code to remind myself to do this
+# def save_summary(
+#         summary,
+#         save_as=f"model_summary-{timestamp_string()}.png"):
 
-
-def histogram_mae_loss(losses_normal, losses_abnormal, bins=15,
-                       save_as=f"fig_loss_histogram-{timestamp_string()}.png"):
-    plt.hist([losses_normal[:], losses_abnormal[:]], bins=bins)
-    plt.xlabel("MAE loss")
-    plt.ylabel("No. of images")
-    plt.legend(['Normal', 'Abnormal'], loc='upper left')
-    plt.savefig(save_as)
-
-
-def histogram_mae_loss_seperate(
-        losses_normal, losses_abnormal, bins=15,
-        save_as=f"fig_loss_histogram_seperate-{timestamp_string()}.png"):
-
-    fig, axs = plt.subplots(1, 2, sharey=True, tight_layout=True)
-    axs[0].hist(losses_normal, bins=bins)
-    axs[0].set_title("Normal")
-    axs[1].hist(losses_abnormal, bins=bins)
-    axs[1].set_title("Abnormal")
-    axs[0].set_xlabel("MAE loss")
-    axs[0].set_ylabel("No. of images")
-    axs[1].set_ylabel("No. of images")
-    plt.savefig(save_as)
-
-
-# histogram_mae_loss(dist1, dist2)
-# histogram_mae_loss_seperate(dist1, dist2)
-
-
-def plot_input_vs_reconstructed_images(
-    input_images,
-        reconstructed_images,
-        n: int = 10,
-        save_as=f"fig_input_and_reconstructed-{timestamp_string()}.png"):
-
-    plt.figure(figsize=(20, 4))
-
-    for i in range(n):
-        # Display original
-        ax = plt.subplot(2, n, i)
-        plt.imshow(input_images)
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-        # Display reconstruction
-        ax = plt.subplot(2, n, i + n)
-        plt.imshow(reconstructed_images)
-        plt.gray()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-        plt.savefig(save_as)
-
-
-def plot_mae_train_vs_val(
-        history,
-        save_as=f"fig_mae_train_vs_val-{timestamp_string()}.png"):
-
-    plt.plot(history.history['mae'])
-    plt.plot(history.history['val_mae'])
-    plt.title('Model MAE')
-    plt.ylabel('MAE')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.savefig(save_as)
-
-
-def plot_loss_train_vs_val(
-        history,
-        save_as=f"fig_loss_train_vs_val-{timestamp_string()}.png"):
-
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test'], loc='upper left')
-    plt.savefig(save_as)
-
-
-def save_summary(
-        summary,
-        save_as=f"model_summary-{timestamp_string()}.png"):
-
-    with open(save_as, 'w') as file:
-        file.write(summary)
+#     with open(save_as, 'w') as file:
+#         file.write(summary)

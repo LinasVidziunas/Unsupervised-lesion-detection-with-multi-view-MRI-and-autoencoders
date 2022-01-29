@@ -1,10 +1,9 @@
 from Datapreprocessing.slice import Slice
-from plotting import histogram_mae_loss_seperate, histogram_mae_loss
-from plotting import plot_input_vs_reconstructed_images
+from plotting import ModelPlotting
 
 from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
-from keras.layers import MaxPooling2D, UpSampling2D
+from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 
 import numpy as np
 from os import listdir, path
@@ -89,7 +88,7 @@ autoencoder.compile(optimizer="adam",
                     metrics=["mae"])
 autoencoder.summary()
 
-autoencoder.fit(
+history = autoencoder.fit(
     x_train,
     x_train,
     epochs=1000,
@@ -126,10 +125,18 @@ loss_abnormal = losses.mae(
     decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
     test_abnormal.reshape(len(test_abnormal), 320 * 320))
 
-histogram_mae_loss(loss_normal, loss_abnormal)
-histogram_mae_loss_seperate(loss_normal, loss_abnormal)
+
+plot = ModelPlotting(history, save_in_dir="sets")
+
+plot.plot_mae_train_vs_val()
+plot.plot_loss_train_vs_val()
+
+plot.histogram_mae_loss(loss_normal, loss_abnormal)
+plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
 
 reconstructed_images = autoencoder.predict(x_test)
 
-plot_input_vs_reconstructed_images(x_test[:].reshape(320, 320),
-                                   reconstructed_images.reshape(320, 320))
+plot.input_vs_reconstructed_images(
+    [el.reshape(320, 320) for el in x_test],
+    [el.reshape(320, 320) for el in reconstructed_images]
+)
