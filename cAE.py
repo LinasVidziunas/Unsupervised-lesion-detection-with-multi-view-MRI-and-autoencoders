@@ -125,7 +125,6 @@ loss_abnormal = losses.mae(
     decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
     test_abnormal.reshape(len(test_abnormal), 320 * 320))
 
-
 plot = ModelPlotting(history, save_in_dir="sets")
 
 plot.plot_mae_train_vs_val()
