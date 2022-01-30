@@ -122,17 +122,16 @@ BATCH_SIZE = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
 train_dataset, test_dataset, x_train, x_test, test_slices = get_data(
     BATCH_SIZE)
 
-train_dataset = strategy.experimental_distribute_dataset(train_dataset)
-test_dataset = strategy.experimental_distribute_dataset(test_dataset)
-
 with strategy.scope():
-    autoencoder = get_compiled_model()
+    train_dataset = strategy.experimental_distribute_dataset(train_dataset)
+    test_dataset = strategy.experimental_distribute_dataset(test_dataset)
 
-history = autoencoder.fit(
-    train_dataset,
-    epochs=1,
-    validation_data=test_dataset,
-)
+    autoencoder = get_compiled_model()
+    history = autoencoder.fit(
+        train_dataset,
+        epochs=1,
+        validation_data=test_dataset,
+    )
 
 test_abnormal_l = []
 test_normal_l = []
