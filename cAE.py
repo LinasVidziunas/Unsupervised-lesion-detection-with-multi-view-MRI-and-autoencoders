@@ -1,6 +1,7 @@
 from Datapreprocessing.slice import Slice
 from plotting import ModelPlotting
 
+import tensorflow as tf
 from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
@@ -8,92 +9,114 @@ from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 import numpy as np
 from os import listdir, path
 
-train_files = listdir("sets/x_train")
-test_files = listdir("sets/x_test")
 
-x_train = np.zeros((len(train_files), 320, 320))
-x_test = np.zeros((len(test_files), 320, 320))
+def get_data(batch_size: int = 32):
+    train_files = listdir("sets/x_train")
+    test_files = listdir("sets/x_test")
 
-train_slices = []
-test_slices = []
+    x_train = np.zeros((len(train_files), 320, 320))
+    x_test = np.zeros((len(test_files), 320, 320))
 
-# ValueError thrown when slice does not match the default resolution
-for i, slice_file in enumerate(train_files):
-    try:
-        _slice = Slice(path.join("sets/x_train", slice_file))
-        x_train[i][:][:] = _slice.normalized_pixel_array()
-        train_slices.append(_slice)
-    except ValueError:
-        x_train[i][:][:] = x_train[i - 1][:][:]
+    train_slices = []
+    test_slices = []
 
-for i, slice_file in enumerate(test_files):
-    try:
-        _slice = Slice(path.join("sets/x_test", slice_file))
-        x_test[i][:][:] = _slice.normalized_pixel_array()
-        test_slices.append(_slice)
-    except ValueError:
-        x_test[i][:][:] = x_test[i - 1][:][:]
+    # ValueError thrown when slice does not match the default resolution
+    for i, slice_file in enumerate(train_files):
+        try:
+            _slice = Slice(path.join("sets/x_train", slice_file))
+            x_train[i][:][:] = _slice.normalized_pixel_array()
+            train_slices.append(_slice)
+        except ValueError:
+            x_train[i][:][:] = x_train[i - 1][:][:]
 
-input = layers.Input(shape=(320, 320, 1))
+    for i, slice_file in enumerate(test_files):
+        try:
+            _slice = Slice(path.join("sets/x_test", slice_file))
+            x_test[i][:][:] = _slice.normalized_pixel_array()
+            test_slices.append(_slice)
+        except ValueError:
+            x_test[i][:][:] = x_test[i - 1][:][:]
 
-# Encoder
-x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
-x = Flatten()(x)
-# units = x.shape[1]
-
-# bottleneck
-
-x = Dense(1600)(x)
-x = LeakyReLU(alpha=0.2)(x)
-
-# Decoder
-
-x = Reshape((40, 40, 1))(x)
-
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
+    # x_train and x_test and test_slices are temporarily
+    # there for the plotting functions to work
+    return (
+        tf.data.Dataset.from_tensor_slices(
+            (x_train, x_train)).batch(batch_size),
+        tf.data.Dataset.from_tensor_slices((x_test, x_test)).batch(batch_size),
+        x_train, x_test, test_slices)
 
 
-# Autoencoder
-autoencoder = Model(input, decoded)
-autoencoder.compile(optimizer="adam",
-                    loss="binary_crossentropy",
-                    metrics=["mae"])
-autoencoder.summary()
+def get_compiled_model():
+    input = layers.Input(shape=(320, 320, 1))
+
+    # Encoder
+    x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
+    x = Flatten()(x)
+    # units = x.shape[1]
+
+    # bottleneck
+
+    x = Dense(1600)(x)
+    x = LeakyReLU(alpha=0.2)(x)
+
+    # Decoder
+
+    x = Reshape((40, 40, 1))(x)
+
+    x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
+
+    x = UpSampling2D((2, 2))(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
+
+    x = UpSampling2D((2, 2))(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
+
+    x = UpSampling2D((2, 2))(x)
+    x = BatchNormalization()(x)
+    decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
+
+    # Autoencoder
+    autoencoder = Model(input, decoded)
+    autoencoder.compile(optimizer="adam",
+                        loss="binary_crossentropy",
+                        metrics=["mae"])
+    # autoencoder.summary()
+    return autoencoder
+
+
+strategy = tf.distribute.MirroredStrategy()
+print("Number of devices: {}".format(strategy.num_replicas_in_sync()))
+
+with strategy.scope():
+    autoencoder = get_compiled_model()
+
+BATCH_SIZE_PER_REPLICA = 32
+BATCH_SIZE = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
+
+train_dataset, test_dataset, x_train, x_test, test_slices = get_data(BATCH_SIZE)
 
 history = autoencoder.fit(
-    x_train,
-    x_train,
-    epochs=1000,
-    batch_size=32,
-    validation_data=(x_test, x_test),
+    train_dataset,
+    epochs=1,
+    validation_data=test_dataset,
 )
 
 
