@@ -12,13 +12,13 @@ from os import listdir, path
 
 def get_data(batch_size: int = 32):
     train_files = listdir("sets/x_train")
-    test_files = listdir("sets/x_test")
+    val_files = listdir("sets/x_test")
 
     x_train = np.zeros((len(train_files), 320, 320))
-    x_test = np.zeros((len(test_files), 320, 320))
+    x_val = np.zeros((len(val_files), 320, 320))
 
     train_slices = []
-    test_slices = []
+    val_slices = []
 
     # ValueError thrown when slice does not match the default resolution
     for i, slice_file in enumerate(train_files):
@@ -29,21 +29,32 @@ def get_data(batch_size: int = 32):
         except ValueError:
             x_train[i][:][:] = x_train[i - 1][:][:]
 
-    for i, slice_file in enumerate(test_files):
+    for i, slice_file in enumerate(val_files):
         try:
             _slice = Slice(path.join("sets/x_test", slice_file))
-            x_test[i][:][:] = _slice.normalized_pixel_array()
-            test_slices.append(_slice)
+            x_val[i][:][:] = _slice.normalized_pixel_array()
+            val_slices.append(_slice)
         except ValueError:
-            x_test[i][:][:] = x_test[i - 1][:][:]
+            x_val[i][:][:] = x_val[i - 1][:][:]
 
-    # x_train and x_test and test_slices are temporarily
+    # https://stackoverflow.com/questions/65322700/tensorflow-keras-consider-either-turning-off-auto-sharding-or-switching-the-a
+    # Wrap data in Dataset objects.
+    train_data = tf.data.Dataset.from_tensor_slices((x_train, x_train))
+    val_data = tf.data.Dataset.from_tensor_slices((x_val, x_val))
+
+    # The batch size must now be set on the Dataset objects.
+    train_data = train_data.batch(batch_size)
+    val_data = val_data.batch(batch_size)
+
+    # Disable AutoShard.
+    options = tf.data.Options()
+    options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
+    train_data = train_data.with_options(options)
+    val_data = val_data.with_options(options)
+
+    # x_train and x_val and test_slices are temporarily
     # there for the plotting functions to work
-    return (
-        tf.data.Dataset.from_tensor_slices(
-            (x_train, x_train)).batch(batch_size),
-        tf.data.Dataset.from_tensor_slices((x_test, x_test)).batch(batch_size),
-        x_train, x_test, test_slices)
+    return (train_data, val_data, x_train, x_val, val_slices)
 
 
 def get_compiled_model():
@@ -103,7 +114,7 @@ def get_compiled_model():
 
 
 strategy = tf.distribute.MirroredStrategy()
-print("Number of devices: {}".format(strategy.num_replicas_in_sync()))
+print("Number of devices: {}".format(strategy.num_replicas_in_sync))
 
 with strategy.scope():
     autoencoder = get_compiled_model()
@@ -111,14 +122,14 @@ with strategy.scope():
 BATCH_SIZE_PER_REPLICA = 32
 BATCH_SIZE = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
 
-train_dataset, test_dataset, x_train, x_test, test_slices = get_data(BATCH_SIZE)
+train_dataset, test_dataset, x_train, x_test, test_slices = get_data(
+    BATCH_SIZE)
 
 history = autoencoder.fit(
     train_dataset,
     epochs=1,
     validation_data=test_dataset,
 )
-
 
 test_abnormal_l = []
 test_normal_l = []
@@ -160,5 +171,4 @@ reconstructed_images = autoencoder.predict(x_test)
 
 plot.input_vs_reconstructed_images(
     [el.reshape(320, 320) for el in x_test],
-    [el.reshape(320, 320) for el in reconstructed_images]
-)
+    [el.reshape(320, 320) for el in reconstructed_images])
