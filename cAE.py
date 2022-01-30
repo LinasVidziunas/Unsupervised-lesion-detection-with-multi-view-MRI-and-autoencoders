@@ -116,14 +116,17 @@ def get_compiled_model():
 strategy = tf.distribute.MirroredStrategy()
 print("Number of devices: {}".format(strategy.num_replicas_in_sync))
 
-with strategy.scope():
-    autoencoder = get_compiled_model()
-
 BATCH_SIZE_PER_REPLICA = 32
 BATCH_SIZE = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
 
 train_dataset, test_dataset, x_train, x_test, test_slices = get_data(
     BATCH_SIZE)
+
+train_dataset = strategy.experimental_distribute_dataset(train_dataset)
+test_dataset = strategy.experimental_distribute_dataset(test_dataset)
+
+with strategy.scope():
+    autoencoder = get_compiled_model()
 
 history = autoencoder.fit(
     train_dataset,
