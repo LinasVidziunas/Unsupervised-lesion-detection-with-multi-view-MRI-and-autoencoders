@@ -39,7 +39,7 @@ def get_data(batch_size: int = 32):
 
     # https://stackoverflow.com/questions/65322700/tensorflow-keras-consider-either-turning-off-auto-sharding-or-switching-the-a
     # Wrap data in Dataset objects.
-    train_data = tf.data.Dataset.from_tensor_slices((x_train, x_train))
+    train_data = tf.data.Dataset.from_tensor_slices((x_train, x_train)).cache()
     val_data = tf.data.Dataset.from_tensor_slices((x_val, x_val))
 
     # The batch size must now be set on the Dataset objects.
@@ -49,12 +49,13 @@ def get_data(batch_size: int = 32):
     # Disable AutoShard.
     options = tf.data.Options()
     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
-    train_data = train_data.with_options(options)
-    val_data = val_data.with_options(options)
+    train_data_without_shard = train_data.with_options(options)
+    val_data_without_shard = val_data.with_options(options)
 
     # x_train and x_val and test_slices are temporarily
     # there for the plotting functions to work
-    return (train_data, val_data, x_train, x_val, val_slices)
+    return (train_data_without_shard, val_data_without_shard,
+            x_train, x_val, val_slices)
 
 
 def get_compiled_model():
@@ -123,54 +124,52 @@ train_dataset, test_dataset, x_train, x_test, test_slices = get_data(
     BATCH_SIZE)
 
 with strategy.scope():
-    train_dataset = strategy.experimental_distribute_dataset(train_dataset)
-    test_dataset = strategy.experimental_distribute_dataset(test_dataset)
-
     autoencoder = get_compiled_model()
-    history = autoencoder.fit(
-        train_dataset,
-        epochs=1,
-        validation_data=test_dataset,
-    )
 
-test_abnormal_l = []
-test_normal_l = []
+history = autoencoder.fit(
+    train_dataset,
+    epochs=1,
+    validation_data=test_dataset,
+)
 
-for _slice in test_slices:
-    if _slice.get_abnormality() == 1:
-        test_abnormal_l.append(_slice)
-    elif _slice.get_abnormality() == 0:
-        test_normal_l.append(_slice)
+# test_abnormal_l = []
+# test_normal_l = []
 
-test_abnormal = np.zeros((len(test_abnormal_l), 320, 320))
-test_normal = np.zeros((len(test_normal_l), 320, 320))
+# for _slice in test_slices:
+#     if _slice.get_abnormality() == 1:
+#         test_abnormal_l.append(_slice)
+#     elif _slice.get_abnormality() == 0:
+#         test_normal_l.append(_slice)
 
-for i, _slice in enumerate(test_abnormal_l):
-    test_abnormal[i][:][:] = _slice.normalized_pixel_array()
+# test_abnormal = np.zeros((len(test_abnormal_l), 320, 320))
+# test_normal = np.zeros((len(test_normal_l), 320, 320))
 
-for i, _slice in enumerate(test_normal_l):
-    test_normal[i][:][:] = _slice.normalized_pixel_array()
+# for i, _slice in enumerate(test_abnormal_l):
+#     test_abnormal[i][:][:] = _slice.normalized_pixel_array()
 
-# Plotting the MSE distrubution of normal slices
-decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 320 * 320),
-                         test_normal.reshape(len(test_normal), 320 * 320))
+# for i, _slice in enumerate(test_normal_l):
+#     test_normal[i][:][:] = _slice.normalized_pixel_array()
 
-decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(
-    decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
-    test_abnormal.reshape(len(test_abnormal), 320 * 320))
+# # Plotting the MSE distrubution of normal slices
+# decoded_normal = autoencoder.predict(test_normal)
+# loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 320 * 320),
+#                          test_normal.reshape(len(test_normal), 320 * 320))
 
-plot = ModelPlotting(history, save_in_dir="sets")
+# decoded_abnormal = autoencoder.predict(test_abnormal)
+# loss_abnormal = losses.mae(
+#     decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
+#     test_abnormal.reshape(len(test_abnormal), 320 * 320))
 
-plot.plot_mae_train_vs_val()
-plot.plot_loss_train_vs_val()
+# plot = ModelPlotting(history, save_in_dir="sets")
 
-plot.histogram_mae_loss(loss_normal, loss_abnormal)
-plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
+# plot.plot_mae_train_vs_val()
+# plot.plot_loss_train_vs_val()
 
-reconstructed_images = autoencoder.predict(x_test)
+# plot.histogram_mae_loss(loss_normal, loss_abnormal)
+# plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
 
-plot.input_vs_reconstructed_images(
-    [el.reshape(320, 320) for el in x_test],
-    [el.reshape(320, 320) for el in reconstructed_images])
+# reconstructed_images = autoencoder.predict(x_test)
+
+# plot.input_vs_reconstructed_images(
+#     [el.reshape(320, 320) for el in x_test],
+#     [el.reshape(320, 320) for el in reconstructed_images])
