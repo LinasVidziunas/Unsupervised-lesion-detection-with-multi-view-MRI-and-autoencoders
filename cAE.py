@@ -39,7 +39,7 @@ def get_data(batch_size: int = 32):
 
     # https://stackoverflow.com/questions/65322700/tensorflow-keras-consider-either-turning-off-auto-sharding-or-switching-the-a
     # Wrap data in Dataset objects.
-    train_data = tf.data.Dataset.from_tensor_slices((x_train, x_train)).cache()
+    train_data = tf.data.Dataset.from_tensor_slices((x_train, x_train))
     val_data = tf.data.Dataset.from_tensor_slices((x_val, x_val))
 
     # The batch size must now be set on the Dataset objects.
@@ -132,44 +132,44 @@ history = autoencoder.fit(
     validation_data=test_dataset,
 )
 
-# test_abnormal_l = []
-# test_normal_l = []
+test_abnormal_l = []
+test_normal_l = []
 
-# for _slice in test_slices:
-#     if _slice.get_abnormality() == 1:
-#         test_abnormal_l.append(_slice)
-#     elif _slice.get_abnormality() == 0:
-#         test_normal_l.append(_slice)
+for _slice in test_slices:
+    if _slice.get_abnormality() == 1:
+        test_abnormal_l.append(_slice)
+    elif _slice.get_abnormality() == 0:
+        test_normal_l.append(_slice)
 
-# test_abnormal = np.zeros((len(test_abnormal_l), 320, 320))
-# test_normal = np.zeros((len(test_normal_l), 320, 320))
+test_abnormal = np.zeros((len(test_abnormal_l), 320, 320))
+test_normal = np.zeros((len(test_normal_l), 320, 320))
 
-# for i, _slice in enumerate(test_abnormal_l):
-#     test_abnormal[i][:][:] = _slice.normalized_pixel_array()
+for i, _slice in enumerate(test_abnormal_l):
+    test_abnormal[i][:][:] = _slice.normalized_pixel_array()
 
-# for i, _slice in enumerate(test_normal_l):
-#     test_normal[i][:][:] = _slice.normalized_pixel_array()
+for i, _slice in enumerate(test_normal_l):
+    test_normal[i][:][:] = _slice.normalized_pixel_array()
 
-# # Plotting the MSE distrubution of normal slices
-# decoded_normal = autoencoder.predict(test_normal)
-# loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 320 * 320),
-#                          test_normal.reshape(len(test_normal), 320 * 320))
+# Plotting the MSE distrubution of normal slices
+decoded_normal = autoencoder.predict(test_normal, verbose=0)
+loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 320 * 320),
+                         test_normal.reshape(len(test_normal), 320 * 320))
 
-# decoded_abnormal = autoencoder.predict(test_abnormal)
-# loss_abnormal = losses.mae(
-#     decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
-#     test_abnormal.reshape(len(test_abnormal), 320 * 320))
+decoded_abnormal = autoencoder.predict(test_abnormal, verbose=0)
+loss_abnormal = losses.mae(
+    decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
+    test_abnormal.reshape(len(test_abnormal), 320 * 320))
 
-# plot = ModelPlotting(history, save_in_dir="sets")
+plot = ModelPlotting(history, save_in_dir="sets")
 
-# plot.plot_mae_train_vs_val()
-# plot.plot_loss_train_vs_val()
+plot.plot_mae_train_vs_val()
+plot.plot_loss_train_vs_val()
 
-# plot.histogram_mae_loss(loss_normal, loss_abnormal)
-# plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
+plot.histogram_mae_loss(loss_normal, loss_abnormal)
+plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
 
-# reconstructed_images = autoencoder.predict(x_test)
+reconstructed_images = autoencoder.predict(x_test, verbose=0)
 
-# plot.input_vs_reconstructed_images(
-#     [el.reshape(320, 320) for el in x_test],
-#     [el.reshape(320, 320) for el in reconstructed_images])
+plot.input_vs_reconstructed_images(
+    [el.reshape(320, 320) for el in x_test],
+    [el.reshape(320, 320) for el in reconstructed_images])
