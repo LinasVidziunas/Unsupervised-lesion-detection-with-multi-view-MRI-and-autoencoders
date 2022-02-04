@@ -35,16 +35,16 @@ class ModelPlotting:
         name += ".png"
         return name
 
-    def plot_mae_train_vs_val(self):
-        """Plot MAE loss for train and validation in the same graph"""
+    def plot_mse_train_vs_val(self):
+        """Plot MSE loss for train and validation in the same graph"""
 
-        plt.plot(self.history.history['mae'])
-        plt.plot(self.history.history['val_mae'])
-        plt.title('Model MAE loss')
-        plt.ylabel('MAE loss')
+        plt.plot(self.history.history['mean_squared_error'])
+        plt.plot(self.history.history['val_mean_squared_error'])
+        plt.title('Model MSE loss')
+        plt.ylabel('MSE loss')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig(self.__naming("MAE_train_vs_val"))
+        plt.savefig(self.__naming("MSE_train_vs_val"))
         plt.clf()
 
     def plot_loss_train_vs_val(self):
@@ -59,32 +59,32 @@ class ModelPlotting:
         plt.savefig(self.__naming("loss_train_vs_val"))
         plt.clf()
 
-    def histogram_mae_loss(self, losses_normal,
+    def histogram_mse_loss(self, losses_normal,
                            losses_abnormal, n_bins: int = 15):
-        """Plot MAE loss for normal and abnormal in the same histogram"""
+        """Plot MSE loss for normal and abnormal in the same histogram"""
 
         plt.hist([losses_normal[:], losses_abnormal[:]], bins=n_bins)
-        plt.xlabel("MAE loss")
+        plt.xlabel("MSE loss")
         plt.ylabel("No. of slices")
         plt.legend(['Normal', 'Abnormal'], loc='upper left')
-        plt.savefig(self.__naming("MAE_loss_hist"))
+        plt.savefig(self.__naming("MSE_loss_hist"))
         plt.clf()
 
-    def histogram_mae_loss_seperate(self, losses_normal,
+    def histogram_mse_loss_seperate(self, losses_normal,
                                     losses_abnormal, n_bins: int = 7):
-        """Plot MAE loss for normal and abnormal in seperate histograms"""
+        """Plot MSE loss for normal and abnormal in seperate histograms"""
 
         fig, axs = plt.subplots(1, 2, tight_layout=True)
 
         axs[0].hist([losses_normal[:]], bins=n_bins)
         axs[0].set_title("Normal")
-        axs[0].set_xlabel("MAE loss")
+        axs[0].set_xlabel("MSE loss")
         axs[0].set_ylabel("No. of slices")
         axs[1].hist([losses_abnormal[:]], bins=n_bins)
         axs[1].set_title("Abnormal")
-        axs[1].set_xlabel("MAE loss")
+        axs[1].set_xlabel("MSE loss")
         axs[1].set_ylabel("No. of slices")
-        plt.savefig(self.__naming("MAE_loss_hist_seperate"))
+        plt.savefig(self.__naming("MSE_loss_hist_seperate"))
         plt.clf()
 
     def input_vs_reconstructed_images(self, input_images,

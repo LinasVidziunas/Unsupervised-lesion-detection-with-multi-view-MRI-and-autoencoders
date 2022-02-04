@@ -4,6 +4,7 @@ from plotting import ModelPlotting
 from keras import layers, Model, losses
 from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
+from keras.metrics import MeanSquaredError
 
 import numpy as np
 from os import listdir, path
@@ -85,7 +86,7 @@ decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
 autoencoder = Model(input, decoded)
 autoencoder.compile(optimizer="adam",
                     loss="binary_crossentropy",
-                    metrics=["mae"])
+                    metrics=[MeanSquaredError])
 autoencoder.summary()
 
 history = autoencoder.fit(
@@ -127,11 +128,11 @@ loss_abnormal = losses.mae(
 
 plot = ModelPlotting(history, save_in_dir="sets")
 
-plot.plot_mae_train_vs_val()
+plot.plot_mse_train_vs_val()
 plot.plot_loss_train_vs_val()
 
-plot.histogram_mae_loss(loss_normal, loss_abnormal)
-plot.histogram_mae_loss_seperate(loss_normal, loss_abnormal)
+plot.histogram_mse_loss(loss_normal, loss_abnormal)
+plot.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
 
 reconstructed_images = autoencoder.predict(x_test)
 
