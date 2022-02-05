@@ -1,10 +1,8 @@
+from Models.our import ourBestModel
 from Datapreprocessing.slice import Slice
 from plotting import ModelPlotting
 
-from keras import layers, Model, losses
-from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
-from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
-from keras.metrics import MeanSquaredError
+from keras import losses
 
 import numpy as np
 from os import listdir, path
@@ -35,55 +33,8 @@ for i, slice_file in enumerate(test_files):
     except ValueError:
         x_test[i][:][:] = x_test[i - 1][:][:]
 
-input = layers.Input(shape=(320, 320, 1))
+autoencoder = ourBestModel()
 
-# Encoder
-x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-x = BatchNormalization()(x)
-x = MaxPooling2D(pool_size=(2, 2))(x)
-
-x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
-x = Flatten()(x)
-# units = x.shape[1]
-
-# bottleneck
-
-x = Dense(1600)(x)
-x = LeakyReLU(alpha=0.2)(x)
-
-# Decoder
-
-x = Reshape((40, 40, 1))(x)
-
-x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-x = Conv2D(256, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-x = Conv2D(128, (5, 5), activation='relu', padding='same')(x)
-
-x = UpSampling2D((2, 2))(x)
-x = BatchNormalization()(x)
-decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
-
-
-# Autoencoder
-autoencoder = Model(input, decoded)
 autoencoder.compile(optimizer="adam",
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
