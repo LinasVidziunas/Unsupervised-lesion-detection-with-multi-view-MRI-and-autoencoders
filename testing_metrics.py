@@ -1,8 +1,33 @@
 import sklearn.metrics as metrics
 import numpy as np
 import matplotlib.pyplot as plt
+
 y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-y_pred = [0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1]
+y_pred = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+
+
+def get_iqr(reconstruction_error_normal):
+    q3, q1 = np.percentile(reconstruction_error_normal, [75, 25])
+    median = np.mean(reconstruction_error_normal)
+    iqr = q3 - q1
+    return median, iqr
+
+
+class Classifier:
+    def __init__(self, median, iqr, data):
+        self.median = median
+        self.iqr = iqr
+        self.data = data
+        self.predicted = []
+
+    def get_predicted(self):
+        for i in self.data:
+            if i > (self.median + self.iqr):
+                self.predicted.append(1)
+            else:
+                self.predicted.append(0)
+        return self.predicted
+
 
 class Metrics:
     def __init__(self, true, predict):
@@ -18,11 +43,10 @@ class Metrics:
         self.fp = self.confusionmatrix.ravel()[1]
         self.fn = self.confusionmatrix.ravel()[2]
         self.tp = self.confusionmatrix.ravel()[3]
-        self.sensitivity = self.tp/(self.tp+self.fn)
-        self.specificity = self.tn/(self.tn+self.fp)
-        self.f1 = 2*self.tp/(2*self.tp+self.fp+self.fn)
-        self.accuracy = (self.tp+self.tn)/(self.tp+self.tn+self.fp+self.fn)
-
+        self.sensitivity = self.tp / (self.tp + self.fn)
+        self.specificity = self.tn / (self.tn + self.fp)
+        self.f1 = 2 * self.tp / (2 * self.tp + self.fp + self.fn)
+        self.accuracy = (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
 
     def get_roc(self):
         return metrics.roc_curve(self.true, self.predictions)
@@ -32,7 +56,8 @@ class Metrics:
 
     def get_confusionmatrix(self):
         return metrics.confusion_matrix(self.true, self.predictions)
-    #tn, fp, fn, tp = confusion_matrix([0, 1, 0, 1], [1, 1, 1, 0]).ravel()
+
+    # tn, fp, fn, tp = confusion_matrix([0, 1, 0, 1], [1, 1, 1, 0]).ravel()
 
     def metrics_list(self):
         return [f"AUC: {self.auc}", f"TP: {self.tp}", ]
@@ -49,16 +74,16 @@ class Metrics:
         print("Accuracy", self.accuracy)
 
     def save_metrics(self):
-        line = f"AUC: {self.auc}", f""
-        with open('readme.txt', 'w') as f:
+        lines =[f"AUC: {self.auc}", f"TP: {self.tp}", f"FP: {self.fp}",
+                f"TN: {self.tn}", f"FN: {self.fn}", f"Sensitivity: {self.sensitivity}",
+                f"Specificty: {self.specificity}", f"F1: {self.f1}", f"Accuracy: {self.accuracy}"]
+        with open('metrics.txt', 'w') as f:
             for line in lines:
                 f.write(line)
-                f.write('\n'
 
-
-
-Metrics(y_true, y_pred).print_metrics()
-
+Metrics(y_true,y_pred).save_metrics()
+a = Classifier(0, 1, y_pred).get_predicted()
+print(a)
 # confusion = metrics.confusion_matrix(y_true, y_pred)
 #
 # fig, ax = plt.subplots(figsize=(7.5, 7.5))
