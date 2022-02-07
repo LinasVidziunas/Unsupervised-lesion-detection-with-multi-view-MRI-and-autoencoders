@@ -3,6 +3,7 @@ from Datapreprocessing.slice import Slice
 from plotting import ModelPlotting
 
 from keras import losses
+from keras.losses import MeanSquaredError
 
 import numpy as np
 from os import listdir, path
