@@ -1,4 +1,4 @@
-from Datapreprocessing.slice import Slice
+from processed import ProcessedData
 from plotting import ModelPlotting
 from Models.our import ourBestModel
 from Models.unet import unet, unet_dense, unet_safe
@@ -9,37 +9,16 @@ from keras import losses
 from keras.losses import MeanSquaredError
 
 import numpy as np
-from os import listdir, path
 
-train_files = listdir("../sets/train/Axial")
-test_files = listdir("../sets/test/Axial")
-
-x_train = np.zeros((len(train_files), 384, 384))
-x_test = np.zeros((len(test_files), 384, 384))
-
-train_slices = []
-test_slices = []
-
-# ValueError thrown when slice does not match the default resolution
-for i, slice_file in enumerate(train_files):
-    try:
-        _slice = Slice(path.join("../sets/train/Axial", slice_file))
-        x_train[i][:][:] = _slice.normalized_pixel_array()
-        train_slices.append(_slice)
-    except ValueError:
-        x_train[i][:][:] = x_train[i - 1][:][:]
-
-for i, slice_file in enumerate(test_files):
-    try:
-        _slice = Slice(path.join("../sets/test/Axial", slice_file))
-        x_test[i][:][:] = _slice.normalized_pixel_array()
-        test_slices.append(_slice)
-    except ValueError:
-        x_test[i][:][:] = x_test[i - 1][:][:]
+data = ProcessedData("../sets/")
+x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(shape=(384, 384))
+x_test = data.validation.axial.get_slices_as_normalized_pixel_arrays(shape=(384, 384))
+train_slices = data.train.axial.slices
+test_slices = data.validation.axial.slices
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
- autoencoder = unet_dense()
+autoencoder = unet_dense()
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))

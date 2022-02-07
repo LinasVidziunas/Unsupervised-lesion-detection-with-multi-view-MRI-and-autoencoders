@@ -1,9 +1,11 @@
 from Datapreprocessing.slice import Slice
 
 from os import listdir, path
+from numpy import array
 
 
 class ProcessedData:
+    """Import processed data with respect to the default folder structure"""
     def __init__(self, path_to_sets_folder: str = "../sets/"):
         if not path.isdir(path_to_sets_folder):
             raise ValueError(
@@ -18,21 +20,21 @@ class ProcessedData:
     @property
     def train(self):
         if self._train is None:
-            train_set_path = self._path_to_sets_folder + "Train/"
+            train_set_path = self._path_to_sets_folder + "train/"
             self._train = Set(train_set_path)
         return self._train
 
     @property
     def validation(self):
-        if self._train is None:
-            validation_set_path = self._path_to_sets_folder + "Validation/"
+        if self._validation is None:
+            validation_set_path = self._path_to_sets_folder + "validation/"
             self._validation = Set(validation_set_path)
         return self._validation
 
     @property
     def test(self):
-        if self._train is None:
-            test_set_path = self._path_to_sets_folder + "Test/"
+        if self._test is None:
+            test_set_path = self._path_to_sets_folder + "test/"
             self._test = Set(test_set_path)
         return self._test
 
@@ -68,7 +70,7 @@ class Set:
             self._coronal = View(coronal_path)
         return self._coronal
 
-    @property()
+    @property
     def sagittal(self):
         if self._sagittal is None:
             sagittal_path = self._path_to_set_folder + "Sagittal/"
@@ -83,11 +85,11 @@ class View:
                 f"Path to the view folder provided for the View class is not a valid directory: {path_to_view_in_set_folder}"
             )
         self._path_to_view_in_set = path_to_view_in_set_folder
-        self._slices = None
+        self._slices = []
 
     @property
     def slices(self):
-        if self._slices is None:
+        if not self._slices:
             dicoms = listdir(self._path_to_view_in_set)
 
             for i, dicom in enumerate(dicoms):
@@ -99,12 +101,12 @@ class View:
     def get_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
         normalized_pixel_arrays = []
 
-        for i, _slice in enumerate(self.slices()):
+        for i, _slice in enumerate(self.slices):
             normalized_pixel_array = _slice.normalized_pixel_array()
             if normalized_pixel_array.shape == shape:
                 normalized_pixel_arrays.append(normalized_pixel_array)
 
-        return normalized_pixel_arrays
+        return array(normalized_pixel_arrays)
 
 # from os import listdir, path
 
