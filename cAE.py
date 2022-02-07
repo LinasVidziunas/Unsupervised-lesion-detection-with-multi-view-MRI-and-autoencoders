@@ -86,7 +86,7 @@ decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
 autoencoder = Model(input, decoded)
 autoencoder.compile(optimizer="adam",
                     loss="binary_crossentropy",
-                    metrics=[MeanSquaredError])
+                    metrics=[MeanSquaredError()])
 autoencoder.summary()
 
 history = autoencoder.fit(
