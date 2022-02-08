@@ -3,9 +3,10 @@ from plotting import ModelPlotting
 from Models.our import ourBestModel
 from Models.unet import unet, unet_dense, unet_safe
 from Models.vgg16_ae import vgg16, vgg16_dense
-
+import tensorflow
 from keras import losses
 from keras.losses import MeanSquaredError
+
 
 import numpy as np
 from os import listdir, path
@@ -38,12 +39,13 @@ for i, slice_file in enumerate(test_files):
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-# autoencoder = unet_dense(input_size=(384, 384, 1), dense_size=120)
+autoencoder = unet_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
-autoencoder = unet_safe(None, input_size=(384, 384, 1))
+#autoencoder = unet_safe(None, input_size=(384, 384, 1))
 
-autoencoder.compile(optimizer="adam",
+
+autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
 autoencoder.summary()
@@ -97,5 +99,5 @@ reconstructed_images = autoencoder.predict(x_test)
 
 plot.input_vs_reconstructed_images(
     [el.reshape(384, 384) for el in x_test],
-    [el.reshape(384, 384) for el in reconstructed_images]
-)
+#     [el.reshape(384, 384) for el in reconstructed_images]
+# )
