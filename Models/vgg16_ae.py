@@ -1,5 +1,5 @@
 from keras import Model
-from keras.layers import Input, Conv2D
+from keras.layers import Input, Conv2D, Reshape
 from keras.layers import UpSampling2D, Concatenate
 from keras.applications.vgg16 import VGG16
 
