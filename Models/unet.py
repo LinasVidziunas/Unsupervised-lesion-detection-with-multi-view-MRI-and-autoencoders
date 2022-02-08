@@ -149,7 +149,7 @@ def unet(input_size=(320, 320, 1), dropout_rate: float = 0.5,
     return Model(inputs, conv10)
 
 
-def unet_dense(input_size=(384, 384, 1), dense_size: int = 160, dropout_rate: float = 0.5, skip_connections: bool = True):
+def unet_dense(input_size=(384, 384, 1), dense_size: int = 80, dropout_rate: float = 0.5, skip_connections: bool = True):
 
 
     # Build the model
