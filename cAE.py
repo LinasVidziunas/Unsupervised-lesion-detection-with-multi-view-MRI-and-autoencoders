@@ -3,15 +3,16 @@ from plotting import ModelPlotting
 from Models.our import ourBestModel
 from Models.unet import unet, unet_dense, unet_safe
 from Models.vgg16_ae import vgg16, vgg16_dense
-
+import tensorflow
 from keras import losses
 from keras.losses import MeanSquaredError
+
 
 import numpy as np
 from os import listdir, path
 
 train_files = listdir("../sets/train/Axial")
-test_files = listdir("../sets/validation/Axial")
+test_files = listdir("../sets/test/Axial")
 
 x_train = np.zeros((len(train_files), 384, 384))
 x_test = np.zeros((len(test_files), 384, 384))
@@ -30,7 +31,7 @@ for i, slice_file in enumerate(train_files):
 
 for i, slice_file in enumerate(test_files):
     try:
-        _slice = Slice(path.join("../sets/validation/Axial", slice_file))
+        _slice = Slice(path.join("../sets/test/Axial", slice_file))
         x_test[i][:][:] = _slice.normalized_pixel_array()
         test_slices.append(_slice)
     except ValueError:
@@ -38,12 +39,13 @@ for i, slice_file in enumerate(test_files):
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-# autoencoder = unet_dense(input_size=(384, 384, 1), dense_size=120)
+autoencoder = unet_dense()
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
-autoencoder = unet_safe(None, input_size=(384, 384, 1))
+#autoencoder = unet_safe(None, input_size=(384, 384, 1))
 
-autoencoder.compile(optimizer="adam",
+
+autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
 autoencoder.summary()
@@ -51,7 +53,7 @@ autoencoder.summary()
 history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=200,
+    epochs=1000,
     batch_size=32,
     validation_data=(x_test, x_test),
 )
@@ -77,11 +79,11 @@ for i, _slice in enumerate(test_normal_l):
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 384 * 384),
+loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 384 * 384),
                          test_normal.reshape(len(test_normal), 384 * 384))
 
 decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(
+loss_abnormal = losses.mse(
     decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
     test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
