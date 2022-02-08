@@ -14,7 +14,7 @@ def vgg16(input_size=(320, 320, 1)):
 
     mg_conc = Concatenate()([inp, inp, inp])
 
-    encoded = VGG16(input_tensor=mg_conc, include_top=False, weights=None)(inp)
+    encoded = VGG16(input_tensor=mg_conc, include_top=False, weights=None)
 
     ################### latent ###################
     x = Conv2D(512, (3, 3), activation='relu',

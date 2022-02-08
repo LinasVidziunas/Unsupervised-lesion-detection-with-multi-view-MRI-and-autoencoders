@@ -1,7 +1,7 @@
 from Datapreprocessing.slice import Slice
 from plotting import ModelPlotting
 from Models.our import ourBestModel
-from Models.unet import unet, unet_dense
+from Models.unet import unet, unet_dense, unet_safe
 from Models.vgg16_ae import vgg16, vgg16_dense
 
 from keras import losses
@@ -30,18 +30,18 @@ for i, slice_file in enumerate(train_files):
 
 for i, slice_file in enumerate(test_files):
     try:
-        _slice = Slice(path.join("../sets/test/Axial", slice_file))
+        _slice = Slice(path.join("../sets/validation/Axial", slice_file))
         x_test[i][:][:] = _slice.normalized_pixel_array()
         test_slices.append(_slice)
     except ValueError:
         x_test[i][:][:] = x_test[i - 1][:][:]
 
-
-autoencoder = ourBestModel()
-# autoencoder = unet(input_size=(384, 384, 1))
+# autoencoder = ourBestModel()
+# autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
 # autoencoder = unet_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
+autoencoder = unet_safe(None, input_size=(384, 384, 1))
 
 autoencoder.compile(optimizer="adam",
                     loss="binary_crossentropy",
