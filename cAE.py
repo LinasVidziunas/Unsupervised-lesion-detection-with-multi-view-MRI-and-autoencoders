@@ -99,5 +99,5 @@ reconstructed_images = autoencoder.predict(x_test)
 
 plot.input_vs_reconstructed_images(
     [el.reshape(384, 384) for el in x_test],
-#     [el.reshape(384, 384) for el in reconstructed_images]
-# )
+    [el.reshape(384, 384) for el in reconstructed_images]
+)
