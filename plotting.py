@@ -1,45 +1,49 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+from os import path, makedirs
+
 
 class ModelPlotting:
     def __init__(
             self,
-            history,
-            save_in_dir: str = "",
+            model_name: str = "default",
             timestamp: bool = True):
         """
         Easier plotting without having to worry about naming, timestamping,
         and so on.
 
-        :param history: The history that Model.fit returns
-        :param save_in_dir: Directory where to save figures (Default: "")
+        :param model_name: Subdirectory of results where to save figures (Default: "default")
         :param timestamp: Boolean value whether to timestamp figure names
         :type timestamp: bool
         :return: Instance of ModelPlotting,
         from where you can call plotting functions.
         """
 
-        self.history = history
-        self.save_in_dir = save_in_dir
+        # self.history = history
+        self.save_in_dir = path.join('results', model_name)
+
+        if not path.isdir(self.save_in_dir):
+            makedirs(self.save_in_dir, exist_ok=True)
+
         self.timestamp = timestamp
 
-    def __timestamp_string(self):
+    def timestamp_string(self):
         today = datetime.today()
-        return f"{today.day}-{today.month}-{today.hour}-{today.minute}"
+        return f"{today.day}{today.month}{today.year}-{today.hour}{today.minute}"
 
     def __naming(self, plotname: str):
         name = f"{self.save_in_dir}/fig_{plotname}"
         if self.timestamp:
-            name += f"-{self.__timestamp_string()}"
+            name += f"-{self.timestamp_string()}"
         name += ".png"
         return name
 
-    def plot_mse_train_vs_val(self):
+    def plot_mse_train_vs_val(self, history):
         """Plot MSE loss for train and validation in the same graph"""
 
-        plt.plot(self.history.history['mean_squared_error'])
-        plt.plot(self.history.history['val_mean_squared_error'])
+        plt.plot(history.history['mean_squared_error'])
+        plt.plot(history.history['val_mean_squared_error'])
         plt.title('Model MSE loss')
         plt.ylabel('MSE loss')
         plt.xlabel('Epoch')
@@ -47,11 +51,11 @@ class ModelPlotting:
         plt.savefig(self.__naming("MSE_train_vs_val"))
         plt.clf()
 
-    def plot_loss_train_vs_val(self):
+    def plot_loss_train_vs_val(self, history):
         """Plot loss for train and validation in the same graph"""
 
-        plt.plot(self.history.history['loss'])
-        plt.plot(self.history.history['val_loss'])
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
@@ -109,12 +113,3 @@ class ModelPlotting:
 
         plt.savefig(self.__naming("input_and_reconstructed_images"))
         plt.clf()
-
-
-# Not how one does it, but keeping the code to remind myself to do this
-# def save_summary(
-#         summary,
-#         save_as=f"model_summary-{timestamp_string()}.png"):
-
-#     with open(save_as, 'w') as file:
-#         file.write(summary)

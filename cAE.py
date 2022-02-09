@@ -9,6 +9,10 @@ from keras import losses
 from keras.losses import MeanSquaredError
 
 
+# Change this to the desired name of your model.
+# Used to identify the model in results.
+MODEL_NAME = "test"
+
 data = ProcessedData("../sets/")
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
@@ -26,7 +30,15 @@ autoencoder = unet_dense()
 autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
-autoencoder.summary()
+
+plot = ModelPlotting(MODEL_NAME)
+
+with open(
+        path.join(
+            plot.save_in_dir,
+            f"AE_summary{plot.timestamp_string()}.txt"),
+        'w') as f:
+    autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
 history = autoencoder.fit(
     x_train,
@@ -51,10 +63,8 @@ loss_abnormal = losses.mse(
     decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
     test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
-plot = ModelPlotting(history, save_in_dir="sets")
-
-plot.plot_mse_train_vs_val()
-plot.plot_loss_train_vs_val()
+plot.plot_mse_train_vs_val(history)
+plot.plot_loss_train_vs_val(history)
 
 plot.histogram_mse_loss(loss_normal, loss_abnormal)
 plot.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
