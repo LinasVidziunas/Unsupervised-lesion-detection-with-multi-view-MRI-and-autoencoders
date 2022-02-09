@@ -78,11 +78,12 @@ test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 384 * 384),
+
+loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 384 * 384),
                          test_normal.reshape(len(test_normal), 384 * 384))
 
 decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(
+loss_abnormal = losses.mse(
     decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
     test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
