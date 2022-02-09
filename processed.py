@@ -6,6 +6,7 @@ from numpy import array
 
 class ProcessedData:
     """Import processed data with respect to the default folder structure"""
+
     def __init__(self, path_to_sets_folder: str = "../sets/"):
         if not path.isdir(path_to_sets_folder):
             raise ValueError(
@@ -97,6 +98,28 @@ class View:
                 self._slices.append(_slice)
 
         return self._slices
+
+    def get_abnormal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
+        normalized_pixel_arrays = []
+
+        for i, _slice in enumerate(self.slices):
+            if _slice.get_abnormality() == 1:
+                pixel_array = _slice.normalized_pixel_array()
+                if pixel_array.shape == shape:
+                    normalized_pixel_arrays.append(pixel_array)
+
+        return array(normalized_pixel_arrays)
+
+    def get_normal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
+        normalized_pixel_arrays = []
+
+        for i, _slice in enumerate(self.slices):
+            if _slice.get_abnormality() == 0:
+                pixel_array = _slice.normalized_pixel_array()
+                if pixel_array.shape == shape:
+                    normalized_pixel_arrays.append(pixel_array)
+
+        return array(normalized_pixel_arrays)
 
     def get_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
         normalized_pixel_arrays = []
