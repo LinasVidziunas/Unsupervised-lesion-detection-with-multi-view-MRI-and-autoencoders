@@ -53,7 +53,7 @@ autoencoder.summary()
 history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=400,
+    epochs=1000,
     batch_size=32,
     validation_data=(x_test, x_test),
 )
