@@ -12,7 +12,7 @@ import numpy as np
 from os import listdir, path
 
 train_files = listdir("../sets/train/Axial")
-test_files = listdir("../sets/validation/Axial")
+test_files = listdir("../sets/test/Axial")
 
 x_train = np.zeros((len(train_files), 384, 384))
 x_test = np.zeros((len(test_files), 384, 384))
@@ -31,7 +31,7 @@ for i, slice_file in enumerate(train_files):
 
 for i, slice_file in enumerate(test_files):
     try:
-        _slice = Slice(path.join("../sets/validation/Axial", slice_file))
+        _slice = Slice(path.join("../sets/test/Axial", slice_file))
         x_test[i][:][:] = _slice.normalized_pixel_array()
         test_slices.append(_slice)
     except ValueError:
@@ -53,8 +53,8 @@ autoencoder.summary()
 history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=200,
-    batch_size=32,
+    epochs=400,
+    batch_size=16,
     validation_data=(x_test, x_test),
 )
 
