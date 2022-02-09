@@ -6,13 +6,12 @@ from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 from keras.metrics import MeanSquaredError
 
-import numpy as np
 
 data = ProcessedData("../sets/")
-x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(shape=(384, 384))
-x_test = data.validation.axial.get_slices_as_normalized_pixel_arrays(shape=(384, 384))
-train_slices = data.train.axial.slices
-test_slices = data.validation.axial.slices
+x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
+x_test = data.validation.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
 
 input = layers.Input(shape=(384, 384, 1))
 
@@ -72,24 +71,10 @@ history = autoencoder.fit(
     validation_data=(x_test, x_test),
 )
 
-
-test_abnormal_l = []
-test_normal_l = []
-
-for _slice in test_slices:
-    if _slice.get_abnormality() == 1:
-        test_abnormal_l.append(_slice)
-    elif _slice.get_abnormality() == 0:
-        test_normal_l.append(_slice)
-
-test_abnormal = np.zeros((len(test_abnormal_l), 384, 384))
-test_normal = np.zeros((len(test_normal_l), 384, 384))
-
-for i, _slice in enumerate(test_abnormal_l):
-    test_abnormal[i][:][:] = _slice.normalized_pixel_array()
-
-for i, _slice in enumerate(test_normal_l):
-    test_normal[i][:][:] = _slice.normalized_pixel_array()
+test_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
+test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
