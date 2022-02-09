@@ -149,7 +149,7 @@ def unet(input_size=(320, 320, 1), dropout_rate: float = 0.5,
     return Model(inputs, conv10)
 
 
-def unet_dense(input_size=(384, 384, 1), dense_size: int = 45, dropout_rate: float = 0.5, skip_connections: bool = True):
+def unet_dense(input_size=(384, 384, 1), dense_size: int = 120, dropout_rate: float = 0.5, skip_connections: bool = True):
 
 
     # Build the model
@@ -158,22 +158,22 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 45, dropout_rate: flo
 
     # Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
-    c1 = Dropout(0.3)(c1)
+    c1 = Dropout(0.5)(c1)
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1)
 
     c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
-    c2 = Dropout(0.3)(c2)
+    c2 = Dropout(0.5)(c2)
     c2 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
     p2 = MaxPooling2D((2, 2))(c2)
 
     c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
-    c3 = Dropout(0.3)(c3)
+    c3 = Dropout(0.5)(c3)
     c3 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
     p3 = MaxPooling2D((2, 2))(c3)
 
     c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
-    c4 = Dropout(0.3)(c4)
+    c4 = Dropout(0.5)(c4)
     c4 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
     p4 = MaxPooling2D(pool_size=(2, 2))(c4)
 
@@ -188,25 +188,25 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 45, dropout_rate: flo
     u6 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(reshape)
     u6 = concatenate([u6, c4])
     c6 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
-    c6 = Dropout(0.3)(c6)
+    c6 = Dropout(0.5)(c6)
     c6 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
 
     u7 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
     u7 = concatenate([u7, c3])
     c7 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
-    c7 = Dropout(0.3)(c7)
+    c7 = Dropout(0.5)(c7)
     c7 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
 
     u8 = Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
     u8 = concatenate([u8, c2])
     c8 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
-    c8 = Dropout(0.3)(c8)
+    c8 = Dropout(0.5)(c8)
     c8 = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
 
     u9 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
     u9 = concatenate([u9, c1], axis=3)
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
-    c9 = Dropout(0.3)(c9)
+    c9 = Dropout(0.5)(c9)
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
     outputs = Conv2D(1, (1, 1), activation='sigmoid')(c9)
