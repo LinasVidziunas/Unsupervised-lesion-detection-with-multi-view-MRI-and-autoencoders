@@ -39,7 +39,7 @@ for i, slice_file in enumerate(test_files):
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-autoencoder = unet_dense(input_size=(384, 384, 1), dense_size=120)
+autoencoder = unet_dense()
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 #autoencoder = unet_safe(None, input_size=(384, 384, 1))
@@ -54,7 +54,7 @@ history = autoencoder.fit(
     x_train,
     x_train,
     epochs=400,
-    batch_size=16,
+    batch_size=32,
     validation_data=(x_test, x_test),
 )
 
@@ -79,11 +79,11 @@ for i, _slice in enumerate(test_normal_l):
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mae(decoded_normal.reshape(len(test_normal), 384 * 384),
+loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 384 * 384),
                          test_normal.reshape(len(test_normal), 384 * 384))
 
 decoded_abnormal = autoencoder.predict(test_abnormal)
-loss_abnormal = losses.mae(
+loss_abnormal = losses.mse(
     decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
     test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
