@@ -35,17 +35,13 @@ x = MaxPooling2D(pool_size=(2, 2))(x)
 
 x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
 x = Flatten()(x)
-# units = x.shape[1]
 
-# bottleneck
-
-x = Dense(1600)(x)
+x = Dense(576)(x)
 x = LeakyReLU(alpha=0.2)(x)
 
-# Decoder
+x = Reshape((24, 24, 1))(x)
 
-x = Reshape((40, 40, 1))(x)
-
+x = UpSampling2D((2, 2))(x)
 x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 
 x = UpSampling2D((2, 2))(x)
