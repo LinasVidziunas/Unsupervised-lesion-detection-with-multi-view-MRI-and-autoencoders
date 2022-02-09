@@ -1,4 +1,4 @@
-from Datapreprocessing.slice import Slice
+from processed import ProcessedData
 from plotting import ModelPlotting
 
 from keras import layers, Model, losses
@@ -6,36 +6,14 @@ from keras.layers import Flatten, Dense, Reshape, Conv2D, BatchNormalization
 from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 from keras.metrics import MeanSquaredError
 
-import numpy as np
-from os import listdir, path
 
-train_files = listdir("sets/x_train")
-test_files = listdir("sets/x_test")
+data = ProcessedData("../sets/")
+x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
+x_test = data.validation.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
 
-x_train = np.zeros((len(train_files), 320, 320))
-x_test = np.zeros((len(test_files), 320, 320))
-
-train_slices = []
-test_slices = []
-
-# ValueError thrown when slice does not match the default resolution
-for i, slice_file in enumerate(train_files):
-    try:
-        _slice = Slice(path.join("sets/x_train", slice_file))
-        x_train[i][:][:] = _slice.normalized_pixel_array()
-        train_slices.append(_slice)
-    except ValueError:
-        x_train[i][:][:] = x_train[i - 1][:][:]
-
-for i, slice_file in enumerate(test_files):
-    try:
-        _slice = Slice(path.join("sets/x_test", slice_file))
-        x_test[i][:][:] = _slice.normalized_pixel_array()
-        test_slices.append(_slice)
-    except ValueError:
-        x_test[i][:][:] = x_test[i - 1][:][:]
-
-input = layers.Input(shape=(320, 320, 1))
+input = layers.Input(shape=(384, 384, 1))
 
 # Encoder
 x = Conv2D(64, (7, 7), activation='relu', padding='same')(input)
@@ -56,17 +34,13 @@ x = MaxPooling2D(pool_size=(2, 2))(x)
 
 x = Conv2D(64, (5, 5), activation='relu', padding='same')(x)
 x = Flatten()(x)
-# units = x.shape[1]
 
-# bottleneck
-
-x = Dense(1600)(x)
+x = Dense(576)(x)
 x = LeakyReLU(alpha=0.2)(x)
 
-# Decoder
+x = Reshape((24, 24, 1))(x)
 
-x = Reshape((40, 40, 1))(x)
-
+x = UpSampling2D((2, 2))(x)
 x = Conv2D(512, (5, 5), activation='relu', padding='same')(x)
 
 x = UpSampling2D((2, 2))(x)
@@ -97,34 +71,21 @@ history = autoencoder.fit(
     validation_data=(x_test, x_test),
 )
 
-
-test_abnormal_l = []
-test_normal_l = []
-
-for _slice in test_slices:
-    if _slice.get_abnormality() == 1:
-        test_abnormal_l.append(_slice)
-    elif _slice.get_abnormality() == 0:
-        test_normal_l.append(_slice)
-
-test_abnormal = np.zeros((len(test_abnormal_l), 320, 320))
-test_normal = np.zeros((len(test_normal_l), 320, 320))
-
-for i, _slice in enumerate(test_abnormal_l):
-    test_abnormal[i][:][:] = _slice.normalized_pixel_array()
-
-for i, _slice in enumerate(test_normal_l):
-    test_normal[i][:][:] = _slice.normalized_pixel_array()
+test_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
+test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
+    shape=(384, 384))
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 320 * 320),
-                         test_normal.reshape(len(test_normal), 320 * 320))
+
+loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 384 * 384),
+                         test_normal.reshape(len(test_normal), 384 * 384))
 
 decoded_abnormal = autoencoder.predict(test_abnormal)
 loss_abnormal = losses.mse(
-    decoded_abnormal.reshape(len(test_abnormal), 320 * 320),
-    test_abnormal.reshape(len(test_abnormal), 320 * 320))
+    decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
+    test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
 plot = ModelPlotting(history, save_in_dir="sets")
 
@@ -137,6 +98,6 @@ plot.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
 reconstructed_images = autoencoder.predict(x_test)
 
 plot.input_vs_reconstructed_images(
-    [el.reshape(320, 320) for el in x_test],
-    [el.reshape(320, 320) for el in reconstructed_images]
+    [el.reshape(384, 384) for el in x_test],
+    [el.reshape(384, 384) for el in reconstructed_images]
 )
