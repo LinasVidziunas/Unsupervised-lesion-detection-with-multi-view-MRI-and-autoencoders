@@ -184,7 +184,7 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 120, dropout_rate: fl
 
     flatten = Flatten()(p5)
     d1 = Dense(1440, activation='relu')(flatten)
-    bottle = Dense(dense_size, activation='relu')(d1)
+    bottle = Dense(dense_size, activation='sigmoid')(d1)
     d2 = Dense(1440, activation='relu')(bottle)
     reshape = Reshape((12, 12, 10))(d2)
 
@@ -213,7 +213,7 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 120, dropout_rate: fl
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
     c9 = Dropout(0.5)(c9)
     c9 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
-#2
+
     u10 = Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c9)
     u10 = concatenate([u10, c1], axis=3)
     c10 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u10)
