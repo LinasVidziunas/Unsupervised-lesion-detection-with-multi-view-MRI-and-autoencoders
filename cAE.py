@@ -7,6 +7,10 @@ from keras.layers import MaxPooling2D, UpSampling2D, LeakyReLU
 from keras.metrics import MeanSquaredError
 
 
+# Change this to the desired name of your model.
+# Used to identify the model in results.
+MODEL_NAME = "test"
+
 data = ProcessedData("../sets/")
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
@@ -55,18 +59,25 @@ x = UpSampling2D((2, 2))(x)
 x = BatchNormalization()(x)
 decoded = Conv2D(1, (7, 7), activation='sigmoid', padding='same')(x)
 
-
 # Autoencoder
 autoencoder = Model(input, decoded)
 autoencoder.compile(optimizer="adam",
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
-autoencoder.summary()
+
+plot = ModelPlotting(MODEL_NAME)
+
+with open(
+        path.join(
+            plot.save_in_dir,
+            f"AE_summary{plot.timestamp_string()}.txt"),
+        'w') as f:
+    autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
 history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=1000,
+    epochs=10,
     batch_size=32,
     validation_data=(x_test, x_test),
 )
@@ -87,10 +98,8 @@ loss_abnormal = losses.mse(
     decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
     test_abnormal.reshape(len(test_abnormal), 384 * 384))
 
-plot = ModelPlotting(history, save_in_dir="sets")
-
-plot.plot_mse_train_vs_val()
-plot.plot_loss_train_vs_val()
+plot.plot_mse_train_vs_val(history)
+plot.plot_loss_train_vs_val(history)
 
 plot.histogram_mse_loss(loss_normal, loss_abnormal)
 plot.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
