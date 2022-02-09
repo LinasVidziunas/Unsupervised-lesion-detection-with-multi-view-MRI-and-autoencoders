@@ -158,7 +158,7 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 60, dropout_rate: flo
 
     # Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
-    c1 = Dropout(0.25)(0.2)
+    c1 = Dropout(0.25)(c1)
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1)
 
