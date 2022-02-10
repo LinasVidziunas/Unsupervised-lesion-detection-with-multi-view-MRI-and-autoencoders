@@ -1,6 +1,7 @@
 from keras import Model
-from keras.layers import Input, Conv2D, Reshape
-from keras.layers import UpSampling2D, Concatenate
+from keras.layers import Input, Conv2D, Reshape, Flatten, Dense
+from keras.layers import UpSampling2D, Concatenate, MaxPool2D
+from keras.layers import BatchNormalization, Dropout
 from keras.applications.vgg16 import VGG16
 
 
@@ -63,8 +64,8 @@ def vgg16_dense(input_size=(320, 320, 1), dense_size: int = 160):
 
     mg_conc = Concatenate()([inp, inp, inp])
 
-    encoded = VGG16(input_tensor=mg_conc, include_top=False, weights=None,
-                    classes=dense_size)(inp)
+    encoded = VGG16(input_tensor=mg_conc, include_top=True, weights=None,
+                    classes=dense_size)
 
     x = Conv2D(512, (3, 3), activation='relu',
                padding='same', name='latent')(encoded)
@@ -101,3 +102,90 @@ def vgg16_dense(input_size=(320, 320, 1), dense_size: int = 160):
     decoded = Conv2D(1, (3, 3), activation='relu', padding='same')(x)
 
     return Model(inp, decoded)
+
+
+def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool):
+    x = Conv2D(filters=filters, kernel_size=(3, 3),
+               padding="same", activation="relu")(previous_layer)
+    if batchNorm:
+        x = BatchNormalization()(x)
+
+    return x
+
+
+def own_vgg16_encoder_block(previous_layer, filters: int,
+                            conv2d_layers: int = 2,
+                            batchNorm: bool = False,
+                            dropout_rate: int = 0):
+
+    block = own_vgg16_conv2d_block(previous_layer, filters, batchNorm)
+
+    for _ in range(conv2d_layers-1):
+        block = own_vgg16_conv2d_block(block, filters, batchNorm)
+
+    if dropout_rate != 0:
+        block = Dropout(dropout_rate)
+
+    block = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(block)
+
+    return block
+
+
+def own_vgg16_decoder_block(previous_layer, filters: int,
+                            conv2d_layers: int = 2,
+                            batchNorm: bool = False,
+                            dropout_rate: int = 0):
+    block = None
+
+    for i in range(conv2d_layers):
+        block = own_vgg16_conv2d_block(previous_layer, filters, batchNorm)
+
+    if dropout_rate != 0:
+        block = Dropout(dropout_rate)(block)
+
+    block = UpSampling2D(size=(2, 2))(block)
+
+    return block
+
+
+def own_vgg16(input_shape=(384, 384, 1), dense_size: int = 160):
+    encoder = None
+    decoder = None
+
+    encoder_filters = [64, 128, 256, 512, 512]
+    decoder_filters = [512, 512, 256, 128, 64]
+
+    inputs = Input(shape=input_shape)
+
+    e1 = own_vgg16_encoder_block(
+        previous_layer=inputs, filters=encoder_filters[0], conv2d_layers=2, batchNorm=True)
+    e2 = own_vgg16_encoder_block(
+        previous_layer=e1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=True)
+    e3 = own_vgg16_encoder_block(
+        previous_layer=e2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=True)
+    e4 = own_vgg16_encoder_block(
+        previous_layer=e3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=True)
+    encoder = own_vgg16_encoder_block(
+        previous_layer=e4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=True)
+
+    bottleneck = Flatten()(encoder)
+    bottleneck = Dense(4096, activation='relu')(bottleneck)
+    # bottleneck = Dense(4096, activation='relu')(bottleneck)
+    bottleneck = Dense(dense_size, activation='relu')(bottleneck)
+    # bottleneck = Dense(4096, activation='relu')(bottleneck)
+    bottleneck = Dense(4032, activation='relu')(bottleneck)
+    reshape = Reshape((12, 12, 28))(bottleneck)
+
+    d1 = own_vgg16_decoder_block(
+        previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=True)
+    d2 = own_vgg16_decoder_block(
+        previous_layer=d1, filters=decoder_filters[1], conv2d_layers=3, batchNorm=True)
+    d3 = own_vgg16_decoder_block(
+        previous_layer=d2, filters=decoder_filters[2], conv2d_layers=3, batchNorm=True)
+    d4 = own_vgg16_decoder_block(
+        previous_layer=d3, filters=decoder_filters[3], conv2d_layers=2, batchNorm=True)
+    decoder = own_vgg16_decoder_block(
+        previous_layer=d4, filters=decoder_filters[4], conv2d_layers=2, batchNorm=True)
+
+    # for decoder_filter in decoder_filters:
+    return Model(inputs, decoder)

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --partition=gpuA100 
 #SBATCH --time=20:00:00
 #SBATCH --job-name=cAE
