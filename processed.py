@@ -130,31 +130,3 @@ class View:
                 normalized_pixel_arrays.append(normalized_pixel_array)
 
         return array(normalized_pixel_arrays)
-
-# from os import listdir, path
-
-# train_files = listdir("sets/x_train")
-# test_files = listdir("sets/x_test")
-
-# x_train = np.zeros((len(train_files), 320, 320))
-# x_test = np.zeros((len(test_files), 320, 320))
-
-# train_slices = []
-# test_slices = []
-
-# # ValueError thrown when slice does not match the default resolution
-# for i, slice_file in enumerate(train_files):
-#     try:
-#         _slice = Slice(path.join("sets/x_train", slice_file))
-#         x_train[i][:][:] = _slice.normalized_pixel_array()
-#         train_slices.append(_slice)
-#     except ValueError:
-#         x_train[i][:][:] = x_train[i - 1][:][:]
-
-# for i, slice_file in enumerate(test_files):
-#     try:
-#         _slice = Slice(path.join("sets/x_test", slice_file))
-#         x_test[i][:][:] = _slice.normalized_pixel_array()
-#         test_slices.append(_slice)
-#     except ValueError:
-#         x_test[i][:][:] = x_test[i - 1][:][:]
