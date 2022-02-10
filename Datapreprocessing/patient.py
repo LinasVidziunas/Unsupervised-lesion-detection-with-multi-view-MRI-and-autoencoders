@@ -85,7 +85,7 @@ class Patient:
 
         for view, slices in self.__slices.items():
             for slice in slices:
-                if remove_abnormal_slices is True and slice.get_abnormality() is True:
+                if remove_abnormal_slices is True and slice.get_abnormality() == 1:
                     continue
 
                 slice.save_as_dicom(
