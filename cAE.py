@@ -39,11 +39,11 @@ for i, slice_file in enumerate(test_files):
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-# autoencoder = unet_dense()
+ autoencoder = unet_dense()
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
-autoencoder = own_vgg16(input_shape=(384, 384, 1))
+#autoencoder = own_vgg16(input_shape=(384, 384, 1))
 
 autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
                     loss="binary_crossentropy",
