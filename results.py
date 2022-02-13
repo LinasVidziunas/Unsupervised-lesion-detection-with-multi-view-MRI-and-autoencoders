@@ -4,7 +4,7 @@ from datetime import datetime
 from os import path, makedirs
 
 
-class ModelPlotting:
+class ModelResults:
     def __init__(
             self,
             model_name: str = "default",
