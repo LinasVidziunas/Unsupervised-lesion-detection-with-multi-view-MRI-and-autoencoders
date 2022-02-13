@@ -1,8 +1,9 @@
 from Datapreprocessing.slice import Slice
 
-from os import listdir, path
+from tensorflow import image, newaxis
 from numpy import array
 
+from os import listdir, path
 
 class ProcessedData:
     """Import processed data with respect to the default folder structure"""
@@ -100,33 +101,45 @@ class View:
         return self._slices
 
     def get_abnormal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
+        """Returns abnormal resized slices as np.array object"""
+
         normalized_pixel_arrays = []
 
         for _, _slice in enumerate(self.slices):
             if _slice.get_abnormality() == 1:
                 pixel_array = _slice.normalized_pixel_array()
-                if pixel_array.shape == shape:
-                    normalized_pixel_arrays.append(pixel_array)
+                pixel_array = pixel_array[newaxis, ..., newaxis]
+                pixel_array = image.resize(pixel_array, shape)[0, ..., 0].numpy()
+
+                normalized_pixel_arrays.append(pixel_array)
 
         return array(normalized_pixel_arrays)
 
     def get_normal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
+        """Returns normal resized slices as np.array object"""
+
         normalized_pixel_arrays = []
 
         for _, _slice in enumerate(self.slices):
             if _slice.get_abnormality() == 0:
                 pixel_array = _slice.normalized_pixel_array()
-                if pixel_array.shape == shape:
-                    normalized_pixel_arrays.append(pixel_array)
+                pixel_array = pixel_array[newaxis, ..., newaxis]
+                pixel_array = image.resize(pixel_array, shape)[0, ..., 0].numpy()
+                
+                normalized_pixel_arrays.append(pixel_array)
 
         return array(normalized_pixel_arrays)
 
     def get_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
+        """Returns all slices as np.array object"""
+
         normalized_pixel_arrays = []
 
         for _, _slice in enumerate(self.slices):
-            normalized_pixel_array = _slice.normalized_pixel_array()
-            if normalized_pixel_array.shape == shape:
-                normalized_pixel_arrays.append(normalized_pixel_array)
+            pixel_array = _slice.normalized_pixel_array()
+            pixel_array = pixel_array[newaxis, ..., newaxis]
+            pixel_array = image.resize(pixel_array, shape)[0, ..., 0].numpy()
+
+            normalized_pixel_arrays.append(pixel_array)
 
         return array(normalized_pixel_arrays)

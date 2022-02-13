@@ -14,13 +14,19 @@ from os import path
 # Used to identify the model in results.
 MODEL_NAME = "test"
 
+# Define the dominant image dimensions
 IMAGE_DIM = [384, 384]
 
+# Retrieve processed data
 data = ProcessedData("../sets/")
+
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+print(f"Amount of training images: {len(x_train)}") # Debugging
+
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+print(f"Amount of validatoin images: {len(x_val)}") # Debugging
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
