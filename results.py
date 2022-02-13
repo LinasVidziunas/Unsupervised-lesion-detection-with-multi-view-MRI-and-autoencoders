@@ -4,7 +4,7 @@ from datetime import datetime
 from os import path, makedirs
 
 
-class ModelPlotting:
+class ModelResults:
     def __init__(
             self,
             model_name: str = "default",
@@ -113,3 +113,13 @@ class ModelPlotting:
 
         plt.savefig(self.__naming("input_and_reconstructed_images"))
         plt.clf()
+
+    def save_raw_data(self, data, name="raw_data"):
+        with open(path.join(
+                self.save_in_dir,
+                f"{name}{self.timestamp_string()}.raw"), 'w') as f:
+            for i, d in enumerate(data):
+                if i == len(data) - 1:
+                    f.write(f"{d}")
+                else:
+                    f.write(f"{d},")

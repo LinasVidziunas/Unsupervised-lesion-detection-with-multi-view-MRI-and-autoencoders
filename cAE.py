@@ -1,5 +1,5 @@
 from processed import ProcessedData
-from plotting import ModelPlotting
+from results import ModelResults
 from Models.our import ourBestModel
 from Models.unet import unet, unet_dense, unet_safe
 from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
@@ -17,7 +17,7 @@ MODEL_NAME = "test"
 data = ProcessedData("../sets/")
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
-x_test = data.validation.axial.get_slices_as_normalized_pixel_arrays(
+x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
 
 # autoencoder = ourBestModel()
@@ -32,12 +32,12 @@ autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
 
-plot = ModelPlotting(MODEL_NAME)
+model_results = ModelResults(MODEL_NAME)
 
 with open(
         path.join(
-            plot.save_in_dir,
-            f"AE_summary{plot.timestamp_string()}.txt"),
+            model_results.save_in_dir,
+            f"AE_summary{model_results.timestamp_string()}.txt"),
         'w') as f:
     autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
@@ -46,33 +46,43 @@ history = autoencoder.fit(
     x_train,
     epochs=200,
     batch_size=32,
-    validation_data=(x_test, x_test),
+    validation_data=(x_val, x_val),
 )
+model_results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
+model_results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+model_results.save_raw_data(history.history['loss'], "loss_epoch")
+model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
 
-test_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
+validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
-test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
+validation_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
 
 # Plotting the MSE distrubution of normal slices
-decoded_normal = autoencoder.predict(test_normal)
-loss_normal = losses.mse(decoded_normal.reshape(len(test_normal), 384 * 384),
-                         test_normal.reshape(len(test_normal), 384 * 384))
+decoded_normal = autoencoder.predict(validation_normal)
+loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), 384 * 384),
+                         validation_normal.reshape(len(validation_normal), 384 * 384))
 
-decoded_abnormal = autoencoder.predict(test_abnormal)
+# Saving raw MSE loss of normal slices
+model_results.save_raw_data(loss_normal, "normal_mse_loss")
+
+decoded_abnormal = autoencoder.predict(validation_abnormal)
 loss_abnormal = losses.mse(
-    decoded_abnormal.reshape(len(test_abnormal), 384 * 384),
-    test_abnormal.reshape(len(test_abnormal), 384 * 384))
+    decoded_abnormal.reshape(len(validation_abnormal), 384 * 384),
+    validation_abnormal.reshape(len(validation_abnormal), 384 * 384))
 
-plot.plot_mse_train_vs_val(history)
-plot.plot_loss_train_vs_val(history)
+# Saving raw MSE loss of abnormal slices
+model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
 
-plot.histogram_mse_loss(loss_normal, loss_abnormal)
-plot.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
+model_results.plot_mse_train_vs_val(history)
+model_results.plot_loss_train_vs_val(history)
 
-reconstructed_images = autoencoder.predict(x_test)
+model_results.histogram_mse_loss(loss_normal, loss_abnormal)
+model_results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
 
-plot.input_vs_reconstructed_images(
-    [el.reshape(384, 384) for el in x_test],
+reconstructed_images = autoencoder.predict(x_val)
+
+model_results.input_vs_reconstructed_images(
+    [el.reshape(384, 384) for el in x_val],
     [el.reshape(384, 384) for el in reconstructed_images]
 )
