@@ -93,7 +93,7 @@ class View:
         if not self._slices:
             dicoms = listdir(self._path_to_view_in_set)
 
-            for i, dicom in enumerate(dicoms):
+            for _, dicom in enumerate(dicoms):
                 _slice = Slice(path.join(self._path_to_view_in_set, dicom))
                 self._slices.append(_slice)
 
@@ -102,7 +102,7 @@ class View:
     def get_abnormal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
         normalized_pixel_arrays = []
 
-        for i, _slice in enumerate(self.slices):
+        for _, _slice in enumerate(self.slices):
             if _slice.get_abnormality() == 1:
                 pixel_array = _slice.normalized_pixel_array()
                 if pixel_array.shape == shape:
@@ -113,7 +113,7 @@ class View:
     def get_normal_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
         normalized_pixel_arrays = []
 
-        for i, _slice in enumerate(self.slices):
+        for _, _slice in enumerate(self.slices):
             if _slice.get_abnormality() == 0:
                 pixel_array = _slice.normalized_pixel_array()
                 if pixel_array.shape == shape:
@@ -124,7 +124,7 @@ class View:
     def get_slices_as_normalized_pixel_arrays(self, shape=(320, 320)):
         normalized_pixel_arrays = []
 
-        for i, _slice in enumerate(self.slices):
+        for _, _slice in enumerate(self.slices):
             normalized_pixel_array = _slice.normalized_pixel_array()
             if normalized_pixel_array.shape == shape:
                 normalized_pixel_arrays.append(normalized_pixel_array)
