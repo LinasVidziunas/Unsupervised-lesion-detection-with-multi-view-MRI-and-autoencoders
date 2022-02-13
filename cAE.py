@@ -48,6 +48,10 @@ history = autoencoder.fit(
     batch_size=32,
     validation_data=(x_val, x_val),
 )
+model_results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
+model_results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+model_results.save_raw_data(history.history['loss'], "loss_epoch")
+model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
 
 validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
     shape=(384, 384))
@@ -60,7 +64,7 @@ loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), 384 * 38
                          validation_normal.reshape(len(validation_normal), 384 * 384))
 
 # Saving raw MSE loss of normal slices
-model_results.save_raw_data(loss_normal, "normal_loss")
+model_results.save_raw_data(loss_normal, "normal_mse_loss")
 
 decoded_abnormal = autoencoder.predict(validation_abnormal)
 loss_abnormal = losses.mse(
@@ -68,7 +72,7 @@ loss_abnormal = losses.mse(
     validation_abnormal.reshape(len(validation_abnormal), 384 * 384))
 
 # Saving raw MSE loss of abnormal slices
-model_results.save_raw_data(loss_abnormal, "abnormal_loss")
+model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
 
 model_results.plot_mse_train_vs_val(history)
 model_results.plot_loss_train_vs_val(history)
