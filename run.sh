@@ -9,4 +9,4 @@
 uenv verbose cuda-11.4 cudnn-11.4-8.2.4
 
 # Run the Python script that uses the GPU
-python3 -u cAE.py
+python3 -u main.py
