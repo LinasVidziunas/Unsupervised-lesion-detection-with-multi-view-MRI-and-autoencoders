@@ -17,13 +17,13 @@ for i, patient in enumerate(abnormal_list):
     abnormal_list[i][1] = str(abnormal_list[i][1]).split(" ")[2]
 
 patients = []
-PROSTATEx_path = "Datapreprocessing/PROSTATEx"
+PROSTATEx_path = "F:\\Bakkelor2022\\manifest-hjL8tlLc1556886850502670511\\PROSTATEx"
 for i, folder_path in enumerate(listdir(PROSTATEx_path)):
     patients.append(
         Patient(path.join(PROSTATEx_path, folder_path), abnormal_list))
     # patients[i].extract(path.join("test", folder_path))
 
-sets = split_set_by_patients(patients, 1, 1, 0)
+sets = split_set_by_patients(patients, 142, 21, 41)
 
 # After splitting set, extract patient dicoms to new directory
 for set_name, patients in sets.items():
