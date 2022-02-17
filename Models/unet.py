@@ -2,7 +2,6 @@ from keras import Model
 from keras.layers import Input, Conv2D, Dense, Flatten, Reshape, Conv2DTranspose
 from keras.layers import MaxPooling2D, UpSampling2D, Dropout, concatenate
 
-#hello
 def unet_safe(pretrained_weights=None, input_size=(384, 384, 1)):
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation='relu', padding='same',
@@ -94,9 +93,10 @@ def unet_org(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connectio
 
     c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+    bottle = Flatten()(c5)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
 
-    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(reshape)
+    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(c5)
     u6 = concatenate([u6, c4skip])
     c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
     c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
@@ -119,12 +119,10 @@ def unet_org(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connectio
     output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
 
-    return Model(inputs, output)
+    return output, bottle
 
 
-def unet_org_dense(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connections: bool = True):
-    inputs = Input(shape=input_size)
-
+def unet_org_dense(inputs, dropout_rate: float = 0.5, skip_connections: bool = True):
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1skip)
@@ -174,16 +172,10 @@ def unet_org_dense(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_con
     output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
 
-    return Model(inputs, output)
+    return output, bottle
 
 
-def unet_dense(input_size=(384, 384, 1), dense_size: int = 60, dropout_rate: float = 0.35, skip_connections: bool = True):
-
-
-    # Build the model
-    inputs = Input(input_size)
-
-
+def unet_dense(inputs, dense_size: int = 60, dropout_rate: float = 0.35):
     # Contraction path
     c1 = Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1 = Dropout(dropout_rate)(c1)
@@ -250,4 +242,4 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 60, dropout_rate: flo
 
     outputs = Conv2D(1, (1, 1), activation='sigmoid')(c10)
 
-    return Model(inputs, outputs)
+    return outputs, bottle

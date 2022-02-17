@@ -4,18 +4,64 @@ from Models.our import ourBestModel
 from Models.unet import unet_org, unet_dense, unet_safe, unet_org_dense
 from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
 
-import tensorflow
-from keras import losses
-from keras.losses import MeanSquaredError
+import tensorflow 
+from keras import losses, Model
+from keras.layers import Input, Dense
+from keras.losses import MeanSquaredError, CategoricalCrossentropy
+from keras.metrics import CategoricalAccuracy
+
 from os import path
+
+def default_save_data(history, autoencoder, model_results):
+    model_results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
+    model_results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+    model_results.save_raw_data(history.history['loss'], "loss_epoch")
+    model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
+    
+    validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
+        shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+    validation_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
+        shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+    
+    # Plotting the MSE distrubution of normal slices
+    decoded_normal = autoencoder.predict(validation_normal)
+    loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+                             validation_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+
+    # Saving raw MSE loss of normal slices
+    model_results.save_raw_data(loss_normal, "normal_mse_loss")
+    
+    decoded_abnormal = autoencoder.predict(validation_abnormal)
+    loss_abnormal = losses.mse(
+        decoded_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+        validation_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+    
+    # Saving raw MSE loss of abnormal slices
+    model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
+    
+    model_results.plot_mse_train_vs_val(history)
+    model_results.plot_loss_train_vs_val(history)
+    
+    model_results.histogram_mse_loss(loss_normal, loss_abnormal)
+    model_results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
+    
+    reconstructed_images = autoencoder.predict(x_val)
+    
+    model_results.input_vs_reconstructed_images(
+        [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
+        [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
+    )
+
+
+# if __name__ == "__main__":
 
 # Change this to the desired name of your model.
 # Used to identify the model in results.
 MODEL_NAME = "original_unet_denseembedding"
 
 # Define the dominant image dimensions
-IMAGE_DIM = [384, 384]
-
+IMAGE_DIM = [384, 384, 1]
+    
 # Retrieve processed data
 data = ProcessedData("../sets/")
 
@@ -25,7 +71,18 @@ print(f"Amount of training images: {len(x_train)}") # Debugging
 
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of validatoin images: {len(x_val)}") # Debugging
+print(f"Amount of validation images: {len(x_val)}") # Debugging
+x_val_labels = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.validation.axial.slices]
+x_val_labels = tensorflow.constant(x_val_labels, shape=(len(x_val_labels), 2))
+
+x_test = data.test.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+print(f"Amount of test images: {len(x_test)}") # Debugging
+x_test_labels = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
+x_test_labels = tensorflow.constant(x_test_labels, shape=(len(x_test_labels), 2))
+
+# Build the model
+inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
@@ -36,61 +93,74 @@ autoencoder = unet_org_dense(input_size=(384, 384, 1))
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
 # autoencoder = own_vgg16(input_shape=(384, 384, 1))
 
-autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
+autoencoder = Model(inputs, outputs)
+
+autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-4),
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
-autoencoder.summary()
-model_results = ModelResults(MODEL_NAME)
 
+autoencoder_results = ModelResults(MODEL_NAME)
+    
 with open(
         path.join(
-            model_results.save_in_dir,
-            f"AE_summary{model_results.timestamp_string()}.txt"),
+            autoencoder_results.save_in_dir,
+            f"AE_summary{autoencoder_results.timestamp_string()}.txt"),
         'w') as f:
     autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
-history = autoencoder.fit(
+autoencoder_history = autoencoder.fit(
     x_train,
     x_train,
     epochs=100,
     batch_size=32,
     validation_data=(x_val, x_val),
-)
-model_results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
-model_results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
-model_results.save_raw_data(history.history['loss'], "loss_epoch")
-model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
+    )
 
-validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-validation_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+default_save_data(autoencoder_history, autoencoder, autoencoder_results)
 
-# Plotting the MSE distrubution of normal slices
-decoded_normal = autoencoder.predict(validation_normal)
-loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                         validation_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+classif_results = ModelResults(MODEL_NAME)
 
-# Saving raw MSE loss of normal slices
-model_results.save_raw_data(loss_normal, "normal_mse_loss")
+# Freeze encoder
+encoder.trainable = False
 
-decoded_abnormal = autoencoder.predict(validation_abnormal)
-loss_abnormal = losses.mse(
-    decoded_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
-    validation_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+# Add layer onto encoder
+classif = Dense(2, activation='softmax', name="classification")(encoder)
+classif = Model(inputs, classif)
 
-# Saving raw MSE loss of abnormal slices
-model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
+# Copy over weigts
+[classif.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(classif.layers)-1)]
 
-model_results.plot_mse_train_vs_val(history)
-model_results.plot_loss_train_vs_val(history)
+classif.compile(
+    optimizer=tensorflow.keras.optimizers.Adam(),
+    loss=CategoricalCrossentropy(),
+    metrics=[CategoricalAccuracy()])
 
-model_results.histogram_mse_loss(loss_normal, loss_abnormal)
-model_results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
+classif.summary()
 
-reconstructed_images = autoencoder.predict(x_val)
+with open(
+        path.join(
+            autoencoder_results.save_in_dir,
+            f"Classif_summary{classif_results.timestamp_string()}.txt"),
+        'w') as f:
+    autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
-model_results.input_vs_reconstructed_images(
-    [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
-    [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
-)
+classif_history = classif.fit(
+    x_val,
+    x_val_labels,
+    epochs=20,
+    validation_data=(x_test, x_test_labels))
+
+# Fine tunings
+encoder.trainable = True
+
+classif.compile(
+    optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-5),
+    loss=CategoricalCrossentropy(),
+    metrics=[CategoricalAccuracy()])
+
+fine_classif_history = classif.fit(
+    x_val,
+    x_val_labels,
+    epochs=10,
+    validation_data=(x_test, x_test_labels))
+
