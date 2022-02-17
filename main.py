@@ -111,7 +111,7 @@ with open(
 autoencoder_history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=100,
+    epochs=20,
     batch_size=32,
     validation_data=(x_val, x_val),
     )
@@ -120,8 +120,8 @@ default_save_data(autoencoder_history, autoencoder, autoencoder_results)
 
 classif_results = ModelResults(MODEL_NAME)
 
-# Freeze encoder
-encoder.trainable = False
+# Copy over weigts
+[x.set_weights(autoencoder.layers[i].get_weights()) for i, x in enumerate(classif.layers)]
 
 # Add layer onto encoder
 classif = Dense(2, activation='softmax', name="classification")(encoder)
