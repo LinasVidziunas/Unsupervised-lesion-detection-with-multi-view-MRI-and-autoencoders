@@ -14,11 +14,19 @@ from os import path
 # Used to identify the model in results.
 MODEL_NAME = "test"
 
+# Define the dominant image dimensions
+IMAGE_DIM = [384, 384]
+
+# Retrieve processed data
 data = ProcessedData("../sets/")
+
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
-    shape=(384, 384))
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+print(f"Amount of training images: {len(x_train)}") # Debugging
+
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
-    shape=(384, 384))
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+print(f"Amount of validatoin images: {len(x_val)}") # Debugging
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
@@ -54,22 +62,22 @@ model_results.save_raw_data(history.history['loss'], "loss_epoch")
 model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
 
 validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
-    shape=(384, 384))
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 validation_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
-    shape=(384, 384))
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 # Plotting the MSE distrubution of normal slices
 decoded_normal = autoencoder.predict(validation_normal)
-loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), 384 * 384),
-                         validation_normal.reshape(len(validation_normal), 384 * 384))
+loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+                         validation_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
 # Saving raw MSE loss of normal slices
 model_results.save_raw_data(loss_normal, "normal_mse_loss")
 
 decoded_abnormal = autoencoder.predict(validation_abnormal)
 loss_abnormal = losses.mse(
-    decoded_abnormal.reshape(len(validation_abnormal), 384 * 384),
-    validation_abnormal.reshape(len(validation_abnormal), 384 * 384))
+    decoded_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+    validation_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
 # Saving raw MSE loss of abnormal slices
 model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
@@ -83,6 +91,6 @@ model_results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
 reconstructed_images = autoencoder.predict(x_val)
 
 model_results.input_vs_reconstructed_images(
-    [el.reshape(384, 384) for el in x_val],
-    [el.reshape(384, 384) for el in reconstructed_images]
+    [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
+    [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
 )
