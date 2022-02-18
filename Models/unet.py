@@ -70,83 +70,111 @@ def unet_safe(pretrained_weights=None, input_size=(384, 384, 1)):
 
     return Model(input=inputs, output=conv10)
 
-
-def unet(input_size=(320, 320, 1), dropout_rate: float = 0.5,
-         skip_connections: bool = True):
+def unet_org(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connections: bool = True):
     inputs = Input(shape=input_size)
 
-    conv1 = Conv2D(64, 3, activation='relu', padding='same')(inputs)
-    conv1 = Conv2D(64, 3, activation='relu', padding='same')(conv1)
-    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
+    c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+    p1 = MaxPooling2D((2, 2))(c1skip)
 
-    conv2 = Conv2D(128, 3, activation='relu', padding='same')(pool1)
-    conv2 = Conv2D(128, 3, activation='relu', padding='same')(conv2)
-    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+    c2 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    c2skip = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    p2 = MaxPooling2D((2, 2))(c2skip)
 
-    conv3 = Conv2D(256, 3, activation='relu', padding='same')(pool2)
-    conv3 = Conv2D(256, 3, activation='relu', padding='same')(conv3)
-    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    c3 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+    c3 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    c3skip = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    p3 = MaxPooling2D((2, 2))(c3skip)
 
-    conv4 = Conv2D(512, 3, activation='relu', padding='same')(pool3)
-    conv4 = Conv2D(512, 3, activation='relu', padding='same')(conv4)
-    drop4 = Dropout(dropout_rate)(conv4)
-    pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+    c4 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+    c4 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    c4skip = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
 
-    conv5 = Conv2D(1024, 3, activation='relu', padding='same')(pool4)
-    conv5 = Conv2D(1024, 3, activation='relu', padding='same')(conv5)
-    drop5 = Dropout(dropout_rate)(conv5)
+    c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+    c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+    c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
 
-    up6 = Conv2D(512, 2, activation='relu', padding='same')(
-        UpSampling2D(size=(2, 2))(drop5))
-    merge6 = None
-    conv6 = None
+    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(reshape)
+    u6 = concatenate([u6, c4skip])
+    c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+    c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
 
-    if skip_connections:
-        merge6 = concatenate([drop4, up6], axis=3)
-        conv6 = Conv2D(512, 3, activation='relu', padding='same')(merge6)
-    else:
-        conv6 = Conv2D(512, 3, activation='relu', padding='same')(up6)
-    conv6 = Conv2D(512, 3, activation='relu', padding='same')(conv6)
+    u7 = Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(c6)
+    u7 = concatenate([u7, c3skip])
+    c7 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+    c7 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
 
-    up7 = Conv2D(256, 2, activation='relu', padding='same')(
-        UpSampling2D(size=(2, 2))(conv6))
-    merge7 = None
-    conv7 = None
+    u8 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c7)
+    u8 = concatenate([u8, c2skip])
+    c8 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+    c8 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
 
-    if skip_connections:
-        merge7 = concatenate([conv3, up7], axis=3)
-        conv7 = Conv2D(256, 3, activation='relu', padding='same')(merge7)
-    else:
-        conv7 = Conv2D(256, 3, activation='relu', padding='same')(up7)
-    conv7 = Conv2D(256, 3, activation='relu', padding='same')(conv7)
+    u9 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c8)
+    u9 = concatenate([u9, c1skip])
+    c9 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+    c9 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-    up8 = Conv2D(128, 2, activation='relu', padding='same')(
-        UpSampling2D(size=(2, 2))(conv7))
-    merge8 = None
-    conv8 = None
+    output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-    if skip_connections:
-        merge8 = concatenate([conv2, up8], axis=3)
-        conv8 = Conv2D(128, 3, activation='relu', padding='same')(merge8)
-    else:
-        conv8 = Conv2D(128, 3, activation='relu', padding='same')(up8)
-    conv8 = Conv2D(128, 3, activation='relu', padding='same')(conv8)
 
-    up9 = Conv2D(64, 2, activation='relu', padding='same')(
-        UpSampling2D(size=(2, 2))(conv8))
-    merge9 = None
-    conv9 = None
+    return Model(inputs, output)
 
-    if skip_connections:
-        merge9 = concatenate([conv1, up9], axis=3)
-        conv9 = Conv2D(64, 3, activation='relu', padding='same')(merge9)
-    else:
-        conv9 = Conv2D(64, 3, activation='relu', padding='same')(up9)
-    conv9 = Conv2D(64, 3, activation='relu', padding='same')(conv9)
-    conv9 = Conv2D(2, 3, activation='relu', padding='same')(conv9)
-    conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
 
-    return Model(inputs, conv10)
+def unet_org_dense(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connections: bool = True):
+    inputs = Input(shape=input_size)
+
+    c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
+    c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+    p1 = MaxPooling2D((2, 2))(c1skip)
+
+    c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+    c2 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    c2skip = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    p2 = MaxPooling2D((2, 2))(c2skip)
+
+    c3 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+    c3 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    c3skip = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    p3 = MaxPooling2D((2, 2))(c3skip)
+
+    c4 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+    c4 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    c4skip = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
+
+    flatten = Flatten()(p4)
+    d1 = Dense(1152, activation='relu')(flatten)
+    mod = Dropout(dropout_rate)(d1)
+    bottle = Dense(120, activation='sigmoid')(mod)
+    d2 = Dense(1152, activation='relu')(bottle)
+    reshape = Reshape((24, 24, 2))(d2)
+
+    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(reshape)
+    u6 = concatenate([u6, c4skip])
+    c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+    c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+
+    u7 = Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(c6)
+    u7 = concatenate([u7, c3skip])
+    c7 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+    c7 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+
+    u8 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c7)
+    u8 = concatenate([u8, c2skip])
+    c8 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+    c8 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+
+    u9 = Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c8)
+    u9 = concatenate([u9, c1skip])
+    c9 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+    c9 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+
+    output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+
+
+    return Model(inputs, output)
 
 
 def unet_dense(input_size=(384, 384, 1), dense_size: int = 60, dropout_rate: float = 0.35, skip_connections: bool = True):
@@ -188,7 +216,6 @@ def unet_dense(input_size=(384, 384, 1), dense_size: int = 60, dropout_rate: flo
     bottle = Dense(dense_size, activation='sigmoid')(mod)
     d2 = Dense(1440, activation='relu')(bottle)
     reshape = Reshape((12, 12, 10))(d2)
-
 
     # Expansive path
     u6 = Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(reshape)

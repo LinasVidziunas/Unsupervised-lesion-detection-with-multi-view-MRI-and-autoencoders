@@ -66,8 +66,9 @@ class ModelResults:
     def histogram_mse_loss(self, losses_normal,
                            losses_abnormal, n_bins: int = 15):
         """Plot MSE loss for normal and abnormal in the same histogram"""
-
-        plt.hist([losses_normal[:], losses_abnormal[:]], bins=n_bins)
+        #Changes done my mr.Thoresen 18.02.2022
+        plt.hist([losses_normal[:]], bins=int(len(losses_normal)), alpha=0.4)
+        plt.hist([losses_abnormal[:]], bins=len(losses_abnormal), alpha=0.4)
         plt.xlabel("MSE loss")
         plt.ylabel("No. of slices")
         plt.legend(['Normal', 'Abnormal'], loc='upper left')

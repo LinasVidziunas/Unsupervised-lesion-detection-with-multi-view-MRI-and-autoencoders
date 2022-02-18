@@ -1,18 +1,17 @@
 from processed import ProcessedData
 from results import ModelResults
 from Models.our import ourBestModel
-from Models.unet import unet, unet_dense, unet_safe
+from Models.unet import unet_org, unet_dense, unet_safe, unet_org_dense
 from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
 
 import tensorflow
 from keras import losses
 from keras.losses import MeanSquaredError
-
 from os import path
 
 # Change this to the desired name of your model.
 # Used to identify the model in results.
-MODEL_NAME = "test"
+MODEL_NAME = "original_unet_denseembedding"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384]
@@ -30,16 +29,17 @@ print(f"Amount of validatoin images: {len(x_val)}") # Debugging
 
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-autoencoder = unet_dense()
+#autoencoder = unet_org(input_size=(384, 384, 1))
+autoencoder = unet_org_dense(input_size=(384, 384, 1))
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
-#autoencoder = own_vgg16(input_shape=(384, 384, 1))
+# autoencoder = own_vgg16(input_shape=(384, 384, 1))
 
 autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.0001),
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
-
+autoencoder.summary()
 model_results = ModelResults(MODEL_NAME)
 
 with open(
@@ -52,7 +52,7 @@ with open(
 history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=200,
+    epochs=100,
     batch_size=32,
     validation_data=(x_val, x_val),
 )
