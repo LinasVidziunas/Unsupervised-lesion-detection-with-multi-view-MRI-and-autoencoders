@@ -6,7 +6,7 @@ from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
 
 import tensorflow 
 from keras import losses, Model
-from keras.layers import Input, Dense
+from keras.layers import Input, Dense, Dropout
 from keras.losses import MeanSquaredError, CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 
@@ -61,7 +61,7 @@ MODEL_NAME = "original_unet_denseembedding"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
-    
+
 # Retrieve processed data
 data = ProcessedData("../sets/")
 
@@ -120,15 +120,19 @@ default_save_data(autoencoder_history, autoencoder, autoencoder_results)
 
 classif_results = ModelResults(MODEL_NAME)
 
-# Copy over weigts
-[x.set_weights(autoencoder.layers[i].get_weights()) for i, x in enumerate(classif.layers)]
-
-# Add layer onto encoder
-classif = Dense(2, activation='softmax', name="classification")(encoder)
-classif = Model(inputs, classif)
+encoder = Model(inputs, encoder)
 
 # Copy over weigts
-[classif.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(classif.layers)-1)]
+[encoder.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(encoder.layers)-1)]
+
+# Freeze encoder
+encoder.trainabe = False
+
+# New model on top
+x = encoder(inputs, training=False)
+x = Dropout(0.2)(x)
+x = Dense(2, activation='softmax', name="classification")(x)
+classif = Model(inputs, x)
 
 classif.compile(
     optimizer=tensorflow.keras.optimizers.Adam(),
