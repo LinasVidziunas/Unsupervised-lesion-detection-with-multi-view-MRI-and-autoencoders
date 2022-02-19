@@ -72,14 +72,14 @@ print(f"Amount of training images: {len(x_train)}") # Debugging
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of validation images: {len(x_val)}") # Debugging
-x_val_labels = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.validation.axial.slices]
-x_val_labels = tensorflow.constant(x_val_labels, shape=(len(x_val_labels), 2))
+y_val = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.validation.axial.slices]
+y_val = tensorflow.constant(y_val, shape=(len(y_val), 2))
 
 x_test = data.test.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of test images: {len(x_test)}") # Debugging
-x_test_labels = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
-x_test_labels = tensorflow.constant(x_test_labels, shape=(len(x_test_labels), 2))
+y_test = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
+y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 # Build the model
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
@@ -146,9 +146,9 @@ with open(
 
 classif_history = classif.fit(
     x_val,
-    x_val_labels,
+    y_val,
     epochs=20,
-    validation_data=(x_test, x_test_labels))
+    validation_data=(x_test, y_test))
 
 # Fine tunings
 encoder.trainable = True
@@ -160,7 +160,7 @@ classif.compile(
 
 fine_classif_history = classif.fit(
     x_val,
-    x_val_labels,
+    y_val,
     epochs=10,
-    validation_data=(x_test, x_test_labels))
+    validation_data=(x_test, y_test))
 
