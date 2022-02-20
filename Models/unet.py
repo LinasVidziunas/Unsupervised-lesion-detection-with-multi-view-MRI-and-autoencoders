@@ -69,8 +69,8 @@ def unet_safe(pretrained_weights=None, input_size=(384, 384, 1)):
 
     return Model(input=inputs, output=conv10)
 
-def unet_org(input_size=(320, 320, 1), dropout_rate: float = 0.5, skip_connections: bool = True):
-    inputs = Input(shape=input_size)
+def unet_org(inputs, dropout_rate: float = 0.5, skip_connections: bool = True):
+    # inputs = Input(shape=input_size)
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)

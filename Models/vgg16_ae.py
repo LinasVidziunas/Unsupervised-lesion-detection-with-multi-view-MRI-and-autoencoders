@@ -148,44 +148,43 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
     return block
 
 
-def own_vgg16(input_shape=(384, 384, 1), dense_size: int = 160):
-    encoder = None
-    decoder = None
-
+def own_vgg16(inputs, input_shape=(384, 384, 1), dense_size: int = 80):
     encoder_filters = [64, 128, 256, 512, 512]
     decoder_filters = [512, 512, 256, 128, 64]
 
-    inputs = Input(shape=input_shape)
+    # inputs = Input(shape=input_shape)
 
-    e1 = own_vgg16_encoder_block(
+    b1 = own_vgg16_encoder_block(
         previous_layer=inputs, filters=encoder_filters[0], conv2d_layers=2, batchNorm=True)
-    e2 = own_vgg16_encoder_block(
-        previous_layer=e1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=True)
-    e3 = own_vgg16_encoder_block(
-        previous_layer=e2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=True)
-    e4 = own_vgg16_encoder_block(
-        previous_layer=e3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=True)
+    b2 = own_vgg16_encoder_block(
+        previous_layer=b1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=True)
+    b3 = own_vgg16_encoder_block(
+        previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=True)
+    b4 = own_vgg16_encoder_block(
+        previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=True)
     encoder = own_vgg16_encoder_block(
-        previous_layer=e4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=True)
+        previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=True)
 
-    bottleneck = Flatten()(encoder)
-    bottleneck = Dense(4096, activation='relu')(bottleneck)
+    f1 = Flatten()(encoder)
+    d1 = Dense(4096, activation='relu')(f1)
     # bottleneck = Dense(4096, activation='relu')(bottleneck)
-    bottleneck = Dense(dense_size, activation='relu')(bottleneck)
+    bottleneck = Dense(dense_size, activation='relu')(d1)
     # bottleneck = Dense(4096, activation='relu')(bottleneck)
-    bottleneck = Dense(4032, activation='relu')(bottleneck)
-    reshape = Reshape((12, 12, 28))(bottleneck)
+    d2 = Dense(4032, activation='relu')(bottleneck)
+    reshape = Reshape((12, 12, 28))(d2)
 
-    d1 = own_vgg16_decoder_block(
+    b5 = own_vgg16_decoder_block(
         previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=True)
-    d2 = own_vgg16_decoder_block(
-        previous_layer=d1, filters=decoder_filters[1], conv2d_layers=3, batchNorm=True)
-    d3 = own_vgg16_decoder_block(
-        previous_layer=d2, filters=decoder_filters[2], conv2d_layers=3, batchNorm=True)
-    d4 = own_vgg16_decoder_block(
-        previous_layer=d3, filters=decoder_filters[3], conv2d_layers=2, batchNorm=True)
+    b6 = own_vgg16_decoder_block(
+        previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=True)
+    b7 = own_vgg16_decoder_block(
+        previous_layer=b6, filters=decoder_filters[2], conv2d_layers=3, batchNorm=True)
+    b8 = own_vgg16_decoder_block(
+        previous_layer=b7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=True)
     decoder = own_vgg16_decoder_block(
-        previous_layer=d4, filters=decoder_filters[4], conv2d_layers=2, batchNorm=True)
+        previous_layer=b8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=True)
 
-    # for decoder_filter in decoder_filters:
-    return Model(inputs, decoder)
+    decoder = Conv2D(filters=1, kernel_size=(3, 3),
+                     padding="same", activation="sigmoid")(decoder)
+
+    return decoder, bottleneck

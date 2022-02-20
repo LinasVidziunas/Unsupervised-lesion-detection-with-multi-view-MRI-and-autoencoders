@@ -87,11 +87,12 @@ inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
 #autoencoder = unet_org(input_size=(384, 384, 1))
-autoencoder = unet_org_dense(input_size=(384, 384, 1))
+autoencoder = unet_org_dense(inputs)
+# outputs, encoder = unet_dense(inputs)
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
-# autoencoder = own_vgg16(input_shape=(384, 384, 1))
+outputs, encoder = own_vgg16(inputs)
 
 autoencoder = Model(inputs, outputs)
 
@@ -111,7 +112,7 @@ with open(
 autoencoder_history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=20,
+    epochs=200,
     batch_size=32,
     validation_data=(x_val, x_val),
     )
