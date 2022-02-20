@@ -168,3 +168,7 @@ fine_classif_history = classif.fit(
     epochs=10,
     validation_data=(x_test, y_test))
 
+predictions = classif.predict(x_test)
+
+for i, prediction in enumerate(predictions, start=0):
+    print(f"Predicted: {prediction}. Correct: {y_test[i]}")
