@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-# import sklearn.metrics as metrics
-# import numpy as np
 
+# import sklearn.metrics as metrics
+import numpy as np
 import tensorflow as tf
 
 from datetime import datetime
@@ -124,30 +124,31 @@ class ModelResults:
         where the first value in the list is normal rate and the second is abnormal
         rate.
 
-        :param predictions: categorical prediction ex. [[0.9, 0.1], ...]
+        :param predictions: tf.tensor categorical prediction ex. [[0.9, 0.1], ...]
         :param truth: categorical truth ex. [[1.0, 0.0], ...]
         """
 
         abnormal_predictions = []
         normal_predictions = []
 
+
         for i, truth in enumerate(truth, start=0):
-            if tf.equal(truth, [0, 1]):
+            if np.array_equal(np.array(truth), np.array([0, 1])):
                 abnormal_predictions.append(predictions[i])
-            elif tf.equal(truth,  [1, 0]):
+            elif np.array_equal(np.array(truth), np.array([1, 0])):
                 normal_predictions.append(predictions[i])
-               
+
         plt.scatter([i[0] for i in normal_predictions],
                     [i[1] for i in normal_predictions],
-                    c="blue", label="Normal")
+                    c="blue", label="Normal", alpha=0.6)
                 
         plt.scatter([i[0] for i in abnormal_predictions],
                     [i[1] for i in abnormal_predictions],
                     c="orange", label="Abnormal")
-
+               
         plt.title("Predictions")
-        plt.xlabel("Normal")
-        plt.ylabel("Abnormal")
+        plt.xlabel("Normal slice")
+        plt.ylabel("Abnormal slice")
         plt.legend(loc='best')
         plt.savefig(self.__naming("Scatter_plot_classification"))
         plt.clf()

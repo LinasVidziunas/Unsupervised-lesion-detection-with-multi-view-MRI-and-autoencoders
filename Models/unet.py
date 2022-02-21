@@ -69,7 +69,7 @@ def unet_safe(pretrained_weights=None, input_size=(384, 384, 1)):
 
     return Model(input=inputs, output=conv10)
 
-def unet_org(inputs, dropout_rate: float = 0.5, skip_connections: bool = True):
+def unet_org(inputs):
     # inputs = Input(shape=input_size)
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -117,7 +117,6 @@ def unet_org(inputs, dropout_rate: float = 0.5, skip_connections: bool = True):
 
     output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-
     return output, bottle
 
 
@@ -143,8 +142,8 @@ def unet_org_dense(inputs, dropout_rate: float = 0.5, skip_connections: bool = T
 
     flatten = Flatten()(p4)
     d1 = Dense(1152, activation='relu')(flatten)
-    mod = Dropout(dropout_rate)(d1)
-    bottle = Dense(120, activation='sigmoid')(mod)
+    # mod = Dropout(dropout_rate)(d1)
+    bottle = Dense(120, activation='sigmoid')(d1)
     d2 = Dense(1152, activation='relu')(bottle)
     reshape = Reshape((24, 24, 2))(d2)
 
