@@ -67,17 +67,17 @@ data = ProcessedData("../sets/")
 
 x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of training images: {len(x_train)}") # Debugging
+print(f"Amount of training images: {len(x_train)}")
 
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of validation images: {len(x_val)}") # Debugging
+print(f"Amount of validation images: {len(x_val)}")
 y_val = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.validation.axial.slices]
 y_val = tensorflow.constant(y_val, shape=(len(y_val), 2))
 
 x_test = data.test.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of test images: {len(x_test)}") # Debugging
+print(f"Amount of test images: {len(x_test)}")
 y_test = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
 y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
