@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 # import sklearn.metrics as metrics
 # import numpy as np
-from datetime import datetime
 
+import tensorflow as tf
+
+from datetime import datetime
 from os import path, makedirs
 
 class ModelResults:
@@ -130,9 +132,9 @@ class ModelResults:
         normal_predictions = []
 
         for i, truth in enumerate(truth, start=0):
-            if truth == [0, 1]:
+            if tf.equal(truth, [0, 1]):
                 abnormal_predictions.append(predictions[i])
-            elif truth == [1, 0]:
+            elif tf.equal(truth,  [1, 0]):
                 normal_predictions.append(predictions[i])
                
         plt.scatter([i[0] for i in normal_predictions],
@@ -148,7 +150,7 @@ class ModelResults:
         plt.ylabel("Abnormal")
         plt.legend(loc='best')
         plt.savefig(self.__naming("Scatter_plot_classification"))
-        plt.clt()
+        plt.clf()
 
 
     def save_raw_data(self, data, name="raw_data"):
