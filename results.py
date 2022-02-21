@@ -138,14 +138,14 @@ class ModelResults:
             elif np.array_equal(np.array(truth), np.array([1, 0])):
                 normal_predictions.append(predictions[i])
 
-        plt.scatter([i[0] for i in abnormal_predictions],
-                    [i[1] for i in abnormal_predictions],
-                    c="orange", label="Abnormal")
-              
         plt.scatter([i[0] for i in normal_predictions],
                     [i[1] for i in normal_predictions],
                     c="blue", label="Normal", alpha=0.6)
                 
+        plt.scatter([i[0] for i in abnormal_predictions],
+                    [i[1] for i in abnormal_predictions],
+                    c="orange", label="Abnormal")
+               
         plt.title("Predictions")
         plt.xlabel("Normal slice")
         plt.ylabel("Abnormal slice")
