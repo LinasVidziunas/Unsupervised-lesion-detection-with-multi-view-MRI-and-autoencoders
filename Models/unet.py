@@ -227,7 +227,6 @@ def unet_org_dense(inputs, dropout_rate: float = 0.5, skip_connections: bool = T
 
     output = Conv2D(1, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-
     return output, bottle
 
 
