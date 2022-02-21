@@ -183,6 +183,11 @@ for i, prediction in enumerate(predictions, start=0):
     raw += f"\n{prediction},{y_test[i]}"
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
 
-autoencoder_results.save_raw_data(raw, "classification_predicted_vs_correct")
-    
+with open(
+        path.join(
+            autoencoder_results.save_in_dir,
+            f"classificatoin_predicted_vs_correct{classif_results.timestamp_string()}.raw"),
+        'w') as f:
+    f.write(raw)
+
 autoencoder_results.scatter_plot_of_predictions(predictions, y_test)
