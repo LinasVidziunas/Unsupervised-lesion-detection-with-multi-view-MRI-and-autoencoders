@@ -92,8 +92,7 @@ def unet_org(inputs, dropout_rate: float = 0.5, skip_connections: bool = True):
     p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
 
     c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
-    c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
-    bottle = Flatten()(c5)
+    bottle = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
 
     u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(c5)
