@@ -9,6 +9,7 @@ from keras import losses, Model
 from keras.layers import Input, Dense, Dropout
 from keras.losses import MeanSquaredError, CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
+import matplotlib.pyplot as plt
 
 from os import path
 
@@ -57,7 +58,7 @@ def default_save_data(history, autoencoder, model_results):
 
 # Change this to the desired name of your model.
 # Used to identify the model in results.
-MODEL_NAME = "original_unet_denseembedding"
+MODEL_NAME = "classified_original_unet"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
@@ -87,12 +88,12 @@ inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 # autoencoder = ourBestModel()
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
 #autoencoder = unet_org(input_size=(384, 384, 1))
-autoencoder = unet_org_dense(inputs)
+outputs, encoder = unet_org(inputs)
 # outputs, encoder = unet_dense(inputs)
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
-outputs, encoder = own_vgg16(inputs)
+# outputs, encoder = own_vgg16(inputs)
 
 autoencoder = Model(inputs, outputs)
 
@@ -112,7 +113,7 @@ with open(
 autoencoder_history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=200,
+    epochs=150,
     batch_size=32,
     validation_data=(x_val, x_val),
     )
@@ -173,5 +174,11 @@ fine_classif_history = classif.fit(
 
 predictions = classif.predict(x_test)
 
+raw = "prediction,correct"
 for i, prediction in enumerate(predictions, start=0):
+    raw += f"\n{prediction},{y_test[i]}"
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
+
+autoencoder_results.save_raw_data(raw, "classification_predicted_vs_correct")
+    
+autoencoder_results.scatter_plot_of_predictions(predictions, y_test)
