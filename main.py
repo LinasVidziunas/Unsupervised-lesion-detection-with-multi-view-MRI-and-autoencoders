@@ -153,7 +153,7 @@ with open(
 classif_history = classif.fit(
     x_val,
     y_val,
-    batch_size=256,
+    batch_size=128,
     epochs=20,
     validation_data=(x_test, y_test))
 
@@ -168,7 +168,7 @@ classif.compile(
 fine_classif_history = classif.fit(
     x_val,
     y_val,
-    batch_size=256,
+    batch_size=128,
     epochs=10,
     validation_data=(x_test, y_test))
 
