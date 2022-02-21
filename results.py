@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 # import sklearn.metrics as metrics
 # import numpy as np
-from datetime import datetime
 
+import tensorflow as tf
+
+from datetime import datetime
 from os import path, makedirs
 
 class ModelResults:
@@ -65,9 +67,9 @@ class ModelResults:
         plt.clf()
 
     def histogram_mse_loss(self, losses_normal,
-                           losses_abnormal, n_bins: int = 15):
+                           losses_abnormal):
         """Plot MSE loss for normal and abnormal in the same histogram"""
-        #Changes done my mr.Thoresen 18.02.2022
+        # Changes done my Mr. Thoresen 18.02.2022
         plt.hist([losses_normal[:]], bins=int(len(losses_normal)), alpha=0.4)
         plt.hist([losses_abnormal[:]], bins=len(losses_abnormal), alpha=0.4)
         plt.xlabel("MSE loss")
@@ -115,6 +117,41 @@ class ModelResults:
 
         plt.savefig(self.__naming("input_and_reconstructed_images"))
         plt.clf()
+
+    def scatter_plot_of_predictions(self, predictions, truth):
+        """
+        Saves a scatter plot of predicted class. Arguments need to be categorical,
+        where the first value in the list is normal rate and the second is abnormal
+        rate.
+
+        :param predictions: categorical prediction ex. [[0.9, 0.1], ...]
+        :param truth: categorical truth ex. [[1.0, 0.0], ...]
+        """
+
+        abnormal_predictions = []
+        normal_predictions = []
+
+        for i, truth in enumerate(truth, start=0):
+            if tf.equal(truth, [0, 1]):
+                abnormal_predictions.append(predictions[i])
+            elif tf.equal(truth,  [1, 0]):
+                normal_predictions.append(predictions[i])
+               
+        plt.scatter([i[0] for i in normal_predictions],
+                    [i[1] for i in normal_predictions],
+                    c="blue", label="Normal")
+                
+        plt.scatter([i[0] for i in abnormal_predictions],
+                    [i[1] for i in abnormal_predictions],
+                    c="orange", label="Abnormal")
+
+        plt.title("Predictions")
+        plt.xlabel("Normal")
+        plt.ylabel("Abnormal")
+        plt.legend(loc='best')
+        plt.savefig(self.__naming("Scatter_plot_classification"))
+        plt.clf()
+
 
     def save_raw_data(self, data, name="raw_data"):
         with open(path.join(
