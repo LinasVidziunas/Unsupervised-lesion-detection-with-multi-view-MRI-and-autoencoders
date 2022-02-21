@@ -143,8 +143,8 @@ def unet_org_dense(inputs, dropout_rate: float = 0.5, skip_connections: bool = T
 
     flatten = Flatten()(p4)
     d1 = Dense(1152, activation='relu')(flatten)
-    mod = Dropout(dropout_rate)(d1)
-    bottle = Dense(120, activation='sigmoid')(mod)
+    # mod = Dropout(dropout_rate)(d1)
+    bottle = Dense(120, activation='sigmoid')(d1)
     d2 = Dense(1152, activation='relu')(bottle)
     reshape = Reshape((24, 24, 2))(d2)
 
