@@ -6,7 +6,7 @@ from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
 
 import tensorflow 
 from keras import losses, Model
-from keras.layers import Input, Dense, Dropout
+from keras.layers import Input, Dense, Dropout, Flatten
 from keras.losses import MeanSquaredError, CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 import matplotlib.pyplot as plt
@@ -125,13 +125,17 @@ classif_results = ModelResults(MODEL_NAME)
 encoder = Model(inputs, encoder)
 
 # Copy over weigts
-[encoder.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(encoder.layers)-1)]
+[encoder.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(encoder.layers))]
 
 # Freeze encoder
 encoder.trainabe = False
 
 # New model on top
 x = encoder(inputs, training=False)
+
+# Add flatten layer if bottleneck is conv! Comment out if bn is dense!
+x = Flatten()(x)
+
 x = Dropout(0.2)(x)
 x = Dense(2, activation='softmax', name="classification")(x)
 classif = Model(inputs, x)
