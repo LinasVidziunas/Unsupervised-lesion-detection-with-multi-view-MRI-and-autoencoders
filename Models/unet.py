@@ -61,21 +61,25 @@ def new_unet_org_dense(inputs, dropout_rate: float = 0.35):
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+    c1skip = Dropout(dropout_rate)(c1skip)
     p1 = MaxPooling2D((2, 2))(c1skip)
 
     c2 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
     c2 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
     c2skip = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+    c2skip = Dropout(dropout_rate)(c2skip)
     p2 = MaxPooling2D((2, 2))(c2skip)
 
     c3 = Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
     c3 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
     c3skip = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+    c3skip = Dropout(dropout_rate)(c3skip)
     p3 = MaxPooling2D((2, 2))(c3skip)
 
     c4 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
     c4 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
     c4skip = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+    c4skip = Dropout(dropout_rate)(c4skip)
     drop4 = Dropout(dropout_rate)(c4skip)
     p4 = MaxPooling2D(pool_size=(2, 2))(drop4)
 
