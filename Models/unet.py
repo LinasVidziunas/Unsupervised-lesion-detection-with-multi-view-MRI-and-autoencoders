@@ -83,7 +83,8 @@ def new_unet_org_dense(inputs, dropout_rate: float = 0.35):
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
     flatten = Flatten()(c5)
 
-    bottle = Dense(120, activation='sigmoid')(flatten)
+    mod = Dropout(dropout_rate)(flatten)
+    bottle = Dense(120, activation='sigmoid')(mod)
     d2 = Dense(1152, activation='relu')(bottle)
     reshape = Reshape((24, 24, 2))(d2)
 
