@@ -1,28 +1,29 @@
-from processed import ProcessedData
-from results import ModelResults
-from Models.our import ourBestModel
-from Models.unet import unet_org, unet_dense, unet_safe, unet_org_dense, unet_org_dense_dropout
-from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
-
-import tensorflow 
+import tensorflow
 from keras import losses, Model
 from keras.layers import Input, Dense, Dropout, Flatten
 from keras.losses import MeanSquaredError, CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 
+from processed import ProcessedData
+from results import ModelResults
+from Models.our import ourBestModel
+from Models.unet import unet_org, unet_org_dense
+from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
+
 from os import path
+
 
 def default_save_data(history, autoencoder, model_results):
     model_results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
     model_results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
     model_results.save_raw_data(history.history['loss'], "loss_epoch")
     model_results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
-    
+   
     validation_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(
         shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
     validation_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(
         shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-    
+   
     # Plotting the MSE distrubution of normal slices
     decoded_normal = autoencoder.predict(validation_normal)
     loss_normal = losses.mse(decoded_normal.reshape(len(validation_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
@@ -30,23 +31,23 @@ def default_save_data(history, autoencoder, model_results):
 
     # Saving raw MSE loss of normal slices
     model_results.save_raw_data(loss_normal, "normal_mse_loss")
-    
+   
     decoded_abnormal = autoencoder.predict(validation_abnormal)
     loss_abnormal = losses.mse(
         decoded_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
         validation_abnormal.reshape(len(validation_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
-    
+   
     # Saving raw MSE loss of abnormal slices
     model_results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
-    
+   
     model_results.plot_mse_train_vs_val(history)
     model_results.plot_loss_train_vs_val(history)
-    
+   
     model_results.histogram_mse_loss(loss_normal, loss_abnormal)
     model_results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
-    
+   
     reconstructed_images = autoencoder.predict(x_val)
-    
+   
     model_results.input_vs_reconstructed_images(
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
@@ -57,7 +58,7 @@ def default_save_data(history, autoencoder, model_results):
 
 # Change this to the desired name of your model.
 # Used to identify the model in results.
-MODEL_NAME = "classified_unet_org_40_dr_120_bn"
+MODEL_NAME = "classified_unet_35"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
@@ -88,8 +89,8 @@ inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 # autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
 # autoencoder = unet_org(input_size=(384, 384, 1))
 # outputs, encoder = unet_org(inputs)
-# outputs, encoder = unet_org(inputs)
-outputs, encoder = unet_org_dense_dropout(inputs, dropout_rate=0.4)
+outputs, encoder = unet_org(inputs, dropout_rate=0.35)
+# outputs, encoder = unet_org_dense_dropout(inputs, dropout_rate=0.4)
 # autoencoder = vgg16(input_size=(384, 384, 1))
 # autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
 # autoencoder = unet_safe(None, input_size=(384, 384, 1))
@@ -134,7 +135,7 @@ encoder.trainabe = False
 x = encoder(inputs, training=False)
 
 # Add flatten layer if bottleneck is conv! Comment out if bn is dense!
-# x = Flatten()(x)
+x = Flatten()(x)
 
 x = Dropout(0.2)(x)
 x = Dense(2, activation='softmax', name="classification")(x)
@@ -152,7 +153,7 @@ with open(
             autoencoder_results.save_in_dir,
             f"Classif_summary{classif_results.timestamp_string()}.txt"),
         'w') as f:
-    autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
+    classif.summary(print_fn=lambda x: f.write(x + '\n'))
 
 classif_history = classif.fit(
     x_val,
