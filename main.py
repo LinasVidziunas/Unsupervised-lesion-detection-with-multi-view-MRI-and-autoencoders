@@ -9,6 +9,7 @@ from results import ModelResults
 from Models.our import ourBestModel
 from Models.unet import unet_org, unet_org_dense, new_unet_org_dense
 from Models.vgg16_ae import vgg16, vgg16_dense, own_vgg16
+from classification import Classification_using_transfer_learning
 
 from os import path
 
@@ -102,13 +103,14 @@ autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-
                     loss="binary_crossentropy",
                     metrics=[MeanSquaredError()])
 
-autoencoder_results = ModelResults(MODEL_NAME)
+results = ModelResults(MODEL_NAME)
 print(autoencoder.summary())
 
+# Save autoencoder summary
 with open(
         path.join(
-            autoencoder_results.save_in_dir,
-            f"AE_summary{autoencoder_results.timestamp_string()}.txt"),
+            results.save_in_dir,
+            f"AE_summary{results.timestamp_string()}.txt"),
         'w') as f:
     autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
@@ -120,66 +122,21 @@ autoencoder_history = autoencoder.fit(
     validation_data=(x_val, x_val),
     )
 
-default_save_data(autoencoder_history, autoencoder, autoencoder_results)
+default_save_data(autoencoder_history, autoencoder, results)
 
-classif_results = ModelResults(MODEL_NAME)
 
 encoder = Model(inputs, encoder)
 
-# Copy over weigts
-[encoder.layers[i].set_weights(autoencoder.layers[i].get_weights()) for i in range(0, len(encoder.layers))]
+transfer_learning_classif = Classification_using_transfer_learning(autoencoder, encoder, inputs, x_val, y_val, x_test, y_test)
 
-# Freeze encoder
-encoder.trainabe = False
+# Copy weights from autoencoder to encoder model
+transfer_learning_classif.copy_weights()
+classif_results = transfer_learning_classif.run(flatten_layer=False, learning_rate=1e-4, batch_size=32, epochs=20)
+fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=1e-5, batch_size=32, epochs=10, num_layers=5)
 
-# New model on top
-x = encoder(inputs, training=False)
+predictions = transfer_learning_classif.classif.predict(x_test)
 
-# Add flatten layer if bottleneck is conv! Comment out if bn is dense!
-x = Flatten()(x)
-
-x = Dropout(0.2)(x)
-x = Dense(2, activation='softmax', name="classification")(x)
-classif = Model(inputs, x)
-
-classif.compile(
-    optimizer=tensorflow.keras.optimizers.Adam(),
-    loss=CategoricalCrossentropy(),
-    metrics=[CategoricalAccuracy()])
-
-classif.summary()
-
-with open(
-        path.join(
-            autoencoder_results.save_in_dir,
-            f"Classif_summary{classif_results.timestamp_string()}.txt"),
-        'w') as f:
-    classif.summary(print_fn=lambda x: f.write(x + '\n'))
-
-classif_history = classif.fit(
-    x_val,
-    y_val,
-    batch_size=64,
-    epochs=20,
-    validation_data=(x_test, y_test))
-
-# Fine tunings
-encoder.trainable = True
-
-classif.compile(
-    optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-5),
-    loss=CategoricalCrossentropy(),
-    metrics=[CategoricalAccuracy()])
-
-fine_classif_history = classif.fit(
-    x_val,
-    y_val,
-    batch_size=64,
-    epochs=10,
-    validation_data=(x_test, y_test))
-
-predictions = classif.predict(x_test)
-
+# Save classification via transfer learning predictions
 raw = "prediction,correct"
 for i, prediction in enumerate(predictions, start=0):
     raw += f"\n{prediction},{y_test[i]}"
@@ -187,9 +144,9 @@ for i, prediction in enumerate(predictions, start=0):
 
 with open(
         path.join(
-            autoencoder_results.save_in_dir,
-            f"classificatoin_predicted_vs_correct{classif_results.timestamp_string()}.raw"),
+            results.save_in_dir,
+            f"classificatoin_predicted_vs_correct{results.timestamp_string()}.raw"),
         'w') as f:
     f.write(raw)
 
-autoencoder_results.scatter_plot_of_predictions(predictions, y_test)
+results.scatter_plot_of_predictions(predictions, y_test)
