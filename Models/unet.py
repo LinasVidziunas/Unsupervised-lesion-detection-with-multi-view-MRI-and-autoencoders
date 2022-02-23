@@ -3,7 +3,7 @@ from keras.layers import Input, Conv2D, Dense, Flatten, Reshape, Conv2DTranspose
 from keras.layers import MaxPooling2D, UpSampling2D, Dropout, concatenate
 
 
-def unet_org(inputs, dropout_rate: float = 0.35):
+def unet_org(inputs):
     # inputs = Input(shape=input_size)
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -23,15 +23,13 @@ def unet_org(inputs, dropout_rate: float = 0.35):
     c4 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
     c4 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
     c4skip = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
-    drop4 = Dropout(dropout_rate)(c4skip)
-    p4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+    p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
 
     c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
-    bottle = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
-    drop5 = Dropout(dropout_rate)(c5)
+    bottle = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
 
-    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(drop5)
+    u6 = Conv2DTranspose(512, (2, 2), strides=(2, 2), padding='same')(bottle)
     u6 = concatenate([u6, c4skip])
     c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
     c6 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)

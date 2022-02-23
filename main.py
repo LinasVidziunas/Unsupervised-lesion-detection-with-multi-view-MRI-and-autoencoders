@@ -59,7 +59,7 @@ def default_save_data(history, autoencoder, model_results):
 
 # Change this to the desired name of your model.
 # Used to identify the model in results.
-MODEL_NAME = "classified_unet_35"
+MODEL_NAME = "classified_unet_1000_epochs"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
@@ -86,16 +86,7 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 # Build the model
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 
-# autoencoder = ourBestModel()
-# autoencoder = unet_dense(input_size=(384, 384, 1), skip_connections=False)
-# autoencoder = unet_org(input_size=(384, 384, 1))
-# outputs, encoder = unet_org(inputs)
-outputs, encoder = new_unet_org_dense(inputs, dropout_rate=0.35)
-# outputs, encoder = unet_org_dense_dropout(inputs, dropout_rate=0.4)
-# autoencoder = vgg16(input_size=(384, 384, 1))
-# autoencoder = vgg16_dense(input_size=(384, 384, 1), dense_size=120)
-# autoencoder = unet_safe(None, input_size=(384, 384, 1))
-# outputs, encoder = own_vgg16(inputs)
+outputs, encoder = unet_org(inputs)
 
 autoencoder = Model(inputs, outputs)
 
@@ -117,7 +108,7 @@ with open(
 autoencoder_history = autoencoder.fit(
     x_train,
     x_train,
-    epochs=80,
+    epochs=1000,
     batch_size=32,
     validation_data=(x_val, x_val),
     )
@@ -131,7 +122,9 @@ transfer_learning_classif = Classification_using_transfer_learning(autoencoder, 
 
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
-classif_results = transfer_learning_classif.run(flatten_layer=False, learning_rate=1e-4, batch_size=32, epochs=20)
+
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-5, batch_size=32, epochs=40)
+
 fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=1e-5, batch_size=32, epochs=10, num_layers=5)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
