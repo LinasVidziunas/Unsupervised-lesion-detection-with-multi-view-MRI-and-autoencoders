@@ -1,5 +1,6 @@
 import tensorflow
 from keras import Model
+from keras.models import load_model
 from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy
 
@@ -12,12 +13,22 @@ from os import path
 
 
 # ------------------------ CONSTANTS ------------------------ #
+# Configure these for each autoencoder!
+# This will get used to save and load weights
+
+# Epochs for the base autoencoder
+EPOCHS = 1
+
 # Change this to the desired name of your model.
 # Used to identify the model in results.
-MODEL_NAME = "classified_unet_1000_epochs"
+MODEL_NAME = "UNET_axial"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
+
+# Autoencoder base
+inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
+outputs, encoder = unet_org(inputs) 
 
 
 # --------------------- IMPORTING DATA --------------------- #
@@ -30,48 +41,57 @@ print(f"Amount of training images: {len(x_train)}")
 x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of validation images: {len(x_val)}")
+
 y_val = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.validation.axial.slices]
 y_val = tensorflow.constant(y_val, shape=(len(y_val), 2))
 
 x_test = data.test.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of test images: {len(x_test)}")
+
 y_test = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
 y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
 # ---------------------- BASE MODEL ---------------------- #
-inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
+# Some constants used to name saved model
+batch_size = 32
+model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e")
 
-outputs, encoder = unet_org(inputs)
-
-autoencoder = Model(inputs, outputs)
-
-autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-4),
-                    loss=BinaryCrossentropy(),
-                    metrics=[MeanSquaredError()])
-
+autoencoder = Model(inputs, outputs, name=MODEL_NAME)
 results = ModelResults(MODEL_NAME)
-print(autoencoder.summary())
 
-# Save autoencoder summary
-with open(
-        path.join(
+if path.exists(model_path):
+    print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
+    autoencoder = load_model(model_path)
+else:
+    autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-4),
+                        loss=BinaryCrossentropy(),
+                        metrics=[MeanSquaredError()])
+    
+    print(autoencoder.summary())
+
+    # Save autoencoder summary
+    with open(
+            path.join(
             results.save_in_dir,
-            f"AE_summary{results.timestamp_string()}.txt"),
-        'w') as f:
-    autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
-
-autoencoder_history = autoencoder.fit(
-    x_train,
-    x_train,
-    epochs=1000,
-    batch_size=32,
-    validation_data=(x_val, x_val),
+                f"AE_summary{results.timestamp_string()}.txt"),
+            'w') as f:
+        autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
+ 
+    autoencoder_history = autoencoder.fit(
+        x_train,
+        x_train,
+        epochs=EPOCHS,
+        batch_size=batch_size,
+        validation_data=(x_val, x_val),
     )
+    
+    print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
+    autoencoder.save(model_path)
 
-default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, data.validation.axial)
-
+    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, data.validation.axial)
+    
 
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
@@ -95,3 +115,4 @@ for i, prediction in enumerate(predictions, start=0):
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
 
 results.scatter_plot_of_predictions(predictions, y_test)
+
