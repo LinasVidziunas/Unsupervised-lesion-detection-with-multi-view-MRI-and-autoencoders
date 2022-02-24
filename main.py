@@ -56,14 +56,14 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
 batch_size = 32
-model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e")
+model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e.h5")
 
 autoencoder = Model(inputs, outputs, name=MODEL_NAME)
 results = ModelResults(MODEL_NAME)
 
 if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
-    autoencoder = load_model(model_path)
+    autoencoder = load_model(model_path, compile=False)
 else:
     autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-4),
                         loss=BinaryCrossentropy(),
@@ -88,7 +88,7 @@ else:
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
-    autoencoder.save(model_path)
+    autoencoder.save(model_path, save_format='h5')
 
     default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, data.validation.axial)
     
