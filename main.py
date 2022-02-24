@@ -14,13 +14,13 @@ from os import path
 
 # ------------------------ CONSTANTS ------------------------ #
 # Configure these for each autoencoder!
-# This will get used to save and load weights
+# This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 1
+EPOCHS = 50
 
 # Change this to the desired name of your model.
-# Used to identify the model in results.
+# Used to identify the model!
 MODEL_NAME = "UNET_axial"
 
 # Define the dominant image dimensions
@@ -101,7 +101,7 @@ transfer_learning_classif = Classification_using_transfer_learning(autoencoder, 
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
 
-classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-5, batch_size=32, epochs=40)
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-5, batch_size=32, epochs=20)
 
 fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=1e-5, batch_size=32, epochs=10, num_layers=5)
 
