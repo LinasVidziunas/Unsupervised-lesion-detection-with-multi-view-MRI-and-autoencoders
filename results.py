@@ -1,8 +1,9 @@
-import matplotlib.pyplot as plt
+from processed import View
 
+import matplotlib.pyplot as plt
 # import sklearn.metrics as metrics
 import numpy as np
-import tensorflow as tf
+from keras.losses import mse
 
 from datetime import datetime
 from os import path, makedirs
@@ -36,7 +37,7 @@ class ModelResults:
         return f"{today.day}{today.month}{today.year}-{today.hour}{today.minute}"
 
     def __naming(self, plotname: str):
-        name = f"{self.save_in_dir}/fig_{plotname}"
+        name = path.join(self.save_in_dir, f"fig_{plotname}")
         if self.timestamp:
             name += f"-{self.timestamp_string()}"
         name += ".png"
@@ -163,6 +164,53 @@ class ModelResults:
                     f.write(f"{d}")
                 else:
                     f.write(f"{d},")
+
+# Not the prettiest but removes clutter from main.py
+def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, val_view: View):
+    results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
+    results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+    results.save_raw_data(history.history['loss'], "loss_epoch")
+    results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
+    
+    val_view.get_abnormal_slices_as_normalized_pixel_arrays
+
+    x_val_abnormal = val_view.get_abnormal_slices_as_normalized_pixel_arrays(
+        shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+    x_val_normal = val_view.get_normal_slices_as_normalized_pixel_arrays(
+        shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+
+    # Plotting the MSE distrubution of normal slices
+    decoded_normal = autoencoder.predict(x_val_normal)
+    loss_normal = mse(decoded_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+                      x_val_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+
+    # Saving raw MSE loss of normal slices
+    results.save_raw_data(loss_normal, "normal_mse_loss")
+
+    decoded_abnormal = autoencoder.predict(x_val_abnormal)
+    loss_abnormal = mse(
+        decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+        x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+
+    # Saving raw MSE loss of abnormal slices
+    results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
+
+    results.plot_mse_train_vs_val(history)
+    results.plot_loss_train_vs_val(history)
+
+    results.histogram_mse_loss(loss_normal, loss_abnormal)
+    results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
+
+    x_val = val_view.get_slices_as_normalized_pixel_arrays(
+        shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+
+    reconstructed_images = autoencoder.predict(x_val)
+
+    results.input_vs_reconstructed_images(
+        [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
+        [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
+    )
+
 
 
 # y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
