@@ -59,7 +59,7 @@ batch_size = 32
 model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e.h5")
 
 autoencoder = Model(inputs, outputs, name=MODEL_NAME)
-results = ModelResults(MODEL_NAME)
+results = ModelResults(f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e")
 
 if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
@@ -115,4 +115,3 @@ for i, prediction in enumerate(predictions, start=0):
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
 
 results.scatter_plot_of_predictions(predictions, y_test)
-
