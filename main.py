@@ -57,10 +57,18 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
 # ---------------------- CALLBACKS ----------------------- #
-cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=10, verbose=1)
+cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=5, verbose=1)
 
-def lr_exp_decay(_, lr):
-    k = 0.01375 # k is calculated s.t. at 500 epochs lr is 1e-6
+def lr_exp_decay(epoch, lr):
+    k = 0.01375
+    # If starting with lr of 1e-3, set k to:
+    # 0.00690 to reach lr of 1e-6 at 1000 epochs 
+    # 0.01365 to reach lr of 1e-6 at 500 epochs
+    # 0.03450 to reach lr of 1e-6 at 200 epochs
+    # 0.06900 to reach lr of 1e-6 at 100 epochs
+
+    if epoch <= 1:
+        return lr
     return lr * tensorflow.math.exp(-k)
 
 cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=1)
