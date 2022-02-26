@@ -6,7 +6,7 @@ from keras.losses import MeanSquaredError, BinaryCrossentropy
 
 from processed import ProcessedData
 from results import ModelResults, default_save_data
-from Models.unet import unet_org
+from Models.unet import unet
 from classification import Classification_using_transfer_learning
 
 from os import path
@@ -28,7 +28,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = unet_org(inputs) 
+outputs, encoder = unet(inputs)
 
 
 # --------------------- IMPORTING DATA --------------------- #
@@ -101,7 +101,7 @@ transfer_learning_classif = Classification_using_transfer_learning(autoencoder, 
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
 
-classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-5, batch_size=32, epochs=20)
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-4, batch_size=32, epochs=20)
 
 fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=1e-5, batch_size=32, epochs=10, num_layers=5)
 
