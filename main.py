@@ -57,7 +57,7 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
 # ---------------------- CALLBACKS ----------------------- #
-cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=5, verbose=1)
+cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=15, verbose=1)
 
 def lr_exp_decay(epoch, lr):
     k = 0.0069
@@ -75,8 +75,6 @@ cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=0)
 
 
 # ---------------------- BASE MODEL ---------------------- #
-
-
 # Some constants used to name saved model
 batch_size = 32
 model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e.h5")
