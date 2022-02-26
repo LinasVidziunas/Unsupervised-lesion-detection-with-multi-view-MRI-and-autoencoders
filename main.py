@@ -88,7 +88,7 @@ if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:
-    autoencoder.compile(optimizer=Adam(learning_rate=1e-4),
+    autoencoder.compile(optimizer=Adam(learning_rate=1e-3),
                         loss=BinaryCrossentropy(),
                         metrics=[MeanSquaredError()])
     
