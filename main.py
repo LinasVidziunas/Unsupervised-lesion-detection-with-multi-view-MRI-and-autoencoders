@@ -67,7 +67,7 @@ def lr_exp_decay(epoch, lr):
     # 0.03450 to reach lr of 1e-6 at 200 epochs
     # 0.06900 to reach lr of 1e-6 at 100 epochs
 
-    if epoch <= 1:
+    if epoch == 0:
         return lr
     return lr * tensorflow.math.exp(-k)
 
