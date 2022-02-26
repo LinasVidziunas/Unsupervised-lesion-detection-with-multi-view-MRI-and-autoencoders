@@ -1,8 +1,11 @@
 import tensorflow
+from tensorflow.keras.optimizers import Adam
+
 from keras import Model
 from keras.models import load_model
 from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy
+from keras.callbacks import EarlyStopping, LearningRateScheduler
 
 from processed import ProcessedData
 from results import ModelResults, default_save_data
@@ -17,7 +20,7 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 50
+EPOCHS = 500
 
 # Change this to the desired name of your model.
 # Used to identify the model!
@@ -53,7 +56,19 @@ y_test = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] f
 y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
+# ---------------------- CALLBACKS ----------------------- #
+cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=10, verbose=1)
+
+def lr_exp_decay(_, lr):
+    k = 0.01375 # k is calculated s.t. at 500 epochs lr is 1e-6
+    return lr * tensorflow.math.exp(-k)
+
+cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=1)
+
+
 # ---------------------- BASE MODEL ---------------------- #
+
+
 # Some constants used to name saved model
 batch_size = 32
 model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e.h5")
@@ -65,7 +80,7 @@ if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:
-    autoencoder.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=1e-4),
+    autoencoder.compile(optimizer=Adam(learning_rate=1e-4),
                         loss=BinaryCrossentropy(),
                         metrics=[MeanSquaredError()])
     
@@ -85,6 +100,7 @@ else:
         epochs=EPOCHS,
         batch_size=batch_size,
         validation_data=(x_val, x_val),
+        callbacks=[cb_early_stop, cb_lr_scheduler],
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
