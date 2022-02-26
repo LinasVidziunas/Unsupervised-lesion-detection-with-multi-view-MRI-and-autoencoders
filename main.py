@@ -20,7 +20,7 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 1000
+EPOCHS = 2500
 
 # Change this to the desired name of your model.
 # Used to identify the model!
@@ -62,6 +62,7 @@ cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=50, ver
 def lr_exp_decay(epoch, lr):
     k = 0.0069
     # If starting with lr of 1e-3, set k to:
+    # 0.00345 to reach lr of 1e-6 at 2000 epochs
     # 0.00690 to reach lr of 1e-6 at 1000 epochs 
     # 0.01365 to reach lr of 1e-6 at 500 epochs
     # 0.03450 to reach lr of 1e-6 at 200 epochs
