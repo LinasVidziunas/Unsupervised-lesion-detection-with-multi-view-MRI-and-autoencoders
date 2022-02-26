@@ -71,7 +71,7 @@ def lr_exp_decay(epoch, lr):
         return lr
     return lr * tensorflow.math.exp(-k)
 
-cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=1)
+cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=0)
 
 
 # ---------------------- BASE MODEL ---------------------- #
