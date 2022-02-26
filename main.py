@@ -57,7 +57,7 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
 # ---------------------- CALLBACKS ----------------------- #
-cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=15, verbose=1)
+cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=50, verbose=1)
 
 def lr_exp_decay(epoch, lr):
     k = 0.0069
