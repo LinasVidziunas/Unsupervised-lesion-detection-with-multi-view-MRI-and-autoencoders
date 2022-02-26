@@ -9,7 +9,7 @@ from keras.callbacks import EarlyStopping, LearningRateScheduler
 
 from processed import ProcessedData
 from results import ModelResults, default_save_data
-from Models.unet import unet
+from Models.vgg16_ae import own_vgg16
 from classification import Classification_using_transfer_learning
 
 from os import path
@@ -20,18 +20,18 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 500
+EPOCHS = 1000
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "UNET_axial"
+MODEL_NAME = "VGG16_axial_30_dr_50_drbn_batchNorm_300bn_es_00069explrs"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = unet(inputs)
+outputs, encoder = own_vgg16(inputs, dropout_rate=0.3, dropout_rate_bn=0.5, batchNorm=True, dense_size=300)
 
 
 # --------------------- IMPORTING DATA --------------------- #
@@ -60,7 +60,7 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=5, verbose=1)
 
 def lr_exp_decay(epoch, lr):
-    k = 0.01375
+    k = 0.0069
     # If starting with lr of 1e-3, set k to:
     # 0.00690 to reach lr of 1e-6 at 1000 epochs 
     # 0.01365 to reach lr of 1e-6 at 500 epochs
