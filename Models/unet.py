@@ -51,7 +51,7 @@ def unet(inputs):
     return output, bottle
 
 
-def unet_dense(inputs):
+def unet_dense(inputs, dense_size: int = 120):
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1skip)
@@ -77,7 +77,7 @@ def unet_dense(inputs):
 
     flatten = Flatten()(c5)
     d1 = Dense(576, activation="relu")(flatten)
-    bottle = Dense(120, activation='relu')(d1)
+    bottle = Dense(dense_size, activation='relu')(d1)
     d2 = Dense(576, activation='relu')(bottle)
     reshape = Reshape((24, 24, 1))(d2)
 
