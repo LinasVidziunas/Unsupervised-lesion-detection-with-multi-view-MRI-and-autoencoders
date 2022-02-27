@@ -52,8 +52,6 @@ def unet(inputs):
 
 
 def unet_dense(inputs):
-    # inputs = Input(shape=input_size)
-
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1skip)
@@ -132,7 +130,7 @@ def unet_dropout(inputs, dropout_rate: float = 0.35):
     c4skip = Dropout(dropout_rate)(c4skip)
     p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
 
-    drop4 = Dropout(dropout_rate)(c5)
+    drop4 = Dropout(dropout_rate)(p4)
     c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
     bottle = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(drop4)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(bottle)
