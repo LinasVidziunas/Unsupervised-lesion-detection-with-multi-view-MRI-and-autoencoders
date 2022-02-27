@@ -73,8 +73,7 @@ def unet_dense(inputs, dropout_rate: float = 0.35):
     c4 = Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
     c4 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
     c4skip = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
-    drop4 = Dropout(dropout_rate)(c4skip)
-    p4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+    p4 = MaxPooling2D(pool_size=(2, 2))(c4skip)
 
     c5 = Conv2D(512, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
     c5 = Conv2D(1024, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
