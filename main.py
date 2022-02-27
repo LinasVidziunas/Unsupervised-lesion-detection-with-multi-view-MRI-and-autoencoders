@@ -72,8 +72,14 @@ def lr_exp_decay(epoch, lr):
         return lr
     return lr * tensorflow.math.exp(-k)
 
-cb_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=0)
+cb_exp_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=0)
 
+def lr_drop(epoch, lr):
+    if epoch == 10:
+        return lr * 1e-1
+    return lr
+
+cb_drop_lr_scheduler = LearningRateScheduler(lr_drop, verbose=0)
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
@@ -107,7 +113,7 @@ else:
         epochs=EPOCHS,
         batch_size=batch_size,
         validation_data=(x_val, x_val),
-        callbacks=[cb_early_stop, cb_lr_scheduler],
+        callbacks=[cb_early_stop, cb_exp_lr_scheduler],
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
