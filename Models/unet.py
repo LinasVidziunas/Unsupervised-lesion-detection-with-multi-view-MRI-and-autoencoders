@@ -1,11 +1,8 @@
-from keras import Model
-from keras.layers import Input, Conv2D, Dense, Flatten, Reshape, Conv2DTranspose
-from keras.layers import MaxPooling2D, UpSampling2D, Dropout, concatenate
+from keras.layers import Conv2D, Dense, Flatten, Reshape, Conv2DTranspose
+from keras.layers import MaxPooling2D, Dropout, concatenate
 
 
-def unet_w_dropout(inputs, dropout_rate: float = 0.35):
-    # inputs = Input(shape=input_size)
-
+def unet_dropout(inputs, dropout_rate: float = 0.35):
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1skip)
@@ -56,7 +53,7 @@ def unet_w_dropout(inputs, dropout_rate: float = 0.35):
     return output, bottle
 
 
-def unet_org_dense(inputs, dropout_rate: float = 0.35):
+def unet_dense(inputs, dropout_rate: float = 0.35):
     # inputs = Input(shape=input_size)
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -114,7 +111,7 @@ def unet_org_dense(inputs, dropout_rate: float = 0.35):
 
     return output, bottle
 
-def unet_org_dense_dropout(inputs, dropout_rate: float = 0.35):
+def unet_dense_dropout(inputs, dense_size: int = 120, dropout_rate: float = 0.35):
     # inputs = Input(shape=input_size)
 
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
@@ -147,7 +144,7 @@ def unet_org_dense_dropout(inputs, dropout_rate: float = 0.35):
 
     d1 = Dense(576, activation="relu")(flatten)
     dropout = Dropout(dropout_rate)(d1)
-    bottle = Dense(120, activation='sigmoid')(dropout)
+    bottle = Dense(dense_size, activation='sigmoid')(dropout)
     d2 = Dense(576, activation='relu')(bottle)
     reshape = Reshape((24, 24, 1))(d2)
 
@@ -177,9 +174,7 @@ def unet_org_dense_dropout(inputs, dropout_rate: float = 0.35):
 
     return output, bottle
 
-def unet(inputs, dropout_rate: float = 0.35):
-    # inputs = Input(shape=input_size)
-
+def unet(inputs):
     c1 = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
     c1skip = Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1skip)
