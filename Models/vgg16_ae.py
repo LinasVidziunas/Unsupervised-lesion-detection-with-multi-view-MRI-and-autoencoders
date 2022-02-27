@@ -36,13 +36,13 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
                           dropout_rate: float = 0):
     block = None
 
-    for _ in range(conv2d_layers):
-        block = own_vgg16_conv2d_block(previous_layer, filters, batchNorm)
+    block = UpSampling2D(size=(2, 2))(previous_layer)
 
     if dropout_rate != 0:
         block = Dropout(dropout_rate)(block)
 
-    block = UpSampling2D(size=(2, 2))(block)
+    for _ in range(conv2d_layers):
+        block = own_vgg16_conv2d_block(block, filters, batchNorm)
 
     return block
 
