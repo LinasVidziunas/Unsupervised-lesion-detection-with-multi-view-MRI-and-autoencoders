@@ -88,7 +88,7 @@ else:
         epochs=EPOCHS,
         batch_size=batch_size,
         validation_data=(x_val, x_val),
-        callbacks=[ResultsCallback(MODEL_NAME, IMAGE_DIM, data.validation.axial, [25, 50, 100, 200, 300])]
+        callbacks=[ResultsCallback(f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e", IMAGE_DIM, data.validation.axial, save_at_epochs=[10, 25, 50, 100, 200, 300])],
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
