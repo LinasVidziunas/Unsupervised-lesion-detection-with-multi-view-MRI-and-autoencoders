@@ -5,12 +5,12 @@ from keras import Model
 from keras.models import load_model
 from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy
-from keras.callbacks import EarlyStopping, LearningRateScheduler
 
 from processed import ProcessedData
 from results import ModelResults, default_save_data
 from Models.vgg16_ae import own_vgg16
 from classification import Classification_using_transfer_learning
+from callbacks import ResultsCallback
 
 from os import path
 
@@ -88,6 +88,7 @@ else:
         epochs=EPOCHS,
         batch_size=batch_size,
         validation_data=(x_val, x_val),
+        callbacks=[ResultsCallback(MODEL_NAME, IMAGE_DIM, data.validation.axial, [25, 50, 100, 200, 300])]
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
