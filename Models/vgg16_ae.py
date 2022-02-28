@@ -15,7 +15,8 @@ def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool):
 def own_vgg16_encoder_block(previous_layer, filters: int,
                           conv2d_layers: int = 2,
                           batchNorm: bool = False,
-                          dropout_rate: float = 0):
+                          dropout_rate: float = 0,
+                          max_pool: bool = True):
 
     block = own_vgg16_conv2d_block(previous_layer, filters, batchNorm)
 
@@ -25,7 +26,8 @@ def own_vgg16_encoder_block(previous_layer, filters: int,
     if dropout_rate != 0:
         block = Dropout(dropout_rate)(block)
 
-    block = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(block)
+    if max_pool:
+        block = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(block)
 
     return block
 
@@ -33,10 +35,12 @@ def own_vgg16_encoder_block(previous_layer, filters: int,
 def own_vgg16_decoder_block(previous_layer, filters: int,
                           conv2d_layers: int = 2,
                           batchNorm: bool = False,
-                          dropout_rate: float = 0):
-    block = None
+                          dropout_rate: float = 0,
+                          up_sampling: bool = True):
+    block = previous_layer
 
-    block = UpSampling2D(size=(2, 2))(previous_layer)
+    if up_sampling:
+        block = UpSampling2D(size=(2, 2))(block)
 
     if dropout_rate != 0:
         block = Dropout(dropout_rate)(block)
@@ -47,7 +51,7 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
     return block
 
 
-def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 80):
+def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120):
     encoder_filters = [64, 128, 256, 512, 512]
     decoder_filters = [512, 512, 256, 128, 64]
 
@@ -59,10 +63,11 @@ def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batch
         previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
     b4 = own_vgg16_encoder_block(
         previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    encoder = own_vgg16_encoder_block(
-        previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
 
     if include_top:
+        encoder = own_vgg16_encoder_block(
+            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=True)
+
         f1 = Flatten()(encoder)
         d1 = Dense(4096, activation='relu')(f1)
         if dropout_rate_bn != 0:
@@ -76,12 +81,18 @@ def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batch
 
         d2 = Dense(4032, activation='relu')(bottleneck)
         reshape = Reshape((12, 12, 28))(d2)
-    else:
-        bottleneck = encoder
-        reshape = encoder
 
-    b5 = own_vgg16_decoder_block(
-        previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b5 = own_vgg16_decoder_block(
+            previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=True)
+    else:
+        encoder = own_vgg16_encoder_block(
+            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
+
+        bottleneck = encoder
+
+        b5 = own_vgg16_decoder_block(
+            previous_layer=encoder, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)
+
     b6 = own_vgg16_decoder_block(
         previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
     b7 = own_vgg16_decoder_block(
