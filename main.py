@@ -5,12 +5,12 @@ from keras import Model
 from keras.models import load_model
 from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy
-from keras.callbacks import EarlyStopping, LearningRateScheduler
 
 from processed import ProcessedData
 from results import ModelResults, default_save_data
 from Models.vgg16_ae import own_vgg16
 from classification import Classification_using_transfer_learning
+from callbacks import ResultsCallback
 
 from os import path
 
@@ -56,31 +56,6 @@ y_test = [[int(not(bool(_slice.get_abnormality()))), _slice.get_abnormality()] f
 y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
-# ---------------------- CALLBACKS ----------------------- #
-cb_early_stop = EarlyStopping(monitor='val_mean_squared_error', patience=50, verbose=1)
-
-def lr_exp_decay(epoch, lr):
-    k = 0.0069
-    # If starting with lr of 1e-3, set k to:
-    # 0.00345 to reach lr of 1e-6 at 2000 epochs
-    # 0.00690 to reach lr of 1e-6 at 1000 epochs 
-    # 0.01365 to reach lr of 1e-6 at 500 epochs
-    # 0.03450 to reach lr of 1e-6 at 200 epochs
-    # 0.06900 to reach lr of 1e-6 at 100 epochs
-
-    if epoch == 0:
-        return lr
-    return lr * tensorflow.math.exp(-k)
-
-cb_exp_lr_scheduler = LearningRateScheduler(lr_exp_decay, verbose=0)
-
-def lr_drop(epoch, lr):
-    if epoch == 10:
-        return lr * 1e-1
-    return lr
-
-cb_drop_lr_scheduler = LearningRateScheduler(lr_drop, verbose=0)
-
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
 batch_size = 32
@@ -113,7 +88,7 @@ else:
         epochs=EPOCHS,
         batch_size=batch_size,
         validation_data=(x_val, x_val),
-        callbacks=[cb_early_stop, cb_exp_lr_scheduler],
+        callbacks=[ResultsCallback(MODEL_NAME, IMAGE_DIM, data.validation.axial, [25, 50, 100, 200, 300])]
     )
     
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
