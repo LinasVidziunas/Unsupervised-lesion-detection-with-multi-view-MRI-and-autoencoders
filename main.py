@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn import metrics as skmetrics
 
 import tensorflow
 from tensorflow.keras.optimizers import Adam
@@ -9,7 +8,7 @@ from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
 
 from results import ModelResults, default_save_data
-from results import Metrics, get_roc, plot_specificity, plot_sensitivity, plot_f1, plot_accuracy
+from results import Metrics, get_roc, plot_specificity, plot_sensitivity, plot_f1, plot_accuracy, get_auc
 from processed import ProcessedData
 from Models.unet import unet
 from classification import Classification_using_transfer_learning
@@ -141,7 +140,7 @@ test_abnormal_loss = mse(test_abnormal_decoded.reshape(len(test_abnormal_decoded
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc(test_abnormal_loss, test_normal_loss)
-AUC_score = skmetrics.auc(fpr, tpr)
+auc_score = get_auc(fpr, tpr)
 
 # Getting results for every threshold
 results_thresholds = []

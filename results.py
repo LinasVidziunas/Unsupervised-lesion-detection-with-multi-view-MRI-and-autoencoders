@@ -273,6 +273,9 @@ def get_roc(abnormal_losses, normal_losses):
 
     return fpr,tpr,thresholds
 
+def get_auc(fpr, tpr):
+    return skmetrics.auc(fpr, tpr)
+
 def plot_accuracy(thresholds, results_thresholds):
     accuracies = []
     for instance in results_thresholds:
