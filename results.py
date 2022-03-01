@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import auc, roc_curve
+from sklearn.metrics import auc, roc_curve, confusion_matrix
 import matplotlib.pyplot as plt
 
 from keras.losses import mse
@@ -155,6 +155,50 @@ class ModelResults:
         plt.savefig(self.__naming("Scatter_plot_classification"))
         plt.clf()
 
+    def plot_accuracy(self, thresholds, results_thresholds):
+        accuracies = []
+        for instance in results_thresholds:
+            accuracies.append(instance.get_accuracy())
+        plt.plot(thresholds, accuracies, "o-")
+        plt.xlabel("Threshold")
+        plt.ylabel("Accuracy")
+        plt.grid()
+        plt.savefig(self.__naming("Accuracy_for_thresholds"))
+        plt.clf()
+
+    def plot_sensitivity(self, thresholds, results_thresholds):
+        sensitivities = []
+        for instance in results_thresholds:
+            sensitivities.append(instance.get_sensitivity())
+        plt.plot(thresholds, sensitivities, "o-")
+        plt.xlabel("Threshold")
+        plt.ylabel("Sensitivity")
+        plt.grid()
+        plt.savefig(self.__naming("Sensitivity_for_thresholds"))
+        plt.clf()
+
+    def plot_specificity(self, thresholds, results_thresholds):
+        specificities = []
+        for instance in results_thresholds:
+            specificities.append(instance.get_specificity())
+        plt.plot(thresholds, specificities, "o-")
+        plt.xlabel("Threshold")
+        plt.ylabel("Specificity")
+        plt.grid()
+        plt.savefig(self.__naming("Specificity_for_thresholds"))
+        plt.clf()
+
+    def plot_f1(self, thresholds, results_thresholds):
+        f1s = []
+        for instance in results_thresholds:
+            f1s.append(instance.get_specificity())
+        plt.plot(thresholds, f1s, "o-")
+        plt.xlabel("Threshold")
+        plt.ylabel("F1")
+        plt.grid()
+        plt.savefig(self.__naming("F1_for_thresholds"))
+        plt.clf()
+
     def save_raw_data(self, data, name="raw_data"):
         with open(path.join(
                 self.save_in_dir,
@@ -227,7 +271,7 @@ class Metrics:
         self.accuracy = (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
 
     def get_confusionmatrix(self):
-        return skmetrics.confusion_matrix(self.true, self.predictions)
+        return confusion_matrix(self.true, self.predictions)
 
     def get_results(self):
         return [f"TP: {self.tp}", f"TN: {self.tn}", f"FP: {self.fp}", f"FN: {self.fn}",
@@ -269,57 +313,12 @@ def get_roc(abnormal_losses, normal_losses):
     for i in range(len(normal_losses)):
         labels.append(0)
     #
-    fpr, tpr, thresholds = roc_curve(labels, all_losses)
+    fpr, tpr, thresholds = roc_curve(labels, all_losses, drop_intermediate=False)
 
-    return fpr,tpr,thresholds
+    return fpr, tpr, thresholds
 
 def get_auc(fpr, tpr):
-    return skmetrics.auc(fpr, tpr)
-
-def plot_accuracy(thresholds, results_thresholds):
-    accuracies = []
-    for instance in results_thresholds:
-        accuracies.append(instance.get_accuracy())
-    plt.plot(thresholds, accuracies, "o-")
-    plt.xlabel("Threshold")
-    plt.ylabel("Accuracy")
-    plt.grid()
-    plt.savefig("Accuracy_for_thresholds.png")
-    plt.clf()
-
-def plot_sensitivity(thresholds, results_thresholds):
-    sensitivities = []
-    for instance in results_thresholds:
-        sensitivities.append(instance.get_sensitivity())
-    plt.plot(thresholds, sensitivities, "o-")
-    plt.xlabel("Threshold")
-    plt.ylabel("Sensitivity")
-    plt.grid()
-    plt.savefig("Sensitivity_for_thresholds.png")
-    plt.clf()
-
-def plot_specificity(thresholds, results_thresholds):
-    Specificities = []
-    for instance in results_thresholds:
-        Specificities.append(instance.get_specificity())
-    plt.plot(thresholds, Specificities, "o-")
-    plt.xlabel("Threshold")
-    plt.ylabel("Specificity")
-    plt.grid()
-    plt.savefig("Specificity_for_thresholds.png")
-    plt.clf()
-
-def plot_f1(thresholds, results_thresholds):
-    f1s = []
-    for instance in results_thresholds:
-        f1s.append(instance.get_specificity())
-    plt.plot(thresholds, f1s, "o-")
-    plt.xlabel("Threshold")
-    plt.ylabel("F1")
-    plt.grid()
-    plt.savefig("F1_for_thresholds.png")
-    plt.clf()
-    
+    return auc(fpr, tpr)
 
 # y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 # y_pred = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]

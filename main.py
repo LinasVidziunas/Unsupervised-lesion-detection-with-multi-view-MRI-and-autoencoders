@@ -8,7 +8,7 @@ from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
 
 from results import ModelResults, default_save_data
-from results import Metrics, get_roc, plot_specificity, plot_sensitivity, plot_f1, plot_accuracy, get_auc
+from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from Models.unet import unet
 from classification import Classification_using_transfer_learning
@@ -21,7 +21,7 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 25
+EPOCHS = 1
 
 # Change this to the desired name of your model.
 # Used to identify the model!
@@ -140,24 +140,25 @@ test_abnormal_loss = mse(test_abnormal_decoded.reshape(len(test_abnormal_decoded
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc(test_abnormal_loss, test_normal_loss)
+print(f"thresholds: {thresholds}")
 auc_score = get_auc(fpr, tpr)
 
 # Getting results for every threshold
 results_thresholds = []
 for threshold in thresholds:
-    predicted_test = []
+    predicted = []
     for loss in test_loss:
         if loss < threshold:
             predicted.append(0)
         if loss > threshold:
             predicted.append(1)
-    results_thresholds.append(Metrics(test_set_labels, predicted_test))
-# Saving the figures for each metric for each treshold
+    results_thresholds.append(Metrics(test_set_labels, predicted))
 
-plot_specificity(thresholds, results_thresholds)
-plot_sensitivity(thresholds, results_thresholds)
-plot_accuracy(thresholds, results_thresholds)
-plot_f1(thresholds, results_thresholds)
+# Saving the figures for each metric for each treshold
+results.plot_specificity(thresholds, results_thresholds)
+results.plot_sensitivity(thresholds, results_thresholds)
+results.plot_accuracy(thresholds, results_thresholds)
+results.plot_f1(thresholds, results_thresholds)
 
 
 # ------------------- TRANSFER LEARNING ------------------- #
