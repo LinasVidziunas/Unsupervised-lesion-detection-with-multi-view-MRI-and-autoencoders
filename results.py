@@ -160,6 +160,7 @@ class ModelResults:
         for instance in results_thresholds:
             accuracies.append(instance.get_accuracy())
         plt.plot(thresholds, accuracies, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         plt.xlabel("Threshold")
         plt.ylabel("Accuracy")
         plt.grid()
@@ -171,6 +172,7 @@ class ModelResults:
         for instance in results_thresholds:
             sensitivities.append(instance.get_sensitivity())
         plt.plot(thresholds, sensitivities, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         plt.xlabel("Threshold")
         plt.ylabel("Sensitivity")
         plt.grid()
@@ -182,6 +184,7 @@ class ModelResults:
         for instance in results_thresholds:
             specificities.append(instance.get_specificity())
         plt.plot(thresholds, specificities, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         plt.xlabel("Threshold")
         plt.ylabel("Specificity")
         plt.grid()
@@ -193,6 +196,7 @@ class ModelResults:
         for instance in results_thresholds:
             f1s.append(instance.get_specificity())
         plt.plot(thresholds, f1s, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         plt.xlabel("Threshold")
         plt.ylabel("F1")
         plt.grid()
