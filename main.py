@@ -1,5 +1,3 @@
-import numpy as np
-
 import tensorflow
 from tensorflow.keras.optimizers import Adam
 from keras import Model
@@ -11,7 +9,7 @@ from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from Models.unet import unet
-from classification import Classification_using_transfer_learning
+from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback
 
 from os import path
@@ -97,35 +95,16 @@ else:
 
     default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, data.validation.axial)
 
-# ------------------- Threshold selection and evaluation ------------------- #
-# Obtaining validation set losses and labels
-validation_set_labels = [_slice.get_abnormality() for _slice in data.validation.axial.slices]
-validation_decoded = autoencoder.predict(x_val)
-validation_loss = mse(validation_decoded.reshape(len(validation_decoded), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                      x_val.reshape(len(x_val), IMAGE_DIM[0] * IMAGE_DIM[1]))
-# Obtain threshold
-q3, q1 = np.percentile(validation_loss, [75, 25])
-iqr = q3 - q1
-threshold = q3 + 1.5*iqr
 
-# Get test data
-test_set_labels = [_slice.get_abnormality() for _slice in data.test.axial.slices]
-test_decoded = autoencoder.predict(x_test)
-test_loss = mse(
-    test_decoded.reshape(len(test_decoded), IMAGE_DIM[0] * IMAGE_DIM[1]),
-    x_test.reshape(len(x_test), IMAGE_DIM[0] * IMAGE_DIM[1]))
+# ------------------- Classification with IQR method ------------------- #
+iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)
+threshold = iqr_method.obtain_threshold()
+predicted = iqr_method.classify(threshold)
+threshold_results = Metrics([x[1] for x in y_test], predicted).get_results()
+results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_method_results")
 
-# Classify based on set threshold
-predicted = []
-for loss in test_loss:
-    if loss < threshold:
-        predicted.append(0)
-    if loss > threshold:
-        predicted.append(1)
 
-# Getting results from that threshold
-threshold_results = Metrics(test_set_labels, predicted).get_results()
-
+# ------------------------- Model Evaluation --------------------------- #
 # Obtaining more specific data from the test set
 test_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
@@ -140,20 +119,13 @@ test_abnormal_loss = mse(test_abnormal_decoded.reshape(len(test_abnormal_decoded
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc(test_abnormal_loss, test_normal_loss)
-thresholds = thresholds[1:]
-print(f"thresholds: {thresholds}")
+thresholds = thresholds[1:] # Dropping the first threshold
 auc_score = get_auc(fpr, tpr)
 
 # Getting results for every threshold
 results_thresholds = []
 for threshold in thresholds:
-    predicted = []
-    for loss in test_loss:
-        if loss < threshold:
-            predicted.append(0)
-        if loss > threshold:
-            predicted.append(1)
-    results_thresholds.append(Metrics(test_set_labels, predicted))
+    results_thresholds.append(Metrics([x[1] for x in y_test], iqr_method.classify(threshold)))
 
 # Saving the figures for each metric for each treshold
 results.plot_specificity(thresholds, results_thresholds)
@@ -165,8 +137,8 @@ results.plot_f1(thresholds, results_thresholds)
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
 
-transfer_learning_classif = Classification_using_transfer_learning(autoencoder, encoder, inputs, x_val, y_val, x_test,
-                                                                   y_test)
+transfer_learning_classif = Classification_using_transfer_learning(
+    autoencoder, encoder, inputs, x_val, y_val, x_test, y_test)
 
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()

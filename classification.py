@@ -1,5 +1,7 @@
+import numpy as np
+
 from keras import Model
-from keras.losses import CategoricalCrossentropy
+from keras.losses import CategoricalCrossentropy, mse
 from keras.layers import Flatten, Dropout, Dense
 from keras.metrics import CategoricalAccuracy
 from tensorflow.keras.optimizers import Adam
@@ -75,3 +77,33 @@ class Classification_using_transfer_learning(Classification):
             batch_size=batch_size,
             epochs=epochs,
             validation_data=(self.x_test, self.y_test))
+
+class IQR_method(Classification):
+    def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test, image_dim):
+        super().__init__(autoencoder, x_val, y_val, x_test, y_test)
+
+        validation_decoded = self.autoencoder.predict(x_val)
+        self.validation_losses = mse(
+            validation_decoded.reshape(len(validation_decoded), image_dim[0] * image_dim[1]),
+            x_val.reshape(len(x_val), image_dim[0] * image_dim[1]))
+
+        test_decoded = self.autoencoder.predict(x_test)
+        self.test_losses = mse(
+            test_decoded.reshape(len(test_decoded), image_dim[0] * image_dim[1]),
+            x_test.reshape(len(x_test), image_dim[0] * image_dim[1]))
+
+    def obtain_threshold(self, K: float=1.5):
+        q3, q1 = np.percentile(self.validation_losses, [75, 25])
+        iqr = q3 - q1
+        threshold = q3 + K * iqr
+        return threshold
+
+    def classify(self, threshold: float):
+        predicted = []
+        for loss in self.test_losses:
+            if loss < threshold:
+                predicted.append(0)
+            if loss > threshold:
+                predicted.append(1)
+        return predicted
+
