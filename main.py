@@ -128,6 +128,7 @@ for threshold in thresholds:
     results_thresholds.append(Metrics([x[1] for x in y_test], iqr_method.classify(threshold)))
 
 # Saving the figures for each metric for each treshold
+results.plot_roc_curve(fpr, tpr, auc_score)
 results.plot_specificity(thresholds, results_thresholds)
 results.plot_sensitivity(thresholds, results_thresholds)
 results.plot_accuracy(thresholds, results_thresholds)

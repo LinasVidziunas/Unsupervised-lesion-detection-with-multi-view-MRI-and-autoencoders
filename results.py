@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import auc, roc_curve, confusion_matrix
+from sklearn.metrics import auc, roc_curve, confusion_matrix, RocCurveDisplay
 import matplotlib.pyplot as plt
 
 from keras.losses import mse
@@ -201,6 +201,14 @@ class ModelResults:
         plt.ylabel("F1")
         plt.grid()
         plt.savefig(self.__naming("F1_for_thresholds"))
+        plt.clf()
+
+    def plot_roc_curve(self, fpr, tpr, roc_auc):
+        display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc,
+                                          estimator_name='random estimator')
+        display.plot()
+        plt.plot([0, 1], [0, 1], 'r:')
+        plt.savefig(self.__naming("ROC_curve"))
         plt.clf()
 
     def save_raw_data(self, data, name="raw_data"):
