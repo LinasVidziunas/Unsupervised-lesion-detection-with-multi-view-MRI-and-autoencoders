@@ -281,7 +281,7 @@ def plot_accuracy(thresholds, results_thresholds):
     plt.xlabel("Threshold")
     plt.ylabel("Accuracy")
     plt.grid()
-    plt.savefig("Accuracy_for_thresholds")
+    plt.savefig("Accuracy_for_thresholds.png")
     plt.clf()
 
 def plot_sensitivity(thresholds, results_thresholds):
@@ -292,7 +292,7 @@ def plot_sensitivity(thresholds, results_thresholds):
     plt.xlabel("Threshold")
     plt.ylabel("Sensitivity")
     plt.grid()
-    plt.savefig("Sensitivity_for_thresholds")
+    plt.savefig("Sensitivity_for_thresholds.png")
     plt.clf()
 
 def plot_specificity(thresholds, results_thresholds):
@@ -303,7 +303,7 @@ def plot_specificity(thresholds, results_thresholds):
     plt.xlabel("Threshold")
     plt.ylabel("Specificity")
     plt.grid()
-    plt.savefig("Specificity_for_thresholds")
+    plt.savefig("Specificity_for_thresholds.png")
     plt.clf()
 
 def plot_f1(thresholds, results_thresholds):
@@ -314,7 +314,7 @@ def plot_f1(thresholds, results_thresholds):
     plt.xlabel("Threshold")
     plt.ylabel("F1")
     plt.grid()
-    plt.savefig("F1_for_thresholds")
+    plt.savefig("F1_for_thresholds.png")
     plt.clf()
     
 
