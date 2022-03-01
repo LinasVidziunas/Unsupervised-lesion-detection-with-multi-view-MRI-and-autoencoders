@@ -1,9 +1,10 @@
-from processed import View
-from sklearn import metrics as skmetrics
-import matplotlib.pyplot as plt
-# import sklearn.metrics as metrics
 import numpy as np
+from sklearn.metrics import auc, roc_curve
+import matplotlib.pyplot as plt
+
 from keras.losses import mse
+
+from processed import View
 
 from datetime import datetime
 from os import path, makedirs
@@ -211,34 +212,6 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
     )
 
-
-# y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-# y_pred = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-
-
-# def get_iqr(reconstruction_error_normal):
-#     q3, q1 = np.percentile(reconstruction_error_normal, [75, 25])
-#     median = np.mean(reconstruction_error_normal)
-#     iqr = q3 - q1
-#     return median, iqr
-
-
-# class Classifier:
-#     def __init__(self, median, iqr, data):
-#         self.median = median
-#         self.iqr = iqr
-#         self.data = data
-#         self.predicted = []
-
-#     def get_predicted(self):
-#         for i in self.data:
-#             if i > (self.median + self.iqr):
-#                 self.predicted.append(1)
-#             else:
-#                 self.predicted.append(0)
-#         return self.predicted
-
-
 class Metrics:
     def __init__(self, true, predict):
         self.true = true
@@ -296,7 +269,7 @@ def get_roc(abnormal_losses, normal_losses):
     for i in range(len(normal_losses)):
         labels.append(0)
     #
-    fpr, tpr, thresholds = skmetrics.roc_curve(labels, all_losses)
+    fpr, tpr, thresholds = roc_curve(labels, all_losses)
 
     return fpr,tpr,thresholds
 
@@ -343,3 +316,31 @@ def plot_f1(thresholds, results_thresholds):
     plt.grid()
     plt.savefig("F1_for_thresholds")
     plt.clf()
+    
+
+# y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+# y_pred = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+
+
+# def get_iqr(reconstruction_error_normal):
+#     q3, q1 = np.percentile(reconstruction_error_normal, [75, 25])
+#     median = np.mean(reconstruction_error_normal)
+#     iqr = q3 - q1
+#     return median, iqr
+
+
+# class Classifier:
+#     def __init__(self, median, iqr, data):
+#         self.median = median
+#         self.iqr = iqr
+#         self.data = data
+#         self.predicted = []
+
+#     def get_predicted(self):
+#         for i in self.data:
+#             if i > (self.median + self.iqr):
+#                 self.predicted.append(1)
+#             else:
+#                 self.predicted.append(0)
+#         return self.predicted
+
