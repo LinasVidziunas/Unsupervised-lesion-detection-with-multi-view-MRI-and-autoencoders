@@ -140,6 +140,7 @@ test_abnormal_loss = mse(test_abnormal_decoded.reshape(len(test_abnormal_decoded
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc(test_abnormal_loss, test_normal_loss)
+thresholds = thresholds[1:]
 print(f"thresholds: {thresholds}")
 auc_score = get_auc(fpr, tpr)
 

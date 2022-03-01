@@ -313,7 +313,7 @@ def get_roc(abnormal_losses, normal_losses):
     for i in range(len(normal_losses)):
         labels.append(0)
     #
-    fpr, tpr, thresholds = roc_curve(labels, all_losses, drop_intermediate=False)
+    fpr, tpr, thresholds = roc_curve(labels, all_losses)
 
     return fpr, tpr, thresholds
 
