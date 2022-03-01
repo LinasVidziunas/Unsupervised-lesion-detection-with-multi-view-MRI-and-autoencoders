@@ -100,7 +100,10 @@ else:
 iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)
 threshold = iqr_method.obtain_threshold()
 predicted = iqr_method.classify(threshold)
-threshold_results = Metrics([x[1] for x in y_test], predicted).get_results()
+
+metr = Metrics([x[1] for x in y_test], predicted)
+threshold_results = metr.get_results()
+results.plot_confusion_matrix(metr.get_confusionmatrix())
 results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_method_results")
 
 
