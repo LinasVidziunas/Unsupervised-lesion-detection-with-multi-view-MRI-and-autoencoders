@@ -19,11 +19,11 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 1
+EPOCHS = 25
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "UNET_test_IQR"
+MODEL_NAME = "UNET_IQR"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
