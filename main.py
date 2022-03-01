@@ -1,19 +1,19 @@
 import numpy as np
+from sklearn import metrics as skmetrics
+
 import tensorflow
 from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
 from keras.layers import Input
 from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
-from results import Metrics, get_roc, plot_specificity, plot_sensitivity, plot_f1, plot_accuracy
 
-from processed import ProcessedData
 from results import ModelResults, default_save_data
-from Models.vgg16_ae import own_vgg16
+from results import Metrics, get_roc, plot_specificity, plot_sensitivity, plot_f1, plot_accuracy
+from processed import ProcessedData
+from Models.unet import unet
 from classification import Classification_using_transfer_learning
 from callbacks import ResultsCallback
-
-from sklearn import metrics as skmetrics
 
 from os import path
 
@@ -22,18 +22,18 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 2500
+EPOCHS = 25
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VGG16_axial_30_dr_50_drbn_batchNorm_300bn_es_00069explrs"
+MODEL_NAME = "UNET_test_IQR"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = own_vgg16(inputs, dropout_rate=0.3, dropout_rate_bn=0.5, batchNorm=True, dense_size=300)
+outputs, encoder = unet(inputs)
 
 # --------------------- IMPORTING DATA --------------------- #
 data = ProcessedData("../sets/")
