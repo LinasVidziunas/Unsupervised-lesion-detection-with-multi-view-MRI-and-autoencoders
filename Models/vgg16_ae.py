@@ -69,18 +69,10 @@ def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batch
             previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=True)
 
         f1 = Flatten()(encoder)
-        d1 = Dense(4096, activation='relu')(f1)
-        if dropout_rate_bn != 0:
-            d1 = Dropout(dropout_rate_bn)(d1)
 
-        d2 = Dense(4096, activation='relu')(d1)
-        if dropout_rate_bn != 0:
-            d2 = Dropout(dropout_rate_bn)(d2)
+        bottleneck = Dense(dense_size, activation='relu')(f1)
 
-        bottleneck = Dense(dense_size, activation='relu')(d1)
-
-        d2 = Dense(4032, activation='relu')(bottleneck)
-        reshape = Reshape((12, 12, 28))(d2)
+        reshape = Reshape((12, 12, 28))(bottleneck)
 
         b5 = own_vgg16_decoder_block(
             previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=True)
