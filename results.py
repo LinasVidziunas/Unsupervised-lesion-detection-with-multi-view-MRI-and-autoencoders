@@ -1,12 +1,14 @@
-from processed import View
-
-import matplotlib.pyplot as plt
-# import sklearn.metrics as metrics
 import numpy as np
+from sklearn.metrics import auc, roc_curve, confusion_matrix, RocCurveDisplay, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
 from keras.losses import mse
+
+from processed import View
 
 from datetime import datetime
 from os import path, makedirs
+
 
 class ModelResults:
     def __init__(
@@ -51,7 +53,7 @@ class ModelResults:
         plt.title('Model MSE loss')
         plt.ylabel('MSE loss')
         plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.legend(['Train', 'Validation'], loc='upper right')
         plt.savefig(self.__naming("MSE_train_vs_val"))
         plt.clf()
 
@@ -63,7 +65,7 @@ class ModelResults:
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.legend(['Train', 'Validation'], loc='upper right')
         plt.savefig(self.__naming("loss_train_vs_val"))
         plt.clf()
 
@@ -132,7 +134,6 @@ class ModelResults:
         abnormal_predictions = []
         normal_predictions = []
 
-
         for i, truth in enumerate(truth, start=0):
             if np.array_equal(np.array(truth), np.array([0, 1])):
                 abnormal_predictions.append(predictions[i])
@@ -142,11 +143,11 @@ class ModelResults:
         plt.scatter([i[0] for i in normal_predictions],
                     [i[1] for i in normal_predictions],
                     c="blue", label="Normal", alpha=0.6)
-                
+
         plt.scatter([i[0] for i in abnormal_predictions],
                     [i[1] for i in abnormal_predictions],
                     c="orange", label="Abnormal")
-               
+
         plt.title("Predictions")
         plt.xlabel("Normal slice")
         plt.ylabel("Abnormal slice")
@@ -154,6 +155,67 @@ class ModelResults:
         plt.savefig(self.__naming("Scatter_plot_classification"))
         plt.clf()
 
+    def plot_accuracy(self, thresholds, results_thresholds):
+        accuracies = []
+        for instance in results_thresholds:
+            accuracies.append(instance.get_accuracy())
+        plt.plot(thresholds, accuracies, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
+        plt.xlabel("Threshold")
+        plt.ylabel("Accuracy")
+        plt.grid()
+        plt.savefig(self.__naming("Accuracy_for_thresholds"))
+        plt.clf()
+
+    def plot_sensitivity(self, thresholds, results_thresholds):
+        sensitivities = []
+        for instance in results_thresholds:
+            sensitivities.append(instance.get_sensitivity())
+        plt.plot(thresholds, sensitivities, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
+        plt.xlabel("Threshold")
+        plt.ylabel("Sensitivity")
+        plt.grid()
+        plt.savefig(self.__naming("Sensitivity_for_thresholds"))
+        plt.clf()
+
+    def plot_specificity(self, thresholds, results_thresholds):
+        specificities = []
+        for instance in results_thresholds:
+            specificities.append(instance.get_specificity())
+        plt.plot(thresholds, specificities, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
+        plt.xlabel("Threshold")
+        plt.ylabel("Specificity")
+        plt.grid()
+        plt.savefig(self.__naming("Specificity_for_thresholds"))
+        plt.clf()
+
+    def plot_f1(self, thresholds, results_thresholds):
+        f1s = []
+        for instance in results_thresholds:
+            f1s.append(instance.get_specificity())
+        plt.plot(thresholds, f1s, "o-")
+        plt.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
+        plt.xlabel("Threshold")
+        plt.ylabel("F1")
+        plt.grid()
+        plt.savefig(self.__naming("F1_for_thresholds"))
+        plt.clf()
+
+    def plot_roc_curve(self, fpr, tpr, roc_auc, name="ROC_curve"):
+        display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc,
+                                          estimator_name='random estimator')
+        display.plot()
+        plt.plot([0, 1], [0, 1], 'r:')
+        plt.savefig(self.__naming(name))
+        plt.clf()
+
+    def plot_confusion_matrix(self, confusion_matrix):
+        display = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix)
+        display.plot(cmap='Greys')
+        plt.savefig(self.__naming("confusion_matrix"))
+        plt.clf()
 
     def save_raw_data(self, data, name="raw_data"):
         with open(path.join(
@@ -165,13 +227,14 @@ class ModelResults:
                 else:
                     f.write(f"{d},")
 
+
 # Not the prettiest but removes clutter from main.py
 def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, val_view: View):
     results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
     results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
     results.save_raw_data(history.history['loss'], "loss_epoch")
     results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
-    
+
     val_view.get_abnormal_slices_as_normalized_pixel_arrays
 
     x_val_abnormal = val_view.get_abnormal_slices_as_normalized_pixel_arrays(
@@ -211,7 +274,73 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images]
     )
 
+class Metrics:
+    def __init__(self, true, predict):
+        self.true = true
+        self.predictions = predict
+        self.confusionmatrix = self.get_confusionmatrix()
+        self.tn = self.confusionmatrix.ravel()[0]
+        self.fp = self.confusionmatrix.ravel()[1]
+        self.fn = self.confusionmatrix.ravel()[2]
+        self.tp = self.confusionmatrix.ravel()[3]
+        self.sensitivity = self.tp / (self.tp + self.fn)
+        self.specificity = self.tn / (self.tn + self.fp)
+        self.f1 = 2 * self.tp / (2 * self.tp + self.fp + self.fn)
+        self.accuracy = (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
 
+    def get_confusionmatrix(self):
+        return confusion_matrix(self.true, self.predictions)
+
+    def get_results(self):
+        return [f"TP: {self.tp}", f"TN: {self.tn}", f"FP: {self.fp}", f"FN: {self.fn}",
+                f"Sensitivity: {self.sensitivity}", f"Specificity: {self.specificity}",
+                f"F1: {self.f1}", f"Accuracy: {self.accuracy}"]
+
+    def get_f1(self):
+        return self.f1
+
+    def get_sensitivity(self):
+        return self.sensitivity
+
+    def get_accuracy(self):
+        return  self.accuracy
+
+    def get_specificity(self):
+        return self.specificity
+
+    def print_metrics(self):
+        print("TP:", self.tp)
+        print("FP:", self.fp)
+        print("TN", self.tn)
+        print("FN", self.fn)
+        print("sensitivity", self.sensitivity)
+        print("specificity", self.specificity)
+        print("F1", self.f1)
+        print("Accuracy", self.accuracy)
+
+def get_roc(abnormal_losses, normal_losses):
+    all_losses = []
+    labels = []
+    for i in range(len(abnormal_losses)):
+        all_losses.append(abnormal_losses[i])
+    for i in range(len(normal_losses)):
+        all_losses.append(normal_losses[i])
+
+    # Normalize all_losses
+    normalized_losses = [el/max(all_losses) for el in all_losses]
+
+    for i in range(len(abnormal_losses)):
+        labels.append(1)
+    for i in range(len(normal_losses)):
+        labels.append(0)
+
+    fpr, tpr, thresholds = roc_curve(labels, normalized_losses)
+
+    # Return "anti-normalized" thresholds
+    return fpr, tpr, [el*max(all_losses) for el in thresholds]
+
+def get_auc(fpr, tpr):
+    return auc(fpr, tpr)
 
 # y_true = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 # y_pred = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
@@ -239,73 +368,3 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
 #                 self.predicted.append(0)
 #         return self.predicted
 
-
-# class Metrics:
-#     def __init__(self, true, predict):
-#         self.true = true
-#         self.predictions = predict
-#         self.roc_curve = self.get_roc()
-#         self.fpr = self.roc_curve[0]
-#         self.tpr = self.roc_curve[1]
-#         self.thresholds = self.roc_curve[2]
-#         self.auc = self.get_auc()
-#         self.confusionmatrix = self.get_confusionmatrix()
-#         self.tn = self.confusionmatrix.ravel()[0]
-#         self.fp = self.confusionmatrix.ravel()[1]
-#         self.fn = self.confusionmatrix.ravel()[2]
-#         self.tp = self.confusionmatrix.ravel()[3]
-#         self.sensitivity = self.tp / (self.tp + self.fn)
-#         self.specificity = self.tn / (self.tn + self.fp)
-#         self.f1 = 2 * self.tp / (2 * self.tp + self.fp + self.fn)
-#         self.accuracy = (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
-
-#     def get_roc(self):
-#         return metrics.roc_curve(self.true, self.predictions)
-
-#     def get_auc(self):
-#         return metrics.auc(self.fpr, self.tpr)
-
-#     def get_confusionmatrix(self):
-#         return metrics.confusion_matrix(self.true, self.predictions)
-
-#     # tn, fp, fn, tp = confusion_matrix([0, 1, 0, 1], [1, 1, 1, 0]).ravel()
-
-#     def metrics_list(self):
-#         return [f"AUC: {self.auc}", f"TP: {self.tp}", ]
-
-#     def print_metrics(self):
-#         print("AUC:", self.auc)
-#         print("TP:", self.tp)
-#         print("FP:", self.fp)
-#         print("TN", self.tn)
-#         print("FN", self.fn)
-#         print("sensitivity", self.sensitivity)
-#         print("specificity", self.specificity)
-#         print("F1", self.f1)
-#         print("Accuracy", self.accuracy)
-
-#     def save_metrics(self):
-#         lines =[f"AUC: {self.auc}", f"TP: {self.tp}", f"FP: {self.fp}",
-#                 f"TN: {self.tn}", f"FN: {self.fn}", f"Sensitivity: {self.sensitivity}",
-#                 f"Specificty: {self.specificity}", f"F1: {self.f1}", f"Accuracy: {self.accuracy}"]
-#         with open('metrics.txt', 'w') as f:
-#             for line in lines:
-#                 f.write(line)
-
-# Metrics(y_true,y_pred).save_metrics()
-# a = Classifier(0, 1, y_pred).get_predicted()
-# print(a)
-# confusion = metrics.confusion_matrix(y_true, y_pred)
-#
-# fig, ax = plt.subplots(figsize=(7.5, 7.5))
-# ax.matshow(confusion, cmap=plt.cm.Blues, alpha=0.3)
-# for i in range(confusion.shape[0]):
-#     for j in range(confusion.shape[1]):
-#         ax.text(x=j, y=i, s=confusion[i, j], va='center', ha='center', size='xx-large')
-#
-# plt.xlabel('Predictions', fontsize=18)
-# plt.ylabel('Actuals', fontsize=18)
-# plt.title('Confusion Matrix', fontsize=18)
-#
-# fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred)
-# print(metrics.auc(fpr, tpr))
