@@ -203,12 +203,12 @@ class ModelResults:
         plt.savefig(self.__naming("F1_for_thresholds"))
         plt.clf()
 
-    def plot_roc_curve(self, fpr, tpr, roc_auc):
+    def plot_roc_curve(self, fpr, tpr, roc_auc, name="ROC_curve"):
         display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc,
                                           estimator_name='random estimator')
         display.plot()
         plt.plot([0, 1], [0, 1], 'r:')
-        plt.savefig(self.__naming("ROC_curve"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
     def plot_confusion_matrix(self, confusion_matrix):

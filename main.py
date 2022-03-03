@@ -21,6 +21,11 @@ from os import path
 # Epochs for the base autoencoder
 EPOCHS = 10
 
+# For all; autoencoder, classification via transfer learning,
+# and also for fine tuning classification via transfer learning,
+# but for fine tuning LEARNING_RATE * 1e-1
+LEARNING_RATE = 1e-4
+
 # Change this to the desired name of your model.
 # Used to identify the model!
 MODEL_NAME = "UNET_IQR"
@@ -31,6 +36,7 @@ IMAGE_DIM = [384, 384, 1]
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 outputs, encoder = unet(inputs)
+
 
 # --------------------- IMPORTING DATA --------------------- #
 data = ProcessedData("../sets/")
@@ -67,7 +73,7 @@ if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:
-    autoencoder.compile(optimizer=Adam(learning_rate=1e-4),
+    autoencoder.compile(optimizer=Adam(learning_rate=LEARNING_RATE),
                         loss=BinaryCrossentropy(),
                         metrics=[MeanSquaredError()])
 
@@ -109,16 +115,16 @@ results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_meth
 
 # ------------------------- Model Evaluation --------------------------- #
 # Obtaining more specific data from the test set
-test_abnormal = data.test.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-test_normal = data.test.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+x_test_abnormal = data.test.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+x_test_normal = data.test.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
-test_abnormal_decoded = autoencoder.predict(test_abnormal)
-test_normal_decoded = autoencoder.predict(test_normal)
+test_abnormal_decoded = autoencoder.predict(x_test_abnormal)
+test_normal_decoded = autoencoder.predict(x_test_normal)
 
 test_normal_loss = mse(test_normal_decoded.reshape(len(test_normal_decoded), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                       test_normal.reshape(len(test_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+                       x_test_normal.reshape(len(x_test_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 test_abnormal_loss = mse(test_abnormal_decoded.reshape(len(test_abnormal_decoded), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                         test_abnormal.reshape(len(test_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+                         x_test_abnormal.reshape(len(x_test_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc(test_abnormal_loss, test_normal_loss)
@@ -146,17 +152,25 @@ transfer_learning_classif = Classification_using_transfer_learning(
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
 
-classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=1e-4, batch_size=32, epochs=20)
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=LEARNING_RATE, batch_size=32, epochs=20)
 
-fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=1e-5, batch_size=32, epochs=10, num_layers=5)
+fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE*1e-1, batch_size=32, epochs=10, num_layers=5)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
+test_normal_pred = transfer_learning_classif.classif.predict(x_test_normal)
+test_abnormal_pred = transfer_learning_classif.classif.predict(x_test_abnormal)
 
 # Save classification via transfer learning predictions
-results.save_raw_data(predictions, "classification_tl_predictions")
-results.save_raw_data(y_test, "classififcation_tl_labels")
+results.save_raw_data(predictions, "classification_transfer_learning_predictions")
+results.save_raw_data(y_test, "classification_transfer_learning_labels")
 
 for i, prediction in enumerate(predictions, start=0):
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
 
+
+# Getting ROC
+fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for el in test_normal_pred])
+auc_score = get_auc(fpr, tpr)
+
+results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
 results.scatter_plot_of_predictions(predictions, y_test)

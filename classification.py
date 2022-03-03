@@ -78,6 +78,7 @@ class Classification_using_transfer_learning(Classification):
             epochs=epochs,
             validation_data=(self.x_test, self.y_test))
 
+
 class IQR_method(Classification):
     def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test, image_dim):
         super().__init__(autoencoder, x_val, y_val, x_test, y_test)
