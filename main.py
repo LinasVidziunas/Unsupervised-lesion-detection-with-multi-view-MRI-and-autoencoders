@@ -19,6 +19,13 @@ from os import path
 # Configure these for each autoencoder!
 # This will get used to save and load weights, and saving results.
 
+# Define the dominant image dimensions
+IMAGE_DIM = [384, 384, 1]
+
+# Change this to the desired name of your model.
+# Used to identify the model!
+MODEL_NAME = "VGG16_IQR"
+
 # Epochs for the base autoencoder
 EPOCHS = 35
 
@@ -26,17 +33,15 @@ EPOCHS = 35
 # and also for fine tuning classification via transfer learning,
 # but for fine tuning LEARNING_RATE * 1e-1
 LEARNING_RATE = 1e-4
-
-# Change this to the desired name of your model.
-# Used to identify the model!
-MODEL_NAME = "VGG16_IQR"
-
-# Define the dominant image dimensions
-IMAGE_DIM = [384, 384, 1]
+BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 outputs, encoder = own_vgg16(inputs, 0, 0, False, False, 0)
+
+# Specific settings for transfer learning
+CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
+CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification via transfer learning
 
 
 # --------------------- IMPORTING DATA --------------------- #
@@ -64,11 +69,10 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
-batch_size = 32
-model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e.h5")
+model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e.h5")
 
 autoencoder = Model(inputs, outputs, name=MODEL_NAME)
-results = ModelResults(f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e")
+results = ModelResults(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e")
 
 if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
@@ -88,13 +92,18 @@ else:
             'w') as f:
         autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
+    callbacks = [
+        ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
+                        IMAGE_DIM, data.validation.axial,
+                        save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000])]
+
     autoencoder_history = autoencoder.fit(
         x_train,
         x_train,
         epochs=EPOCHS,
-        batch_size=batch_size,
+        batch_size=BATCH_SIZE,
         validation_data=(x_val, x_val),
-        callbacks=[ResultsCallback(f"{MODEL_NAME}_{batch_size}bs_{EPOCHS}e", IMAGE_DIM, data.validation.axial, save_at_epochs=[10, 25, 50, 100, 200, 300])],
+        callbacks=callbacks,
     )
 
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
@@ -153,9 +162,9 @@ transfer_learning_classif = Classification_using_transfer_learning(
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
 
-classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=LEARNING_RATE, batch_size=32, epochs=20)
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=LEARNING_RATE, batch_size=CLASSIF_TF_BS, epochs=20)
 
-fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE*1e-1, batch_size=32, epochs=10, num_layers=5)
+fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE*1e-1, batch_size=CLASSIF_TF_FT_BS, epochs=10, num_layers=5)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
 test_normal_pred = transfer_learning_classif.classif.predict(x_test_normal)
@@ -167,7 +176,6 @@ results.save_raw_data(y_test, "classification_transfer_learning_labels")
 
 for i, prediction in enumerate(predictions, start=0):
     print(f"Predicted: {prediction}. Correct: {y_test[i]}")
-
 
 # Getting ROC
 fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for el in test_normal_pred])
