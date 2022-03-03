@@ -1,6 +1,7 @@
 from keras.callbacks import Callback
 from keras.losses import mse
 from results import ModelResults
+from results import get_roc, get_auc
 
 from os import path
 
@@ -50,3 +51,10 @@ class ResultsCallback(Callback):
                 [el.reshape(self.image_dim[0], self.image_dim[1]) for el in x_val],
                 [el.reshape(self.image_dim[0], self.image_dim[1]) for el in reconstructed_images]
             )
+
+
+            # ---------------------------- Saving validation roc and auc -----------------------------#
+            fpr, tpr, _ = get_roc(loss_abnormal, loss_normal)
+            auc_score = get_auc(fpr, tpr)
+
+            results.plot_roc_curve(fpr, tpr, auc_score)

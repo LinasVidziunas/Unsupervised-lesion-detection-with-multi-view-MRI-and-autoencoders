@@ -19,7 +19,7 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 25
+EPOCHS = 10
 
 # Change this to the desired name of your model.
 # Used to identify the model!
@@ -67,7 +67,7 @@ if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:
-    autoencoder.compile(optimizer=Adam(learning_rate=1e-3),
+    autoencoder.compile(optimizer=Adam(learning_rate=1e-4),
                         loss=BinaryCrossentropy(),
                         metrics=[MeanSquaredError()])
 
@@ -109,8 +109,8 @@ results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_meth
 
 # ------------------------- Model Evaluation --------------------------- #
 # Obtaining more specific data from the test set
-test_abnormal = data.validation.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-test_normal = data.validation.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+test_abnormal = data.test.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+test_normal = data.test.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 test_abnormal_decoded = autoencoder.predict(test_abnormal)
 test_normal_decoded = autoencoder.predict(test_normal)
