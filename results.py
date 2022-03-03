@@ -325,15 +325,19 @@ def get_roc(abnormal_losses, normal_losses):
         all_losses.append(abnormal_losses[i])
     for i in range(len(normal_losses)):
         all_losses.append(normal_losses[i])
-    #
+
+    # Normalize all_losses
+    normalized_losses = [el/max(all_losses) for el in all_losses]
+
     for i in range(len(abnormal_losses)):
         labels.append(1)
     for i in range(len(normal_losses)):
         labels.append(0)
-    #
-    fpr, tpr, thresholds = roc_curve(labels, all_losses)
 
-    return fpr, tpr, thresholds
+    fpr, tpr, thresholds = roc_curve(labels, normalized_losses)
+
+    # Return "anti-normalized" thresholds
+    return fpr, tpr, [el*max(all_losses) for el in thresholds]
 
 def get_auc(fpr, tpr):
     return auc(fpr, tpr)
