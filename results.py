@@ -53,7 +53,7 @@ class ModelResults:
         plt.title('Model MSE loss')
         plt.ylabel('MSE loss')
         plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.legend(['Train', 'Validation'], loc='upper right')
         plt.savefig(self.__naming("MSE_train_vs_val"))
         plt.clf()
 
@@ -65,7 +65,7 @@ class ModelResults:
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.legend(['Train', 'Validation'], loc='upper right')
         plt.savefig(self.__naming("loss_train_vs_val"))
         plt.clf()
 
