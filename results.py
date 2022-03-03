@@ -213,7 +213,7 @@ class ModelResults:
 
     def plot_confusion_matrix(self, confusion_matrix):
         display = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix)
-        display.plot()
+        display.plot(cmap='Greys')
         plt.savefig(self.__naming("confusion_matrix"))
         plt.clf()
 
