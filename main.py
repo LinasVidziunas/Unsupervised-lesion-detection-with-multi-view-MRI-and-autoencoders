@@ -1,4 +1,5 @@
 import tensorflow
+from Models.vgg16_ae import own_vgg16
 from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
@@ -19,7 +20,7 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Epochs for the base autoencoder
-EPOCHS = 10
+EPOCHS = 35
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -28,14 +29,14 @@ LEARNING_RATE = 1e-4
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "UNET_IQR"
+MODEL_NAME = "VGG16_IQR"
 
 # Define the dominant image dimensions
 IMAGE_DIM = [384, 384, 1]
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = unet(inputs)
+outputs, encoder = own_vgg16(inputs, 0, 0, False, False, 0)
 
 
 # --------------------- IMPORTING DATA --------------------- #
