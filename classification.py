@@ -103,7 +103,7 @@ class IQR_method(Classification):
         for loss in self.test_losses:
             if loss < threshold:
                 predicted.append(0)
-            if loss > threshold:
+            elif loss >= threshold:
                 predicted.append(1)
         return predicted
 
