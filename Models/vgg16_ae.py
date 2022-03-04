@@ -51,7 +51,7 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
     return block
 
 
-def own_vgg16(inputs, dropout_rate: float = 0, dropout_rate_bn: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120):
+def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120):
     encoder_filters = [64, 128, 256, 512, 512]
     decoder_filters = [512, 512, 256, 128, 64]
 
