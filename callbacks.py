@@ -2,8 +2,60 @@ from keras.callbacks import Callback
 from keras.losses import mse
 from results import ModelResults
 from results import get_roc, get_auc
+import matplotlib.pyplot as plt
 
 from os import path
+
+class AUCresult():
+    def __init__(self, epoch, tpr, fpr):
+        self.epoch = epoch
+        self.tpr = tpr
+        self.fpr = fpr
+        self.auc_score = get_auc(fpr, tpr)
+
+
+class AUCcallback(Callback):
+    def __init__(self, results: ModelResults, val_view, image_dim, every_x_epochs=5):
+        self.results = results
+        self.val_view = val_view
+        self.image_dim = image_dim
+        self.every_x_epochs = every_x_epochs
+
+        self.auc_results = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        epoch += 1
+        if epoch % self.every_x_epochs != 0:
+            return
+
+        x_val_abnormal = self.val_view.get_abnormal_slices_as_normalized_pixel_arrays(
+            shape=(self.image_dim[0], self.image_dim[1]))
+        x_val_normal = self.val_view.get_normal_slices_as_normalized_pixel_arrays(
+            shape=(self.image_dim[0], self.image_dim[1]))
+
+        decoded_normal = self.model.predict(x_val_normal)
+        loss_normal = mse(decoded_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]),
+                          x_val_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]))
+
+        decoded_abnormal = self.model.predict(x_val_abnormal)
+        loss_abnormal = mse(
+            decoded_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]),
+            x_val_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]))
+
+        fpr, tpr, _ = get_roc(loss_abnormal, loss_normal)
+        self.auc_results.append(AUCresult(epoch, tpr, fpr))
+
+    def on_train_end(self, logs=None):
+        plt.plot([res.epoch for res in self.auc_results], [res.auc_score for res in self.auc_results])
+        plt.title(f"AUC per {self.every_x_epochs} epoch(s)")
+        plt.xlabel("Epoch")
+        plt.ylabel("AUC")
+        plt.savefig(
+            path.join(
+                self.results.save_in_dir,
+                f"fig_auc_per_{self.every_x_epochs}_epochs-{self.results.timestamp_string()}.png"))
+        plt.clf()
+
 
 class ResultsCallback(Callback):
     def __init__(self, model_name, image_dim, val_view, save_at_epochs=[25, 50, 100, 200, 300]):
@@ -23,7 +75,6 @@ class ResultsCallback(Callback):
             x_val_normal = self.val_view.get_normal_slices_as_normalized_pixel_arrays(
                 shape=(self.image_dim[0], self.image_dim[1]))
 
-            # Plotting the MSE distrubution of normal slices
             decoded_normal = self.model.predict(x_val_normal)
             loss_normal = mse(decoded_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]),
                               x_val_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]))
