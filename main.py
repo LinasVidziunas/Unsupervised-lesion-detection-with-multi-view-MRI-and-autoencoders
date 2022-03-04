@@ -24,7 +24,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VGG16_IQR"
+MODEL_NAME = "VGG16"
 
 # Epochs for the base autoencoder
 EPOCHS = 35
@@ -37,7 +37,13 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = own_vgg16(inputs, 0, 0, False, False, 0)
+outputs, encoder = own_vgg16(
+    inputs=inputs,
+    dropout_rate=0,
+    batchNorm=False,
+    include_top=False,
+    dense_size=0,
+    latent_filters=512)
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
