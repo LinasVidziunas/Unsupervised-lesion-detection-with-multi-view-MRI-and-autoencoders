@@ -1,3 +1,8 @@
+from numpy.random import seed
+seed(420)
+from tensorflow.random import set_seed
+set_seed(420)
+
 import tensorflow
 from Models.vgg16_ae import own_vgg16
 from tensorflow.keras.optimizers import Adam
