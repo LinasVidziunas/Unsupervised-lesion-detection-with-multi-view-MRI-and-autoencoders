@@ -52,6 +52,16 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
 
 
 def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120, latent_filters: int = 512):
+    """
+    :param: dropout_rate: dropout rate between all encoder and decoder blocks
+    :param: batchNorm: BatchNorm after each conv layer
+    :param: include_top: whether to include dense layer as bottleneck
+    :param: dense_size: used if include_top is True, defines amount of units for dense layer bn
+    :param: latent_filters: number of filters in the last encoder block
+
+    Returns the full autoencoder and encoder part.
+    """
+
     encoder_filters = [64, 128, 256, 512, 512]
     decoder_filters = [512, 512, 256, 128, 64]
 
