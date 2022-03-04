@@ -51,7 +51,7 @@ def own_vgg16_decoder_block(previous_layer, filters: int,
     return block
 
 
-def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120):
+def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_top: bool = True, dense_size: int = 120, latent_filters: int = 512):
     encoder_filters = [64, 128, 256, 512, 512]
     decoder_filters = [512, 512, 256, 128, 64]
 
@@ -65,8 +65,9 @@ def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_t
         previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
 
     if include_top:
-        encoder = own_vgg16_encoder_block(
-            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=True)
+        b5 = own_vgg16_encoder_block(
+            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=True)
+        encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_filters, batchNorm=batchNorm)
 
         f1 = Flatten()(encoder)
 
@@ -77,8 +78,9 @@ def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_t
         b5 = own_vgg16_decoder_block(
             previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=True)
     else:
-        encoder = own_vgg16_encoder_block(
-            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
+        b5 = own_vgg16_encoder_block(
+            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
+        encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_filters, batchNorm=batchNorm)
 
         bottleneck = encoder
 
