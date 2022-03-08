@@ -4,7 +4,6 @@ from tensorflow.random import set_seed
 set_seed(420)
 
 import tensorflow
-from Models.vgg16_ae import own_vgg16
 from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
@@ -14,9 +13,9 @@ from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
 from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
-from Models.unet import unet
 from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
+from Models.vgg16_ae import own_vgg16
 
 from os import path
 
@@ -25,6 +24,8 @@ from os import path
 # This will get used to save and load weights, and saving results.
 
 # Define the dominant image dimensions
+# [384, 384, 1] for axial
+# [320, 320, 1] for sagittal and coronal
 IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
@@ -32,7 +33,7 @@ IMAGE_DIM = [384, 384, 1]
 MODEL_NAME = "VGG16"
 
 # Epochs for the base autoencoder
-EPOCHS = 35
+EPOCHS = 5
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -55,26 +56,35 @@ CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
 CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification via transfer learning
 
 
-# --------------------- IMPORTING DATA --------------------- #
+# ------------------------ Data path ----------------------- #
 data = ProcessedData("../sets/")
 
-x_train = data.train.axial.get_slices_as_normalized_pixel_arrays(
+
+# ----------------------- Define view -----------------------#
+# Change these to change view!
+train_dataset = data.train.axial
+validation_dataset = data.validation.axial
+test_dataset = data.test.axial
+
+
+# ---------------- Loading data into memory -----------------#
+x_train = train_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of training images: {len(x_train)}")
 
-x_val = data.validation.axial.get_slices_as_normalized_pixel_arrays(
+x_val = validation_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of validation images: {len(x_val)}")
 
 y_val = [[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
-         data.validation.axial.slices]
+         validation_dataset.slices]
 y_val = tensorflow.constant(y_val, shape=(len(y_val), 2))
 
-x_test = data.test.axial.get_slices_as_normalized_pixel_arrays(
+x_test = test_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of test images: {len(x_test)}")
 
-y_test = [[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in data.test.axial.slices]
+y_test = [[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset.slices]
 y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 
 
@@ -105,9 +115,9 @@ else:
 
     callbacks = [
         ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
-                        IMAGE_DIM, data.validation.axial,
+                        IMAGE_DIM, validation_dataset,
                         save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
-        AUCcallback(results, data.validation.axial, IMAGE_DIM, 5)]
+        AUCcallback(results, validation_dataset, IMAGE_DIM, 5)]
 
     autoencoder_history = autoencoder.fit(
         x_train,
@@ -121,7 +131,7 @@ else:
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
     autoencoder.save(model_path, save_format='h5')
 
-    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, data.validation.axial)
+    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 
 
 # ------------------- Classification with IQR method ------------------- #
@@ -137,8 +147,8 @@ results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_meth
 
 # ------------------------- Model Evaluation --------------------------- #
 # Obtaining more specific data from the test set
-x_test_abnormal = data.test.axial.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-x_test_normal = data.test.axial.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+x_test_abnormal = test_dataset.get_abnormal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+x_test_normal = test_dataset.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 test_abnormal_decoded = autoencoder.predict(x_test_abnormal)
 test_normal_decoded = autoencoder.predict(x_test_normal)
