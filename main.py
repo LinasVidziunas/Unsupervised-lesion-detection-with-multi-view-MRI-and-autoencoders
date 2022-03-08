@@ -59,15 +59,15 @@ CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification vi
 # ------------------------ Data path ----------------------- #
 data = ProcessedData("../sets/")
 
+
 # ----------------------- Define view -----------------------#
 # Change these to change view!
-
 train_dataset = data.train.axial
 validation_dataset = data.validation.axial
 test_dataset = data.test.axial
 
-# ---------------- Loading data into memory -----------------#
 
+# ---------------- Loading data into memory -----------------#
 x_train = train_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 print(f"Amount of training images: {len(x_train)}")
