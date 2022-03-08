@@ -152,9 +152,9 @@ for i, view in enumerate(views):
     results.plot_f1(thresholds, results_thresholds, name="F1_for_thresholds_{view}")
 
 #Getting bootstrapping results with MSE losses
-test_data = data.test.axial.get_slices_as_normalized_pixel_arrays(
+test_data = test_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-test_labels = [_slice.get_abnormality() for _slice in data.test.axial.slices]
+test_labels = [_slice.get_abnormality() for _slice in test_dataset.slices]
 
 mean_auc, std_auc = bootstrapping_mse(autoencoder, test_data, test_labels, 3, IMAGE_DIM[0])
 print("Mean auc MSE", mean_auc)
