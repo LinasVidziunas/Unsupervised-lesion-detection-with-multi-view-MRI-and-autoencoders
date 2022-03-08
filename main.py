@@ -13,8 +13,8 @@ from keras.metrics import MeanSquaredError
 from results import ModelResults, get_roc, get_auc, default_save_data, Metrics
 from processed import get_data_by_patients
 from variational import VAE, Sampling
-from classification import Classification_using_transfer_learning, IQR_method
 from Models.unet import model_MV_cAE_UNET
+from classification import Classification_using_transfer_learning, IQR_method
 
 from os import path
 
@@ -151,6 +151,14 @@ for i, view in enumerate(views):
     results.plot_accuracy(thresholds, results_thresholds, name="accuracy_for_thresholds_{view}")
     results.plot_f1(thresholds, results_thresholds, name="F1_for_thresholds_{view}")
 
+#Getting bootstrapping results with MSE losses
+test_data = data.test.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
+test_labels = [_slice.get_abnormality() for _slice in data.test.axial.slices]
+
+mean_auc, std_auc = bootstrapping_mse(autoencoder, test_data, test_labels, 3, IMAGE_DIM[0])
+print("Mean auc MSE", mean_auc)
+print("Std auc MSE", std_auc)
 
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
@@ -192,3 +200,8 @@ for j, view in enumerate(views):
 
     results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
     results.scatter_plot_of_predictions(predictions[j], y_test[j], name="scatter_plot_classification_{view}")
+
+# Get results with bootstrapping
+mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 3)
+print("Mean auc TL", mean_auc_TL)
+print("Std auc TL", std_auc_TL)
