@@ -16,6 +16,7 @@ from processed import ProcessedData
 from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
 from Models.vgg16_ae import own_vgg16
+from variational import VAE_UNET
 
 from os import path
 
@@ -30,10 +31,10 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VGG16"
+MODEL_NAME = "VAE_UNET"
 
 # Epochs for the base autoencoder
-EPOCHS = 5
+EPOCHS = 3
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -43,13 +44,9 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = own_vgg16(
-    inputs=inputs,
-    dropout_rate=0,
-    batchNorm=False,
-    include_top=False,
-    dense_size=0,
-    latent_filters=512)
+autoencoder = VAE_UNET(inputs)
+outputs = autoencoder.outputs
+encoder = autoencoder.z
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
@@ -92,16 +89,16 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 # Some constants used to name saved model
 model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e.h5")
 
-autoencoder = Model(inputs, outputs, name=MODEL_NAME)
+# autoencoder = Model(inputs, outputs, name=MODEL_NAME)
 results = ModelResults(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e")
 
 if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:
-    autoencoder.compile(optimizer=Adam(learning_rate=LEARNING_RATE),
-                        loss=BinaryCrossentropy(),
-                        metrics=[MeanSquaredError()])
+    autoencoder.compile(optimizer=Adam(learning_rate=LEARNING_RATE))
+                        # loss=BinaryCrossentropy(),
+                        # metrics=[MeanSquaredError()])
 
     print(autoencoder.summary())
 
@@ -121,15 +118,16 @@ else:
 
     autoencoder_history = autoencoder.fit(
         x_train,
-        x_train,
+        # x_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
-        validation_data=(x_val, x_val),
+        # validation_data=(x_val, x_val),
         callbacks=callbacks,
     )
 
-    print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
-    autoencoder.save(model_path, save_format='h5')
+    # print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
+    # Problem saving
+    # autoencoder.save(model_path, save_format='h5')
 
     default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 

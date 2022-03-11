@@ -231,9 +231,9 @@ class ModelResults:
 # Not the prettiest but removes clutter from main.py
 def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, val_view: View):
     results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
-    results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+    # results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
     results.save_raw_data(history.history['loss'], "loss_epoch")
-    results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
+    # results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
 
     val_view.get_abnormal_slices_as_normalized_pixel_arrays
 
@@ -258,8 +258,8 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
     # Saving raw MSE loss of abnormal slices
     results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
 
-    results.plot_mse_train_vs_val(history)
-    results.plot_loss_train_vs_val(history)
+    # results.plot_mse_train_vs_val(history)
+    # results.plot_loss_train_vs_val(history)
 
     results.histogram_mse_loss(loss_normal, loss_abnormal)
     results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
