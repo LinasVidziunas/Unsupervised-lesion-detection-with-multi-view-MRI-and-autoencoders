@@ -181,7 +181,7 @@ test_data = test_dataset.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 test_labels = [_slice.get_abnormality() for _slice in test_dataset.slices]
 
-mean_auc, std_auc = bootstrapping_mse(autoencoder, test_data, test_labels, 3, IMAGE_DIM[0])
+mean_auc, std_auc = bootstrapping_mse(autoencoder, test_data, test_labels, 100, IMAGE_DIM[0])
 print("Mean auc MSE", mean_auc)
 print("Std auc MSE", std_auc)
 
@@ -214,7 +214,7 @@ fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for 
 auc_score = get_auc(fpr, tpr)
 
 # Get results with bootstrapping
-mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 3)
+mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 100)
 print("Mean auc TL", mean_auc_TL)
 print("Std auc TL", std_auc_TL)
 
