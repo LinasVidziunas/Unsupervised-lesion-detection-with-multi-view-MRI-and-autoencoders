@@ -111,6 +111,8 @@ class VAE_UNET(Model):
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
+            data = data[0] # necessary if two x_train in fit()
+
             reconstructed, z_mean, z_log_var, _ = self.model(data)
             data = tf.expand_dims(data, -1)
 

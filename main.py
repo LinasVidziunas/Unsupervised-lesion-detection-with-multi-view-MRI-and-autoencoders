@@ -118,7 +118,7 @@ else:
 
     autoencoder_history = autoencoder.fit(
         x_train,
-        # x_train,
+        x_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         # validation_data=(x_val, x_val),
