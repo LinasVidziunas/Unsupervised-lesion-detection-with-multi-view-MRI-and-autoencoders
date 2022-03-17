@@ -15,8 +15,7 @@ from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
-from Models.vgg16_ae import own_vgg16
-from variational import VAE_UNET
+from variational import VAE_UNET, VAE_VGG16
 
 from os import path
 
@@ -31,10 +30,10 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VAE_UNET"
+MODEL_NAME = "VAE_VGG16"
 
 # Epochs for the base autoencoder
-EPOCHS = 3
+EPOCHS = 30
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -44,7 +43,8 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-autoencoder = VAE_UNET(inputs)
+# autoencoder = VAE_UNET(inputs)
+autoencoder = VAE_VGG16(inputs, 300)
 outputs = autoencoder.outputs
 encoder = autoencoder.z
 
@@ -92,7 +92,8 @@ model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOC
 # autoencoder = Model(inputs, outputs, name=MODEL_NAME)
 results = ModelResults(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e")
 
-if path.exists(model_path):
+# if path.exists(model_path):
+if False:
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
     autoencoder = load_model(model_path, compile=False)
 else:

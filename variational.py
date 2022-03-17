@@ -4,6 +4,8 @@ from keras.losses import binary_crossentropy
 from keras.layers import Layer, Conv2D, MaxPooling2D, Conv2DTranspose, concatenate, Dense, Flatten, Reshape
 from keras.metrics import MeanSquaredError, Mean
 
+from Models.vgg16_ae import own_vgg16_conv2d_block, own_vgg16_encoder_block, own_vgg16_decoder_block
+
 
 class Sampling(Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding"""
@@ -14,6 +16,120 @@ class Sampling(Layer):
         dim = tf.shape(z_mean)[1]
         epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
+
+
+class VAE_VGG16(Model):
+    """A VAE wrapper for ae based on VGG16"""
+
+    def __init__(self, inputs, latent_dim, **kwargs):
+        super(VAE_VGG16, self).__init__(**kwargs)
+        self.latent_dim = latent_dim
+
+        self.outputs, self.z_mean, self.z_log_var, self.z  = self._model(inputs)
+        self.model = Model(inputs, [self.outputs, self.z_mean, self.z_log_var, self.z], name="VAE_UNET")
+
+        self.total_loss_tracker = Mean(name="total_loss")
+        self.reconstruction_loss_tracker = Mean(name="reconstruction_loss")
+        self.kl_loss_tracker = Mean(name="kl_loss")
+        self.mse_loss_tracker = MeanSquaredError(name="mean_squared_error")
+
+    @property
+    def layers(self):
+        return self.model.layers
+
+    @property
+    def metrics(self):
+        return [self.total_loss_tracker, self.reconstruction_loss_tracker,
+           self.kl_loss_tracker, self.mse_loss_tracker]
+
+
+    def _model(self, inputs,
+             encoder_filters=[64, 128, 256, 512, 512],
+             decoder_filters=[512, 512, 256, 128, 64],
+             latent_conv_filters:int = 16,
+             batchNorm:bool = False,
+             dropout_rate:int = 0,):
+        
+        b1 = own_vgg16_encoder_block(
+            previous_layer=inputs, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b2 = own_vgg16_encoder_block(
+            previous_layer=b1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b3 = own_vgg16_encoder_block(
+            previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b4 = own_vgg16_encoder_block(
+            previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        
+        b5 = own_vgg16_encoder_block(
+            previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
+        encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters, batchNorm=batchNorm)
+
+        flatten = Flatten()(encoder)
+
+        # Change name
+        flatten = Dense(500)(flatten)
+
+        z_mean = Dense(self.latent_dim, name="z_mean")(flatten)
+        z_log_var = Dense(self.latent_dim, name="z_log_var")(flatten)
+        z = Sampling()([z_mean, z_log_var])
+
+        z = Dense(9216)(z)
+
+        reshape = Reshape((24, 24, latent_conv_filters))(z)
+
+        b5 = own_vgg16_decoder_block(
+            previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)
+        b6 = own_vgg16_decoder_block(
+            previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b7 = own_vgg16_decoder_block(
+            previous_layer=b6, filters=decoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        b8 = own_vgg16_decoder_block(
+            previous_layer=b7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+        decoder = own_vgg16_decoder_block(
+            previous_layer=b8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+
+        output = Conv2D(filters=1, kernel_size=(3, 3),
+                         padding="same", activation="sigmoid")(decoder)
+
+        return output, z_mean, z_log_var, z
+
+
+    def train_step(self, data):
+        with tf.GradientTape() as tape:
+            data = data[0] # necessary if two x_train in fit()
+
+            reconstructed, z_mean, z_log_var, _ = self.model(data)
+            data = tf.expand_dims(data, -1)
+
+            reconstruction_loss = tf.reduce_mean(
+                tf.reduce_sum(
+                    binary_crossentropy(data, reconstructed), axis=(1, 2)
+                )
+            )
+
+            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
+            kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
+            total_loss = reconstruction_loss + kl_loss
+        grads = tape.gradient(total_loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        self.total_loss_tracker.update_state(total_loss)
+        self.reconstruction_loss_tracker.update_state(reconstruction_loss)
+        self.kl_loss_tracker.update_state(kl_loss)
+        self.mse_loss_tracker.update_state(data, reconstructed)
+
+        return {
+            "loss": self.total_loss_tracker.result(),
+            "reconstruction_loss": self.reconstruction_loss_tracker.result(),
+            "kl_loss": self.kl_loss_tracker.result(),
+            "mean_squared_error": self.mse_loss_tracker.result()
+        }
+
+
+    def predict(self, images: list):
+        return self.model.predict(images)[0]
+
+
+    def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
+        return self.model.summary(line_length, positions, print_fn, expand_nested, show_trainable)
 
 
 class VAE_UNET(Model):
