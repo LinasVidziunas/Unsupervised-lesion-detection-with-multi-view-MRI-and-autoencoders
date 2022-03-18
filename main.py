@@ -8,14 +8,14 @@ from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
 from keras.layers import Input
-from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
+from keras.losses import mse
 
 from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
-from variational import VAE_UNET, VAE_VGG16
+from variational import VAE_VGG16
 
 from os import path
 
@@ -43,7 +43,6 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-# autoencoder = VAE_UNET(inputs)
 autoencoder = VAE_VGG16(inputs, 300)
 outputs = autoencoder.outputs
 encoder = autoencoder.z

@@ -6,6 +6,10 @@ from keras.metrics import MeanSquaredError, Mean
 
 from Models.vgg16_ae import own_vgg16_conv2d_block, own_vgg16_encoder_block, own_vgg16_decoder_block
 
+# Credits:
+# Sampling layer and train_step functions are directly obtained from 
+# https://keras.io/examples/generative/vae/
+
 
 class Sampling(Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding"""
@@ -65,16 +69,15 @@ class VAE_VGG16(Model):
 
         flatten = Flatten()(encoder)
 
-        # Change name
-        flatten = Dense(500)(flatten)
+        dense_pre_bn = Dense(500, name="dense_pre_bn")(flatten)
 
-        z_mean = Dense(self.latent_dim, name="z_mean")(flatten)
-        z_log_var = Dense(self.latent_dim, name="z_log_var")(flatten)
-        z = Sampling()([z_mean, z_log_var])
+        z_mean = Dense(self.latent_dim, name="z_mean")(dense_pre_bn)
+        z_log_var = Dense(self.latent_dim, name="z_log_var")(dense_pre_bn)
+        z = Sampling(name="z")([z_mean, z_log_var])
 
-        z = Dense(9216)(z)
+        dense_post_bn = Dense(9216, name="dense_post_bn")(z)
 
-        reshape = Reshape((24, 24, latent_conv_filters))(z)
+        reshape = Reshape((24, 24, latent_conv_filters))(dense_post_bn)
 
         b5 = own_vgg16_decoder_block(
             previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)
