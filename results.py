@@ -244,6 +244,9 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
 
     # Plotting the MSE distrubution of normal slices
     decoded_normal = autoencoder.predict(x_val_normal)
+    if isinstance(decoded_normal, tuple):
+        decoded_normal = decoded_normal[0]
+
     loss_normal = mse(decoded_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
                       x_val_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
@@ -251,6 +254,9 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
     results.save_raw_data(loss_normal, "normal_mse_loss")
 
     decoded_abnormal = autoencoder.predict(x_val_abnormal)
+    if isinstance(decoded_abnormal, tuple):
+        decoded_abnormal = decoded_abnormal[0]
+
     loss_abnormal = mse(
         decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
         x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
@@ -268,6 +274,8 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
         shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
     reconstructed_images = autoencoder.predict(x_val)
+    if isinstance(reconstructed_images, tuple):
+        reconstructed_images = reconstructed_images[0]
 
     results.input_vs_reconstructed_images(
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],

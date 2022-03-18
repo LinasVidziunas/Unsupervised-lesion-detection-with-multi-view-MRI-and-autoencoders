@@ -86,11 +86,17 @@ class IQR_method(Classification):
         super().__init__(autoencoder, x_val, y_val, x_test, y_test)
 
         validation_decoded = self.autoencoder.predict(x_val)
+        if isinstance(validation_decoded, tuple):
+            validation_decoded = validation_decoded[0]
+
         self.validation_losses = mse(
             validation_decoded.reshape(len(validation_decoded), image_dim[0] * image_dim[1]),
             x_val.reshape(len(x_val), image_dim[0] * image_dim[1]))
 
         test_decoded = self.autoencoder.predict(x_test)
+        if isinstance(test_decoded, tuple):
+            test_decoded = test_decoded[0]
+
         self.test_losses = mse(
             test_decoded.reshape(len(test_decoded), image_dim[0] * image_dim[1]),
             x_test.reshape(len(x_test), image_dim[0] * image_dim[1]))

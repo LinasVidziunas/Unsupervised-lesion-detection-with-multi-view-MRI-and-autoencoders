@@ -2,6 +2,8 @@ from keras.layers import Conv2D, Reshape, Flatten, Dense
 from keras.layers import UpSampling2D, MaxPool2D
 from keras.layers import BatchNormalization, Dropout
 
+from variational import Sampling
+
 
 def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool):
     x = Conv2D(filters=filters, kernel_size=(3, 3),
@@ -110,3 +112,53 @@ def own_vgg16(inputs, dropout_rate: float = 0, batchNorm: bool = True, include_t
                      padding="same", activation="sigmoid")(decoder)
 
     return decoder, bottleneck
+
+
+def model_VAE_VGG16(inputs,
+                  encoder_filters=[64, 128, 256, 512, 512],
+                  decoder_filters=[512, 512, 256, 128, 64],
+                  latent_conv_filters: int = 16,
+                  latent_dim: int = 500,
+                  batchNorm:bool = False,
+                  dropout_rate:int = 0,):
+    
+    b1 = own_vgg16_encoder_block(
+        previous_layer=inputs, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b2 = own_vgg16_encoder_block(
+        previous_layer=b1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b3 = own_vgg16_encoder_block(
+        previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b4 = own_vgg16_encoder_block(
+        previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    
+    b5 = own_vgg16_encoder_block(
+        previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
+    encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters, batchNorm=batchNorm)
+    
+    flatten = Flatten()(encoder)
+    
+    dense_pre_bn = Dense(1000, name="dense_pre_bn")(flatten)
+    
+    z_mean = Dense(latent_dim, name="z_mean")(dense_pre_bn)
+    z_log_var = Dense(latent_dim, name="z_log_var")(dense_pre_bn)
+    z = Sampling(name="z")([z_mean, z_log_var])
+        
+    dense_post_bn = Dense(9216, name="dense_post_bn")(z)
+    
+    reshape = Reshape((24, 24, latent_conv_filters))(dense_post_bn)
+    
+    b5 = own_vgg16_decoder_block(
+        previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)
+    b6 = own_vgg16_decoder_block(
+        previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b7 = own_vgg16_decoder_block(
+        previous_layer=b6, filters=decoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b8 = own_vgg16_decoder_block(
+        previous_layer=b7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    decoder = own_vgg16_decoder_block(
+        previous_layer=b8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    
+    output = Conv2D(filters=1, kernel_size=(3, 3),
+                    padding="same", activation="sigmoid")(decoder)
+    
+    return output, z_mean, z_log_var, z
