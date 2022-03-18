@@ -25,9 +25,10 @@ class Sampling(Layer):
 class VAE_VGG16(Model):
     """A VAE wrapper for ae based on VGG16"""
 
-    def __init__(self, inputs, latent_dim, **kwargs):
+    def __init__(self, inputs, latent_conv_filters:int, latent_dim:int, **kwargs):
         super(VAE_VGG16, self).__init__(**kwargs)
         self.latent_dim = latent_dim
+        self.latent_conv_filters = latent_conv_filters
 
         self.outputs, self.z_mean, self.z_log_var, self.z  = self._model(inputs)
         self.model = Model(inputs, [self.outputs, self.z_mean, self.z_log_var, self.z], name="VAE_UNET")
@@ -50,7 +51,6 @@ class VAE_VGG16(Model):
     def _model(self, inputs,
              encoder_filters=[64, 128, 256, 512, 512],
              decoder_filters=[512, 512, 256, 128, 64],
-             latent_conv_filters:int = 16,
              batchNorm:bool = False,
              dropout_rate:int = 0,):
         
@@ -65,11 +65,11 @@ class VAE_VGG16(Model):
         
         b5 = own_vgg16_encoder_block(
             previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate, max_pool=False)
-        encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters, batchNorm=batchNorm)
+        encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=self.latent_conv_filters, batchNorm=batchNorm)
 
         flatten = Flatten()(encoder)
 
-        dense_pre_bn = Dense(500, name="dense_pre_bn")(flatten)
+        dense_pre_bn = Dense(1000, name="dense_pre_bn")(flatten)
 
         z_mean = Dense(self.latent_dim, name="z_mean")(dense_pre_bn)
         z_log_var = Dense(self.latent_dim, name="z_log_var")(dense_pre_bn)
@@ -77,7 +77,7 @@ class VAE_VGG16(Model):
 
         dense_post_bn = Dense(9216, name="dense_post_bn")(z)
 
-        reshape = Reshape((24, 24, latent_conv_filters))(dense_post_bn)
+        reshape = Reshape((24, 24, self.latent_conv_filters))(dense_post_bn)
 
         b5 = own_vgg16_decoder_block(
             previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)

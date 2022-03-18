@@ -30,7 +30,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VAE_VGG16"
+MODEL_NAME = "VAE_VGG16_1kpre_1-1post_500ld"
 
 # Epochs for the base autoencoder
 EPOCHS = 3000
@@ -43,7 +43,7 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-autoencoder = VAE_VGG16(inputs, 300)
+autoencoder = VAE_VGG16(inputs, latent_conv_filters=16, latent_dim=500)
 outputs = autoencoder.outputs
 encoder = autoencoder.z
 
@@ -114,7 +114,7 @@ else:
         ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
                         IMAGE_DIM, validation_dataset,
                         save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
-        AUCcallback(results, validation_dataset, IMAGE_DIM, 5)]
+        AUCcallback(results, validation_dataset, IMAGE_DIM, 10)]
 
     autoencoder_history = autoencoder.fit(
         x_train,
