@@ -127,7 +127,7 @@ else:
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
     autoencoder.save(model_path, save_format='h5')
 
-    # default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
+    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 
 
 # ------------------- Classification with IQR method ------------------- #
