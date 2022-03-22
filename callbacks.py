@@ -33,11 +33,18 @@ class AUCcallback(Callback):
         x_val_normal = self.val_view.get_normal_slices_as_normalized_pixel_arrays(
             shape=(self.image_dim[0], self.image_dim[1]))
 
+
         decoded_normal = self.model.predict(x_val_normal)
+        if isinstance(decoded_normal, tuple):
+            decoded_normal = decoded_normal[0]
+
         loss_normal = mse(decoded_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]),
                           x_val_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]))
 
         decoded_abnormal = self.model.predict(x_val_abnormal)
+        if isinstance(decoded_abnormal, tuple):
+            decoded_abnormal = decoded_abnormal[0]
+
         loss_abnormal = mse(
             decoded_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]),
             x_val_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]))
@@ -76,6 +83,9 @@ class ResultsCallback(Callback):
                 shape=(self.image_dim[0], self.image_dim[1]))
 
             decoded_normal = self.model.predict(x_val_normal)
+            if isinstance(decoded_normal, tuple):
+                decoded_normal = decoded_normal[0]
+
             loss_normal = mse(decoded_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]),
                               x_val_normal.reshape(len(x_val_normal), self.image_dim[0] * self.image_dim[1]))
 
@@ -83,6 +93,9 @@ class ResultsCallback(Callback):
             results.save_raw_data(loss_normal, "normal_mse_loss")
 
             decoded_abnormal = self.model.predict(x_val_abnormal)
+            if isinstance(decoded_abnormal, tuple):
+                decoded_abnormal = decoded_abnormal[0]
+
             loss_abnormal = mse(
                 decoded_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]),
                 x_val_abnormal.reshape(len(x_val_abnormal), self.image_dim[0] * self.image_dim[1]))
@@ -97,6 +110,8 @@ class ResultsCallback(Callback):
                 shape=(self.image_dim[0], self.image_dim[1]))
 
             reconstructed_images = self.model.predict(x_val)
+            if isinstance(reconstructed_images, tuple):
+                reconstructed_images = reconstructed_images[0]
 
             results.input_vs_reconstructed_images(
                 [el.reshape(self.image_dim[0], self.image_dim[1]) for el in x_val],

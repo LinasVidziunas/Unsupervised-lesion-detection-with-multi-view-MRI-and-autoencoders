@@ -231,9 +231,9 @@ class ModelResults:
 # Not the prettiest but removes clutter from main.py
 def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, val_view: View):
     results.save_raw_data(history.history['mean_squared_error'], "mse_per_epoch")
-    results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
+    # results.save_raw_data(history.history['val_mean_squared_error'], "val_mse_per_epoch")
     results.save_raw_data(history.history['loss'], "loss_epoch")
-    results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
+    # results.save_raw_data(history.history['val_loss'], "val_loss_epoch")
 
     val_view.get_abnormal_slices_as_normalized_pixel_arrays
 
@@ -244,6 +244,9 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
 
     # Plotting the MSE distrubution of normal slices
     decoded_normal = autoencoder.predict(x_val_normal)
+    if isinstance(decoded_normal, tuple):
+        decoded_normal = decoded_normal[0]
+
     loss_normal = mse(decoded_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
                       x_val_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
@@ -251,6 +254,9 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
     results.save_raw_data(loss_normal, "normal_mse_loss")
 
     decoded_abnormal = autoencoder.predict(x_val_abnormal)
+    if isinstance(decoded_abnormal, tuple):
+        decoded_abnormal = decoded_abnormal[0]
+
     loss_abnormal = mse(
         decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
         x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
@@ -258,8 +264,8 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
     # Saving raw MSE loss of abnormal slices
     results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
 
-    results.plot_mse_train_vs_val(history)
-    results.plot_loss_train_vs_val(history)
+    # results.plot_mse_train_vs_val(history)
+    # results.plot_loss_train_vs_val(history)
 
     results.histogram_mse_loss(loss_normal, loss_abnormal)
     results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
@@ -268,6 +274,8 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM, va
         shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
     reconstructed_images = autoencoder.predict(x_val)
+    if isinstance(reconstructed_images, tuple):
+        reconstructed_images = reconstructed_images[0]
 
     results.input_vs_reconstructed_images(
         [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],

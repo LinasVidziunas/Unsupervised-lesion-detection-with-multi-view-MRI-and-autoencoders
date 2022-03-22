@@ -8,14 +8,16 @@ from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
 from keras.layers import Input
-from keras.losses import MeanSquaredError, BinaryCrossentropy, mse
+from keras.losses import BinaryCrossentropy, mse
+from keras.metrics import MeanSquaredError
 
 from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
-from Models.vgg16_ae import own_vgg16
+from variational import VAE
+from Models.vgg16_ae import model_VAE_VGG16
 
 from os import path
 
@@ -30,10 +32,10 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VGG16"
+MODEL_NAME = "VAE_test"
 
 # Epochs for the base autoencoder
-EPOCHS = 5
+EPOCHS = 1
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -43,13 +45,8 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, encoder = own_vgg16(
-    inputs=inputs,
-    dropout_rate=0,
-    batchNorm=False,
-    include_top=False,
-    dense_size=0,
-    latent_filters=512)
+outputs, z_mean, z_log_var, encoder = model_VAE_VGG16(inputs)
+autoencoder = VAE(inputs, (outputs, z_mean, z_log_var, encoder), name=MODEL_NAME)
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
@@ -92,7 +89,6 @@ y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
 # Some constants used to name saved model
 model_path = path.join('pre-trained_models', f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e.h5")
 
-autoencoder = Model(inputs, outputs, name=MODEL_NAME)
 results = ModelResults(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e")
 
 if path.exists(model_path):
@@ -117,7 +113,7 @@ else:
         ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
                         IMAGE_DIM, validation_dataset,
                         save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
-        AUCcallback(results, validation_dataset, IMAGE_DIM, 5)]
+        AUCcallback(results, validation_dataset, IMAGE_DIM, 10)]
 
     autoencoder_history = autoencoder.fit(
         x_train,
@@ -151,7 +147,12 @@ x_test_abnormal = test_dataset.get_abnormal_slices_as_normalized_pixel_arrays(sh
 x_test_normal = test_dataset.get_normal_slices_as_normalized_pixel_arrays(shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 test_abnormal_decoded = autoencoder.predict(x_test_abnormal)
+if isinstance(test_abnormal_decoded, tuple):
+    test_abnormal_decoded = test_abnormal_decoded[0]
+
 test_normal_decoded = autoencoder.predict(x_test_normal)
+if isinstance(test_normal_decoded, tuple):
+    test_normal_decoded = test_normal_decoded[0]
 
 test_normal_loss = mse(test_normal_decoded.reshape(len(test_normal_decoded), IMAGE_DIM[0] * IMAGE_DIM[1]),
                        x_test_normal.reshape(len(x_test_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
