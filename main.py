@@ -120,7 +120,7 @@ else:
         x_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
-        #validation_data=(x_val, x_val),
+        validation_data=(x_val, x_val),
         callbacks=callbacks,
     )
 
