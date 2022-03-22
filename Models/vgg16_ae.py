@@ -118,7 +118,7 @@ def model_VAE_VGG16(inputs,
                   encoder_filters=[64, 128, 256, 512, 512],
                   decoder_filters=[512, 512, 256, 128, 64],
                   latent_conv_filters: int = 16,
-                  latent_dim: int = 500,
+                  latent_dim: int = 64,
                   batchNorm:bool = False,
                   dropout_rate:int = 0,):
     
@@ -137,15 +137,15 @@ def model_VAE_VGG16(inputs,
     
     flatten = Flatten()(encoder)
     
-    dense_pre_bn = Dense(1000, name="dense_pre_bn")(flatten)
+    dense_pre_bn = Dense(4096, name="dense_pre_bn")(flatten)
     
     z_mean = Dense(latent_dim, name="z_mean")(dense_pre_bn)
     z_log_var = Dense(latent_dim, name="z_log_var")(dense_pre_bn)
     z = Sampling(name="z")([z_mean, z_log_var])
         
-    dense_post_bn = Dense(9216, name="dense_post_bn")(z)
+    dense_post_bn = Dense(18432, name="dense_post_bn")(z)
     
-    reshape = Reshape((24, 24, latent_conv_filters))(dense_post_bn)
+    reshape = Reshape((24, 24, 32))(dense_post_bn)
     
     b5 = own_vgg16_decoder_block(
         previous_layer=reshape, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate, up_sampling=False)
