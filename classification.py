@@ -29,8 +29,6 @@ class Classification_using_transfer_learning(Classification):
 
     def copy_weights(self):
         for i, encoder_layer in enumerate(self.encoder.layers):
-            print(f"Encoder layer: {encoder_layer.name}")
-            print(f"Autoencoder layer: {self.autoencoder.layers[i].name}")
             encoder_layer.set_weights(self.autoencoder.layers[i].get_weights())
 
     def run(self, flatten_layer: bool = False, learning_rate: float = 1e-3, dropout_rate: float = 0.2, batch_size: int = 64, epochs: int = 20):

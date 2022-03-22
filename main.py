@@ -112,7 +112,7 @@ else:
     callbacks = [
         ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
                         IMAGE_DIM, validation_dataset,
-                        save_at_epochs=[1, 10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
+                        save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
         AUCcallback(results, validation_dataset, IMAGE_DIM, 10)]
 
     autoencoder_history = autoencoder.fit(

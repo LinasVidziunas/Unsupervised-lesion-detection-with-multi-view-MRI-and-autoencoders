@@ -57,10 +57,3 @@ class VAE(Model):
             "kl_loss": self.kl_loss_tracker.result(),
             "mean_squared_error": self.mse_loss_tracker.result()
         }
-
-    # def predict(self, x):
-    #     predictions = []
-
-    #     for i in x:
-    #         if ij
-    #         predictions.append(self(i, training=False)[0]) # index 0 for output, not z or z_mean or z_var_log
