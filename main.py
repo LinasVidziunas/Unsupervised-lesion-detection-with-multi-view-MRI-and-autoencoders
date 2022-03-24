@@ -111,7 +111,7 @@ print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
 y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
               validation_dataset[1].slices])
 
-y_val[0] = tensorflow.constant(y_val[1], shape=(len(y_val[0]), 2))
+y_val[1] = tensorflow.constant(y_val[1], shape=(len(y_val[1]), 2))
 
 x_test.append(test_dataset[1].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
