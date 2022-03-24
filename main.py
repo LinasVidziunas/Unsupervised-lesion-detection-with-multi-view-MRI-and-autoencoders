@@ -14,12 +14,13 @@ from keras.losses import BinaryCrossentropy, mse
 from keras.metrics import MeanSquaredError
 
 from results import ModelResults, default_save_data
-from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
-from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
-from variational import VAE
 from Models.vgg16_ae import model_VAE_VGG16, multi_view_VGG
+
+# from classification import Classification_using_transfer_learning, IQR_method
+# from variational import VAE
+# from results import Metrics, get_roc, get_auc
 
 from os import path
 
@@ -43,9 +44,9 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 
 # Autoencoder base
-ax_input = Input((IMAGE_DIM[0][0], IMAGE_DIM[0][1], IMAGE_DIM[0][2]))
-sag_input = Input((IMAGE_DIM[1][0], IMAGE_DIM[1][1], IMAGE_DIM[1][2]))
-cor_input = Input((IMAGE_DIM[1][0], IMAGE_DIM[1][1], IMAGE_DIM[1][2]))
+ax_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
+sag_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
+cor_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 
 autoencoder = multi_view_VGG(ax_input, sag_input, cor_input)
 
@@ -80,9 +81,9 @@ x_test = []
 y_val = []
 y_test = []
 
-#Axial
 x_train.append(train_dataset[0].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
+# Axial
 print(f"Amount of training images for Axial: {len(x_train[0])}")
 
 x_val.append(validation_dataset[0].get_slices_as_normalized_pixel_arrays(
@@ -100,9 +101,9 @@ print(f"Amount of test images for Axial: {len(x_test[0])}")
 y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[0].slices])
 y_test[0] = tensorflow.constant(y_test[0], shape=(len(y_test[0]), 2))
 
-#Sagittal
 x_train.append(train_dataset[1].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+# Sagittal
 print(f"Amount of training images for Sagittal: {len(x_train[1])}")
 
 x_val.append(validation_dataset[1].get_slices_as_normalized_pixel_arrays(
@@ -122,9 +123,9 @@ y_test[1] = tensorflow.constant(y_test[1], shape=(len(y_test[1]), 2))
 
 
 
-#Coronal
 x_train.append(train_dataset[2].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+# Coronal
 print(f"Amount of training images for Coronal: {len(x_train[2])}")
 
 x_val.append(validation_dataset[2].get_slices_as_normalized_pixel_arrays(
