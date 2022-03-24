@@ -1,6 +1,6 @@
 from Datapreprocessing.slice import Slice
 
-from tensorflow import image, newaxis
+from tensorflow import image, newaxis, constant
 from numpy import array
 
 from os import listdir, path
@@ -143,3 +143,7 @@ class View:
             normalized_pixel_arrays.append(pixel_array)
 
         return array(normalized_pixel_arrays)
+
+def get_abnormality_tf_const(dataset):
+    temp = ([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in dataset.slices])
+    return constant(temp, shape=(len(temp), 2))
