@@ -28,11 +28,11 @@ from os import path
 # Configure these for each autoencoder!
 # This will get used to save and load weights, and saving results.
 
-IMAGE_DIM = [[384, 384, 1], [320, 320, 1]]
+IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "multi_view_cae"
+MODEL_NAME = "multi_view_cae_test"
 
 # Epochs for the base autoencoder
 EPOCHS = 25
@@ -57,81 +57,59 @@ CLASSIF_TF_FT_BS = 32  # Batch size for fine tuning part of the classification v
 # ------------------------ Data path ----------------------- #
 data = ProcessedData("../sets/")
 
-# ----------------------- Define view -----------------------#
-train_dataset = []
-validation_dataset = []
-test_dataset = []
-
-train_dataset.append(data.train.axial)
-validation_dataset.append(data.validation.axial)
-test_dataset.append(data.test.axial)
-
-train_dataset.append(data.train.sagittal)
-validation_dataset.append(data.validation.sagittal)
-test_dataset.append(data.test.sagittal)
-
-train_dataset.append(data.train.coronal)
-validation_dataset.append(data.validation.coronal)
-test_dataset.append(data.test.coronal)
-
 # ---------------- Loading data into memory -----------------#
-x_train = []
-x_val = []
-x_test = []
-y_val = []
-y_test = []
+x_train, x_val, x_test, y_val, y_test = ([] for _ in range(5))
 
-x_train.append(train_dataset[0].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
 # Axial
+x_train.append(data.train.axial.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of training images for Axial: {len(x_train[0])}")
 
-x_val.append(validation_dataset[0].get_slices_as_normalized_pixel_arrays(
+# x_val.append(data.validation.axial.get_slices_as_normalized_pixel_arrays(
+#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
+# print(f"Amount of validation images for Axial: {len(x_val[0])}")
+
+# y_val.append(get_abnormality_tf_const(data.validation.axial))
+
+x_test.append(data.test.axial.get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of validation images for Axial: {len(x_val[0])}")
-
-# y_val[0] = get_abnormality_tf_const(data.validation.axial.slices)
-
-x_test.append(test_dataset[0].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
 print(f"Amount of test images for Axial: {len(x_test[0])}")
 
-y_test[0] = get_abnormality_tf_const(data.test.axial.slices)
+y_test.append(get_abnormality_tf_const(data.test.axial))
 
-x_train.append(train_dataset[1].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 # Sagittal
+x_train.append(data.train.sagittal.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of training images for Sagittal: {len(x_train[1])}")
 
-x_val.append(validation_dataset[1].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
-print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
+# x_val.append(data.validation.sagittal.get_slices_as_normalized_pixel_arrays(
+#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
+# print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
 
-# y_val[1] = get_abnormality_tf_const(data.validation.sagittal.slices)
+# y_val.append(get_abnormality_tf_const(data.validation.sagittal))
 
-x_test.append(test_dataset[1].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+x_test.append(data.test.sagittal.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of test images for Axial: {len(x_test[1])}")
 
-y_test[1] = get_abnormality_tf_const(data.test.sagittal.slices)
+y_test.append(get_abnormality_tf_const(data.test.sagittal))
 
-
-x_train.append(train_dataset[2].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 # Coronal
+x_train.append(data.train.coronal.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of training images for Coronal: {len(x_train[2])}")
 
-x_val.append(validation_dataset[2].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
-print(f"Amount of validation images for Axial: {len(x_val[2])}")
+# x_val.append(data.validation.coronal.get_slices_as_normalized_pixel_arrays(
+#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
+# print(f"Amount of validation images for Axial: {len(x_val[2])}")
 
-# y_val[2] = get_abnormality_tf_const(data.validation.coronal.slices)
+# y_val.append(get_abnormality_tf_const(data.validation.coronal))
 
-x_test.append(test_dataset[2].get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+x_test.append(data.test.coronal.get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of test images for Axial: {len(x_test[2])}")
 
-y_test[2] = get_abnormality_tf_const(data.test.coronal.slices)
+y_test.append(get_abnormality_tf_const(data.test.coronal))
 
 
 # ---------------------- BASE MODEL ---------------------- #
