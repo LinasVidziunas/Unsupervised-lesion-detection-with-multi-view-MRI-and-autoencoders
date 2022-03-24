@@ -1,6 +1,8 @@
 from numpy.random import seed
+
 seed(420)
 from tensorflow.random import set_seed
+
 set_seed(420)
 
 import tensorflow
@@ -25,14 +27,11 @@ from os import path
 # Configure these for each autoencoder!
 # This will get used to save and load weights, and saving results.
 
-# Define the dominant image dimensions
-# [384, 384, 1] for axial
-# [320, 320, 1] for sagittal and coronal
-IMAGE_DIM = [384, 384, 1]
+IMAGE_DIM = [[384, 384, 1], [320, 320, 1]]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VAE_test"
+MODEL_NAME = "multi_view_cae"
 
 # Epochs for the base autoencoder
 EPOCHS = 1
@@ -49,40 +48,119 @@ outputs, z_mean, z_log_var, encoder = model_VAE_VGG16(inputs)
 autoencoder = VAE(inputs, (outputs, z_mean, z_log_var, encoder), name=MODEL_NAME)
 
 # Specific settings for transfer learning
-CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
-CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification via transfer learning
-
+CLASSIF_TF_BS = 32  # Batch size for classification via transfer learning
+CLASSIF_TF_FT_BS = 32  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
 data = ProcessedData("../sets/")
 
-
 # ----------------------- Define view -----------------------#
-# Change these to change view!
-train_dataset = data.train.axial
-validation_dataset = data.validation.axial
-test_dataset = data.test.axial
+train_dataset = []
+validation_dataset = []
+test_dataset = []
 
+train_dataset.append(data.train.axial)
+validation_dataset.append(data.validation.axial)
+test_dataset.append(data.test.axial)
+
+train_dataset.append(data.train.sagittal)
+validation_dataset.append(data.validation.sagittal)
+test_dataset.append(data.test.sagittal)
+
+train_dataset.append(data.train.coronal)
+validation_dataset.append(data.validation.coronal)
+test_dataset.append(data.test.coronal)
 
 # ---------------- Loading data into memory -----------------#
-x_train = train_dataset.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of training images: {len(x_train)}")
+x_train = []
+x_val = []
+y_val = []
+x_test = []
+y_test = []
 
-x_val = validation_dataset.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of validation images: {len(x_val)}")
+# Axial
+x_train.append(train_dataset[0].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
+print(f"Amount of training images for Axial: {len(x_train[0])}")
 
-y_val = [[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
-         validation_dataset.slices]
-y_val = tensorflow.constant(y_val, shape=(len(y_val), 2))
+x_val.append(validation_dataset[0].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
+print(f"Amount of validation images for Axial: {len(x_val[0])}")
 
-x_test = test_dataset.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-print(f"Amount of test images: {len(x_test)}")
+y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
+              validation_dataset[0].slices])
 
-y_test = [[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset.slices]
-y_test = tensorflow.constant(y_test, shape=(len(y_test), 2))
+y_val[0] = tensorflow.constant(y_val[0], shape=(len(y_val[0]), 2))
+
+x_test.append(test_dataset[0].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
+print(f"Amount of test images for Axial: {len(x_test[0])}")
+
+y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[0].slices])
+y_test.append(tensorflow.constant(y_test[0], shape=(len(y_test[0]), 2)))
+
+# Sagittal
+x_train.append(train_dataset[1].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of training images for Sagittal: {len(x_train[1])}")
+
+x_val.append(validation_dataset[1].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
+
+y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
+              validation_dataset[1].slices])
+
+y_val[0] = tensorflow.constant(y_val[1], shape=(len(y_val[0]), 2))
+
+x_test.append(test_dataset[1].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of test images for Axial: {len(x_test[1])}")
+
+y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[1].slices])
+y_test.append(tensorflow.constant(y_test[1], shape=(len(y_test[1]), 2)))
+
+# Coronal
+x_train.append(train_dataset[2].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of training images for Coronal: {len(x_train[2])}")
+
+x_val.append(validation_dataset[2].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of validation images for Axial: {len(x_val[2])}")
+
+y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
+              validation_dataset[2].slices])
+
+y_val[2] = tensorflow.constant(y_val[2], shape=(len(y_val[2]), 2))
+
+x_test.append(test_dataset[2].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of test images for Axial: {len(x_test[1])}")
+
+y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[0].slices])
+y_test.append(tensorflow.constant(y_test[0], shape=(len(y_test[0]), 2)))
+
+# Sagittal
+x_train.append(train_dataset[2].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[2][0], IMAGE_DIM[2][1])))
+print(f"Amount of training images for Axial: {len(x_train[2])}")
+
+x_val.append(validation_dataset[1].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of validation images for Axial: {len(x_val[1])}")
+
+y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
+              validation_dataset[1].slices])
+
+y_val[0] = tensorflow.constant(y_val[1], shape=(len(y_val[0]), 2))
+
+x_test.append(test_dataset[1].get_slices_as_normalized_pixel_arrays(
+    shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
+print(f"Amount of test images for Axial: {len(x_test[1])}")
+
+y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[1].slices])
+y_test.append(tensorflow.constant(y_test[1], shape=(len(y_test[1]), 2)))
 
 
 # ---------------------- BASE MODEL ---------------------- #
@@ -129,7 +207,6 @@ else:
 
     default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 
-
 # ------------------- Classification with IQR method ------------------- #
 iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)
 threshold = iqr_method.obtain_threshold()
@@ -139,7 +216,6 @@ metr = Metrics([x[1] for x in y_test], predicted)
 threshold_results = metr.get_results()
 results.plot_confusion_matrix(metr.get_confusionmatrix())
 results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_method_results")
-
 
 # ------------------------- Model Evaluation --------------------------- #
 # Obtaining more specific data from the test set
@@ -175,7 +251,6 @@ results.plot_sensitivity(thresholds, results_thresholds)
 results.plot_accuracy(thresholds, results_thresholds)
 results.plot_f1(thresholds, results_thresholds)
 
-
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
 
@@ -185,9 +260,11 @@ transfer_learning_classif = Classification_using_transfer_learning(
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
 
-classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=LEARNING_RATE, batch_size=CLASSIF_TF_BS, epochs=20)
+classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rate=LEARNING_RATE,
+                                                batch_size=CLASSIF_TF_BS, epochs=20)
 
-fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE*1e-1, batch_size=CLASSIF_TF_FT_BS, epochs=10, num_layers=5)
+fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE * 1e-1, batch_size=CLASSIF_TF_FT_BS,
+                                                        epochs=10, num_layers=5)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
 test_normal_pred = transfer_learning_classif.classif.predict(x_test_normal)
