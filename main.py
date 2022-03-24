@@ -34,7 +34,7 @@ IMAGE_DIM = [[384, 384, 1], [320, 320, 1]]
 MODEL_NAME = "multi_view_cae"
 
 # Epochs for the base autoencoder
-EPOCHS = 1
+EPOCHS = 25
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
