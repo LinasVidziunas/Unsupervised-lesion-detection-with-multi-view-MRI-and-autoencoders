@@ -137,31 +137,30 @@ else:
             'w') as f:
         autoencoder.summary(print_fn=lambda x: f.write(x + '\n'))
 
-    callbacks = [
-        ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
-                        IMAGE_DIM, validation_dataset,
-                        save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
-        AUCcallback(results, validation_dataset, IMAGE_DIM, 10)]
+    #callbacks = [
+        #ResultsCallback(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e",
+        #                IMAGE_DIM, validation_dataset,
+        #                save_at_epochs=[10, 25, 50, 100, 200, 300, 500, 1000, 1500, 2000]),
+        #AUCcallback(results, validation_dataset, IMAGE_DIM, 10)]
 
     autoencoder_history = autoencoder.fit(
         x_train,
         x_train,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
-        validation_data=(x_val, x_val),
-        callbacks=callbacks,
+        # validation_data=(x_val, x_val),
+        #callbacks=callbacks,
     )
 
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
     autoencoder.save(model_path, save_format='h5')
 
-    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
+    #default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 
 
 #Checking reconstructed images for Axial
-results = ModelResults()
 input_images = x_test[0]
-predicted_images = autoencoder.predict(x_test[0])
+predicted_images = autoencoder.predict(input_images)[0]
 results.input_vs_reconstructed_images(input_images, predicted_images)
 
 # ------------------- Classification with IQR method ------------------- #
