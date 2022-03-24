@@ -1,6 +1,7 @@
 from keras.layers import Conv2D, Reshape, Flatten, Dense, concatenate
 from keras.layers import UpSampling2D, MaxPool2D
 from keras.layers import BatchNormalization, Dropout
+from keras.models import Model
 
 from variational import Sampling
 
@@ -163,11 +164,10 @@ def model_VAE_VGG16(inputs,
     
     return output, z_mean, z_log_var, z
 
-def multi_view_VGG(ax_input,sag_input,cor_input,
+def multi_view_VGG(ax_input, sag_input, cor_input,
                   encoder_filters=[64, 128, 256, 512, 512],
                   decoder_filters=[512, 512, 256, 128, 64],
-                  latent_conv_filters: int = 16,
-                  latent_dim= [64, 32, 16],
+                  latent_conv_filters = [32,16,4],
                   batchNorm:bool = False,
                   dropout_rate:int = 0,):
 
@@ -222,7 +222,7 @@ def multi_view_VGG(ax_input,sag_input,cor_input,
     cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm)
 
     #Shared_bottleneck
-    bottleneck = concatenate([ax_input, sag_encoder, cor_encoder])
+    bottleneck = concatenate([ax_encoder, sag_encoder, cor_encoder])
 
 
     #Axial decoder
@@ -274,4 +274,4 @@ def multi_view_VGG(ax_input,sag_input,cor_input,
     cor_output = Conv2D(filters=1, kernel_size=(3, 3),
                        padding="same", activation="sigmoid")(cor_decoder)
 
-    return ax_output, sag_output, cor_output
+    return Model(inputs=[ax_input, sag_input, cor_input], outputs=[ax_output, sag_output, cor_output])
