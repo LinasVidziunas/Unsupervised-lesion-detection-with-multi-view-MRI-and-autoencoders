@@ -99,7 +99,7 @@ class ModelResults:
         plt.clf()
 
     def input_vs_reconstructed_images(self, input_images,
-                                      reconstructed_images, n: int = 10):
+                                      reconstructed_images, n: int = 5):
 
         plt.figure(figsize=(20, 4))
 

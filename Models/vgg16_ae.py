@@ -167,8 +167,7 @@ def model_VAE_VGG16(inputs,
 def multi_view_VGG(ax_input, sag_input, cor_input,
                   encoder_filters=[64, 128, 256, 512, 512],
                   decoder_filters=[512, 512, 256, 128, 64],
-                  latent_conv_filters: int = 16,
-                  latent_dim= [64, 32, 16],
+                  latent_conv_filters = [32,16,4],
                   batchNorm:bool = False,
                   dropout_rate:int = 0,):
 
@@ -223,7 +222,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
     cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm)
 
     #Shared_bottleneck
-    bottleneck = concatenate([ax_input, sag_encoder, cor_encoder])
+    bottleneck = concatenate([ax_encoder, sag_encoder, cor_encoder])
 
 
     #Axial decoder
