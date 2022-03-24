@@ -164,6 +164,7 @@ def model_VAE_VGG16(inputs,
     
     return output, z_mean, z_log_var, z
 
+
 def multi_view_VGG(ax_input, sag_input, cor_input,
                   encoder_filters=[64, 128, 256, 512, 512],
                   decoder_filters=[512, 512, 256, 128, 64],
@@ -171,9 +172,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
                   batchNorm:bool = False,
                   dropout_rate:int = 0,):
 
-
-
-    #Axial encoder
+    # Axial encoder
     a1 = own_vgg16_encoder_block(
         previous_layer=ax_input, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm,
         dropout_rate=dropout_rate)
@@ -189,7 +188,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
         max_pool=False)
     ax_encoder = own_vgg16_conv2d_block(previous_layer=a5, filters=latent_conv_filters[0], batchNorm=batchNorm)
 
-    #sagittal_encoder
+    # Sagittal_encoder
     b1 = own_vgg16_encoder_block(
         previous_layer=sag_input, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm,
         dropout_rate=dropout_rate)
@@ -205,7 +204,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
         max_pool=False)
     sag_encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters[1], batchNorm=batchNorm)
 
-    #Coronal_encoder
+    # Coronal_encoder
     c1 = own_vgg16_encoder_block(
         previous_layer=cor_input, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm,
         dropout_rate=dropout_rate)
@@ -221,11 +220,10 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
         max_pool=False)
     cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm)
 
-    #Shared_bottleneck
+    # Shared_bottleneck
     bottleneck = concatenate([ax_encoder, sag_encoder, cor_encoder])
 
-
-    #Axial decoder
+    # Axial decoder
     a5 = own_vgg16_decoder_block(
         previous_layer=bottleneck, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm,
         dropout_rate=dropout_rate, up_sampling=False)
@@ -241,8 +239,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
     ax_output = Conv2D(filters=1, kernel_size=(3, 3),
                     padding="same", activation="sigmoid")(ax_decoder)
 
-
-    #Sagittal decoder
+    # Sagittal decoder
     b5 = own_vgg16_decoder_block(
         previous_layer=bottleneck, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm,
         dropout_rate=dropout_rate, up_sampling=False)
@@ -258,7 +255,7 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
     sag_output = Conv2D(filters=1, kernel_size=(3, 3),
                        padding="same", activation="sigmoid")(sag_decoder)
 
-    #Coronal decoder
+    # Coronal decoder
     c5 = own_vgg16_decoder_block(
         previous_layer=bottleneck, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm,
         dropout_rate=dropout_rate, up_sampling=False)
