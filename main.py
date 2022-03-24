@@ -43,6 +43,9 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 
 # Autoencoder base
+ax_input = Input((IMAGE_DIM[0][0], IMAGE_DIM[0][1], IMAGE_DIM[0][2]))
+sag_input = Input((IMAGE_DIM[1][0], IMAGE_DIM[1][1], IMAGE_DIM[1][2]))
+cor_input = Input((IMAGE_DIM[1][0], IMAGE_DIM[1][1], IMAGE_DIM[1][2]))
 
 autoencoder = multi_view_VGG(ax_input, sag_input, cor_input)
 
@@ -154,7 +157,8 @@ if path.exists(model_path):
     autoencoder = load_model(model_path, compile=False)
 else:
     autoencoder.compile(optimizer=Adam(learning_rate=LEARNING_RATE),
-                        loss=BinaryCrossentropy(),
+                        loss=[BinaryCrossentropy(), BinaryCrossentropy(), BinaryCrossentropy()],
+                        loss_weights=[1, 1, 1],
                         metrics=[MeanSquaredError()])
 
     print(autoencoder.summary())
