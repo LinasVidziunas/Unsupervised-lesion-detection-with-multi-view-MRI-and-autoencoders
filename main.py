@@ -14,7 +14,7 @@ from keras.losses import BinaryCrossentropy, mse
 from keras.metrics import MeanSquaredError
 
 from results import ModelResults, default_save_data
-from processed import ProcessedData
+from processed import ProcessedData, get_abnormality_tf_const
 from callbacks import ResultsCallback, AUCcallback
 from Models.vgg16_ae import model_VAE_VGG16, multi_view_VGG
 
@@ -90,16 +90,13 @@ x_val.append(validation_dataset[0].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
 print(f"Amount of validation images for Axial: {len(x_val[0])}")
 
-y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
-              validation_dataset[0].slices])
-y_val[0] = tensorflow.constant(y_val[0], shape=(len(y_val[0]), 2))
+# y_val[0] = get_abnormality_tf_const(data.validation.axial.slices)
 
 x_test.append(test_dataset[0].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[0][0], IMAGE_DIM[0][1])))
 print(f"Amount of test images for Axial: {len(x_test[0])}")
 
-y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[0].slices])
-y_test[0] = tensorflow.constant(y_test[0], shape=(len(y_test[0]), 2))
+y_test[0] = get_abnormality_tf_const(data.test.axial.slices)
 
 x_train.append(train_dataset[1].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
@@ -110,17 +107,13 @@ x_val.append(validation_dataset[1].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
 
-y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
-              validation_dataset[1].slices])
-y_val[1] = tensorflow.constant(y_val[1], shape=(len(y_val[1]), 2))
+# y_val[1] = get_abnormality_tf_const(data.validation.sagittal.slices)
 
 x_test.append(test_dataset[1].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 print(f"Amount of test images for Axial: {len(x_test[1])}")
 
-y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[1].slices])
-y_test[1] = tensorflow.constant(y_test[1], shape=(len(y_test[1]), 2))
-
+y_test[1] = get_abnormality_tf_const(data.test.sagittal.slices)
 
 
 x_train.append(train_dataset[2].get_slices_as_normalized_pixel_arrays(
@@ -132,17 +125,13 @@ x_val.append(validation_dataset[2].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 print(f"Amount of validation images for Axial: {len(x_val[2])}")
 
-y_val.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in
-              validation_dataset[2].slices])
-y_val[2] = tensorflow.constant(y_val[2], shape=(len(y_val[2]), 2))
+# y_val[2] = get_abnormality_tf_const(data.validation.coronal.slices)
 
 x_test.append(test_dataset[2].get_slices_as_normalized_pixel_arrays(
     shape=(IMAGE_DIM[1][0], IMAGE_DIM[1][1])))
 print(f"Amount of test images for Axial: {len(x_test[2])}")
 
-y_test.append([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in test_dataset[2].slices])
-y_test[2] = tensorflow.constant(y_test[2], shape=(len(y_test[2]), 2))
-
+y_test[2] = get_abnormality_tf_const(data.test.coronal.slices)
 
 
 # ---------------------- BASE MODEL ---------------------- #
