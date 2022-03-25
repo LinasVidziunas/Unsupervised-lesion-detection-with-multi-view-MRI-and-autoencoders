@@ -160,11 +160,16 @@ else:
 
     #default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
 
+input_images = x_test[0][:20], x_test[1][:20], x_test[2][:20]
 
-#Checking reconstructed images for Axial
-input_images = x_test[0]
 predicted_images = autoencoder.predict(input_images)[0]
-results.input_vs_reconstructed_images(input_images, predicted_images)
+results.input_vs_reconstructed_images(input_images[0], predicted_images, name="axial")
+
+predicted_images = autoencoder.predict(input_images)[1]
+results.input_vs_reconstructed_images(input_images[1], predicted_images, name="sagittal")
+
+predicted_images = autoencoder.predict(input_images)[2]
+results.input_vs_reconstructed_images(input_images[2], predicted_images, name="coronal")
 
 # ------------------- Classification with IQR method ------------------- #
 # iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)
