@@ -14,9 +14,9 @@ from keras.metrics import MeanSquaredError
 from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
-from classification import Classification_using_transfer_learning, IQR_method
 from callbacks import ResultsCallback, AUCcallback
-from variational import VAE
+from variational import VAE, Sampling
+from classification import Classification_using_transfer_learning, IQR_method
 from Models.vgg16_ae import model_VAE_VGG16
 
 from os import path
