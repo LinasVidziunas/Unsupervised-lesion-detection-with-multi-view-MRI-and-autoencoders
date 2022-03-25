@@ -111,6 +111,9 @@ print(f"Amount of test images for Axial: {len(x_test[2])}")
 
 y_test.append(get_abnormality_tf_const(data.test.coronal))
 
+# Temporarily
+x_train[0] = x_train[0][:2143]
+x_train[1] = x_train[1][:2143]
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
