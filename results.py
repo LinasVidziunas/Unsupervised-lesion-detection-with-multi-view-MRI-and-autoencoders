@@ -99,7 +99,8 @@ class ModelResults:
         plt.clf()
 
     def input_vs_reconstructed_images(self, input_images,
-                                      reconstructed_images, n: int = 5):
+                                    reconstructed_images, n: int = 5,
+                                    name="input_and_reconstructed_images"):
 
         plt.figure(figsize=(20, 4))
 
@@ -118,7 +119,7 @@ class ModelResults:
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
 
-        plt.savefig(self.__naming("input_and_reconstructed_images"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
     def scatter_plot_of_predictions(self, predictions, truth):
