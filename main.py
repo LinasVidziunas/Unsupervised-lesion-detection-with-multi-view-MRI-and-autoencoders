@@ -7,7 +7,6 @@ set_seed(420)
 
 import tensorflow
 from tensorflow.keras.optimizers import Adam
-from keras import Model
 from keras.models import load_model
 from keras.layers import Input
 from keras.losses import BinaryCrossentropy, mse
@@ -15,12 +14,13 @@ from keras.metrics import MeanSquaredError
 
 from results import ModelResults, default_save_data
 from processed import ProcessedData, get_abnormality_tf_const
-from callbacks import ResultsCallback, AUCcallback
 from variational import VAE, Sampling
 from Models.vgg16_ae import model_VAE_VGG16, multi_view_VGG
 
+# from keras import Model
 # from classification import Classification_using_transfer_learning, IQR_method
 # from results import Metrics, get_roc, get_auc
+# from callbacks import ResultsCallback, AUCcallback
 
 from os import path
 
