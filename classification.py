@@ -33,7 +33,7 @@ class Classification_using_transfer_learning(Classification):
 
     def run(self, flatten_layer: bool = False, learning_rate: float = 1e-3, dropout_rate: float = 0.2, batch_size: int = 64, epochs: int = 20):
         # Freeze encoder
-        self.encoder.trainabe = False
+        self.encoder.trainable = False
 
         # New model on top
         x = self.encoder(self.inputs, training=False)
@@ -61,8 +61,12 @@ class Classification_using_transfer_learning(Classification):
 
     def fine_tune(self, learning_rate: float = 1e-5, batch_size: int = 64, epochs: int = 10, num_layers: int = 5):
         # Unfreeze the last 'num_layers' in the encoder
-        for layer_index in range(len(self.encoder.layers) - 1, -1 + len(self.encoder.layers) - num_layers, -1):
-            self.encoder.layers[layer_index].trainable = True
+        if num_layers != 0:
+            for layer_index in range(len(self.encoder.layers) - 1, -1 + len(self.encoder.layers) - num_layers, -1):
+                self.encoder.layers[layer_index].trainable = True
+        elif num_layers == 0:
+            for layer in self.encoder.layers:
+                layer.trainable = True
 
         self.classif.compile(
             optimizer=Adam(learning_rate=learning_rate),
