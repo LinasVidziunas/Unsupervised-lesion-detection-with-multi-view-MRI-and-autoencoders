@@ -201,6 +201,9 @@ for j, view in enumerate(views):
     results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
     results.scatter_plot_of_predictions(predictions[j], y_test[j], name="scatter_plot_classification_{view}")
 
+results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
+results.scatter_plot_of_predictions(predictions, y_test)
+
 # Get results with bootstrapping
 mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 100)
 print("Mean auc TL", mean_auc_TL)
