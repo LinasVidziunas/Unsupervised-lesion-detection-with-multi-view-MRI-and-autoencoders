@@ -36,7 +36,7 @@ IMAGE_DIM = [384, 384, 1]
 MODEL_NAME = "VAE_test"
 
 # Epochs for the base autoencoder
-EPOCHS = 30
+EPOCHS = 200
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
