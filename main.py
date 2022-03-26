@@ -213,12 +213,10 @@ for i, prediction in enumerate(predictions, start=0):
 fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for el in test_normal_pred])
 auc_score = get_auc(fpr, tpr)
 
+results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
+results.scatter_plot_of_predictions(predictions, y_test)
+
 # Get results with bootstrapping
 mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 100)
 print("Mean auc TL", mean_auc_TL)
 print("Std auc TL", std_auc_TL)
-
-
-
-results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
-results.scatter_plot_of_predictions(predictions, y_test)
