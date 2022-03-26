@@ -22,21 +22,21 @@ class ProcessedData:
     @property
     def train(self):
         if self._train is None:
-            train_set_path = self._path_to_sets_folder + "train/"
+            train_set_path = path.join(self._path_to_sets_folder + "train")
             self._train = Set(train_set_path)
         return self._train
 
     @property
     def validation(self):
         if self._validation is None:
-            validation_set_path = self._path_to_sets_folder + "validation/"
+            validation_set_path = path.join(self._path_to_sets_folder, "validation")
             self._validation = Set(validation_set_path)
         return self._validation
 
     @property
     def test(self):
         if self._test is None:
-            test_set_path = self._path_to_sets_folder + "test/"
+            test_set_path = path.join(self._path_to_sets_folder, "test")
             self._test = Set(test_set_path)
         return self._test
 
@@ -61,21 +61,21 @@ class Set:
     @property
     def axial(self):
         if self._axial is None:
-            axial_path = self._path_to_set_folder + "Axial/"
+            axial_path = path.join(self._path_to_set_folder, "Axial")
             self._axial = View(axial_path)
         return self._axial
 
     @property
     def coronal(self):
         if self._coronal is None:
-            coronal_path = self._path_to_set_folder + "Coronal/"
+            coronal_path = path.join(self._path_to_set_folder, "Coronal")
             self._coronal = View(coronal_path)
         return self._coronal
 
     @property
     def sagittal(self):
         if self._sagittal is None:
-            sagittal_path = self._path_to_set_folder + "Sagittal/"
+            sagittal_path = path.join(self._path_to_set_folder, "Sagittal")
             self._sagittal = View(sagittal_path)
         return self._sagittal
 
@@ -95,13 +95,16 @@ class View:
         if not self._slices:
             dicoms = listdir(self._path_to_view_in_set)
 
-            for _, dicom in enumerate(dicoms):
-                # convert patiend_id: 1 -> "0001"
-                if self._patient_id != None and not str(self._patient_id).zfill(4) in dicom:
-                    continue
-
-                _slice = Slice(path.join(self._path_to_view_in_set, dicom))
-                self._slices.append(_slice)
+            # convert patiend_id: 1 -> "0001"
+            if self._patient_id != None:
+                for _, dicom in enumerate(dicoms):
+                    if str(self._patient_id).zfill(4) in dicom:
+                        _slice = Slice(path.join(self._path_to_view_in_set, dicom))
+                        self._slices.append(_slice)
+            else:
+                for _, dicom in enumerate(dicoms):
+                    _slice = Slice(path.join(self._path_to_view_in_set, dicom))
+                    self._slices.append(_slice)
 
         return self._slices
 
@@ -168,21 +171,21 @@ class Patient:
     @property
     def axial(self):
         if self._axial is None:
-            axial_path = self._path_to_set_folder + "Axial/"
+            axial_path = path.join(self._path_to_set_folder, "Axial")
             self._axial = View(axial_path, patient_id=self.patient_id)
         return self._axial
 
     @property
     def coronal(self):
         if self._coronal is None:
-            coronal_path = self._path_to_set_folder + "Coronal/"
+            coronal_path = path.join(self._path_to_set_folder, "Coronal")
             self._coronal = View(coronal_path, patient_id=self.patient_id)
         return self._coronal
 
     @property
     def sagittal(self):
         if self._sagittal is None:
-            sagittal_path = self._path_to_set_folder + "Sagittal/"
+            sagittal_path = path.join(self._path_to_set_folder, "Sagittal")
             self._sagittal = View(sagittal_path, patient_id=self.patient_id)
         return self._sagittal
 
