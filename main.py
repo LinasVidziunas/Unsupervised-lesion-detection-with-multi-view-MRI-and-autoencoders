@@ -55,7 +55,7 @@ CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification vi
 
 
 # ------------------------ Data path ----------------------- #
-data = ProcessedData("../sets/")
+data = ProcessedData("../../../../sets/")
 
 
 # ----------------------- Define view -----------------------#
