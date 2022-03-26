@@ -282,8 +282,22 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
             y_test["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
     train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
+    print(f"\n\n---------------------------- Start: Dataset information ----------------------------\n\n")
+    print(f"Train dataset:")
+    print(f"\tAxial:{len(train['axial'])}")
+    print(f"\tCoronal:{len(train['coronal'])}")
+    print(f"\tSagittal:{len(train['sagittal'])}")
     val = {"axial": concatenate(val["axial"]), "coronal": concatenate(val["coronal"]), "sagittal": concatenate(val["sagittal"])}
+    print(f"Validation dataset:")
+    print(f"\tAxial:{len(val['axial'])}")
+    print(f"\tCoronal:{len(val['coronal'])}")
+    print(f"\tSagittal:{len(val['sagittal'])}")
     test = {"axial": concatenate(test["axial"]), "coronal": concatenate(test["coronal"]), "sagittal": concatenate(test["sagittal"])}
+    print(f"Test dataset:")
+    print(f"\tAxial:{len(test['axial'])}")
+    print(f"\tCoronal:{len(test['coronal'])}")
+    print(f"\tSagittal:{len(test['sagittal'])}")
+    print(f"\n\n----------------------------  End: Dataset information  ----------------------------\n\n")
 
     return {
         "train": train,
