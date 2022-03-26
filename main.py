@@ -13,8 +13,8 @@ from keras.losses import BinaryCrossentropy, mse
 from keras.metrics import MeanSquaredError
 
 from results import ModelResults, default_save_data
-from processed import ProcessedData, get_abnormality_tf_const
 from variational import VAE, Sampling
+from processed import ProcessedData, get_abnormality_tf_const, get_data_by_patients
 from Models.vgg16_ae import model_VAE_VGG16, multi_view_VGG
 
 # from keras import Model
@@ -44,76 +44,23 @@ LEARNING_RATE = 1e-4
 BATCH_SIZE = 32
 
 # Autoencoder base
-ax_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-sag_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-cor_input = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
+ax_inputs, sag_inputs, cor_inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2])) for _ in range(3)]
 
-autoencoder = multi_view_VGG(ax_input, sag_input, cor_input)
+autoencoder = multi_view_VGG(ax_inputs, sag_inputs, cor_inputs)
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32  # Batch size for classification via transfer learning
 CLASSIF_TF_FT_BS = 32  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
-data = ProcessedData("../sets/")
+# data = ProcessedData("../sets/")
+patients = get_data_by_patients(path_to_sets_folder="../sets/", image_dim=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
-# ---------------- Loading data into memory -----------------#
-x_train, x_val, x_test, y_val, y_test = ([] for _ in range(5))
-
-# Axial
-x_train.append(data.train.axial.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of training images for Axial: {len(x_train[0])}")
-
-# x_val.append(data.validation.axial.get_slices_as_normalized_pixel_arrays(
-#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-# print(f"Amount of validation images for Axial: {len(x_val[0])}")
-
-# y_val.append(get_abnormality_tf_const(data.validation.axial))
-
-x_test.append(data.test.axial.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of test images for Axial: {len(x_test[0])}")
-
-y_test.append(get_abnormality_tf_const(data.test.axial))
-
-# Sagittal
-x_train.append(data.train.sagittal.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of training images for Sagittal: {len(x_train[1])}")
-
-# x_val.append(data.validation.sagittal.get_slices_as_normalized_pixel_arrays(
-#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-# print(f"Amount of validation images for Sagittal: {len(x_val[1])}")
-
-# y_val.append(get_abnormality_tf_const(data.validation.sagittal))
-
-x_test.append(data.test.sagittal.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of test images for Axial: {len(x_test[1])}")
-
-y_test.append(get_abnormality_tf_const(data.test.sagittal))
-
-# Coronal
-x_train.append(data.train.coronal.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of training images for Coronal: {len(x_train[2])}")
-
-# x_val.append(data.validation.coronal.get_slices_as_normalized_pixel_arrays(
-#     shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-# print(f"Amount of validation images for Axial: {len(x_val[2])}")
-
-# y_val.append(get_abnormality_tf_const(data.validation.coronal))
-
-x_test.append(data.test.coronal.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1])))
-print(f"Amount of test images for Axial: {len(x_test[2])}")
-
-y_test.append(get_abnormality_tf_const(data.test.coronal))
-
-# Temporarily
-x_train[0] = x_train[0][:2143]
-x_train[1] = x_train[1][:2143]
+x_train = list(patients["train"].values())
+x_val = list(patients["validation"]["x"].values())
+y_val = list(patients["validation"]["y"].values())
+x_test = list(patients["test"]["x"].values())
+y_test = list(patients["test"]["y"].values())
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model

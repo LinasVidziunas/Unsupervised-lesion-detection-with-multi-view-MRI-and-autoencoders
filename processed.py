@@ -1,7 +1,7 @@
 from Datapreprocessing.slice import Slice
 
 from tensorflow import image, newaxis, constant
-from numpy import array
+from numpy import array, concatenate
 
 from os import listdir, path
 
@@ -81,12 +81,13 @@ class Set:
 
 
 class View:
-    def __init__(self, path_to_view_in_set_folder: str):
+    def __init__(self, path_to_view_in_set_folder: str, patient_id = None):
         if not path.isdir(path_to_view_in_set_folder):
             raise ValueError(
                 f"Path to the view folder provided for the View class is not a valid directory: {path_to_view_in_set_folder}"
             )
         self._path_to_view_in_set = path_to_view_in_set_folder
+        self._patient_id = patient_id
         self._slices = []
 
     @property
@@ -95,6 +96,10 @@ class View:
             dicoms = listdir(self._path_to_view_in_set)
 
             for _, dicom in enumerate(dicoms):
+                # convert patiend_id: 1 -> "0001"
+                if self._patient_id != None and not str(self._patient_id).zfill(4) in dicom:
+                    continue
+
                 _slice = Slice(path.join(self._path_to_view_in_set, dicom))
                 self._slices.append(_slice)
 
@@ -143,6 +148,145 @@ class View:
             normalized_pixel_arrays.append(pixel_array)
 
         return array(normalized_pixel_arrays)
+
+
+class Patient:
+    def __init__(self, patient_id, path_to_set_folder: str = "../sets/train"):
+        if not path.isdir(path_to_set_folder):
+            raise ValueError(
+                f"Path to the set folder provided for Patient class is not a valid directory: {path_to_set_folder}"
+            )
+
+        self.exists = [i for i in listdir(path.join(path_to_set_folder, "Axial")) if str(patient_id).zfill(4) in i] != []
+        self.patient_id = patient_id
+        self._path_to_set_folder = path_to_set_folder
+
+        self._axial = None
+        self._coronal = None
+        self._sagittal = None
+
+    @property
+    def axial(self):
+        if self._axial is None:
+            axial_path = self._path_to_set_folder + "Axial/"
+            self._axial = View(axial_path, patient_id=self.patient_id)
+        return self._axial
+
+    @property
+    def coronal(self):
+        if self._coronal is None:
+            coronal_path = self._path_to_set_folder + "Coronal/"
+            self._coronal = View(coronal_path, patient_id=self.patient_id)
+        return self._coronal
+
+    @property
+    def sagittal(self):
+        if self._sagittal is None:
+            sagittal_path = self._path_to_set_folder + "Sagittal/"
+            self._sagittal = View(sagittal_path, patient_id=self.patient_id)
+        return self._sagittal
+
+    def get_normal_slices(self, shape: tuple, equal_amount: bool = False):
+        axial = self.axial.get_normal_slices_as_normalized_pixel_arrays(shape)
+        coronal = self.coronal.get_normal_slices_as_normalized_pixel_arrays(shape)
+        sagittal = self.sagittal.get_normal_slices_as_normalized_pixel_arrays(shape)
+
+        if equal_amount:
+            minimum = min(len(axial), len(coronal), len(sagittal))
+            axial = axial[:minimum-1]
+            coronal = coronal[:minimum-1]
+            sagittal = sagittal[:minimum-1]
+
+        return {"axial": axial, "coronal": coronal, "sagittal": sagittal}
+
+    def get_slices(self, shape: tuple, equal_amount: bool = False):
+        axial = self.axial.get_slices_as_normalized_pixel_arrays(shape)
+        coronal = self.coronal.get_slices_as_normalized_pixel_arrays(shape)
+        sagittal = self.sagittal.get_slices_as_normalized_pixel_arrays(shape)
+
+        if equal_amount:
+            minimum = min(len(axial), len(coronal), len(sagittal))
+            axial = axial[:minimum-1]
+            coronal = coronal[:minimum-1]
+            sagittal = sagittal[:minimum-1]
+
+        return {"axial": axial, "coronal": coronal, "sagittal": sagittal}
+
+    def clear_data(self):
+        self._axial = None
+        self._coronal = None
+        self._sagittal = None
+
+
+def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple = (384, 384)):
+    number_of_patients = 300 #ish
+
+    train = {"axial": [], "coronal": [], "sagittal": []}
+    val = {"axial": [], "coronal": [], "sagittal": []}
+    y_val = {"axial": [], "coronal": [], "sagittal": []}
+    test = {"axial": [], "coronal": [], "sagittal": []}
+    y_test = {"axial": [], "coronal": [], "sagittal": []}
+
+    for patient_id in range(number_of_patients+1):
+        patient = Patient(patient_id, path.join(path_to_sets_folder, "train"))
+        if not patient.exists:
+            continue
+        normal_slices = patient.get_normal_slices(shape=image_dim, equal_amount=True)
+        train["axial"].append(normal_slices["axial"])
+        train["coronal"].append(normal_slices["sagittal"])
+        train["sagittal"].append(normal_slices["sagittal"])
+
+    val_patients = []
+    for patient_id in range(number_of_patients+1):
+        patient = Patient(patient_id, path.join(path_to_sets_folder, "validation"))
+        if not patient.exists:
+            continue
+        val_patients.append(patient)
+
+    for patient in val_patients:
+        normal_slices = patient.get_slices(shape=image_dim, equal_amount=True)
+        val["axial"].append(normal_slices["axial"])
+        val["coronal"].append(normal_slices["sagittal"])
+        val["sagittal"].append(normal_slices["sagittal"])
+
+    for patient in val_patients:
+        for _slice in patient.axial.slices:
+            y_val["axial"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in patient.coronal.slices:
+            y_val["coronal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in patient.sagittal.slices:
+            y_val["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+
+    test_patients = []
+    for patient_id in range(number_of_patients+1):
+        patient = Patient(patient_id, path.join(path_to_sets_folder, "test"))
+        if not patient.exists:
+            continue
+        test_patients.append(patient)
+
+    for patient in test_patients:
+        normal_slices = patient.get_slices(shape=image_dim, equal_amount=True)
+        test["axial"].append(normal_slices["axial"])
+        test["coronal"].append(normal_slices["sagittal"])
+        test["sagittal"].append(normal_slices["sagittal"])
+
+    for patient in test_patients:
+        for _slice in patient.axial.slices:
+            y_test["axial"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in patient.coronal.slices:
+            y_test["coronal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in patient.sagittal.slices:
+            y_test["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+
+    train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
+    val = {"axial": concatenate(val["axial"]), "coronal": concatenate(val["coronal"]), "sagittal": concatenate(val["sagittal"])}
+    test = {"axial": concatenate(test["axial"]), "coronal": concatenate(test["coronal"]), "sagittal": concatenate(test["sagittal"])}
+
+    return {
+        "train": train,
+        "validation": {"x": val, "y": y_val},
+        "test": {"x": test, "y": y_test}
+    }
 
 def get_abnormality_tf_const(dataset):
     temp = ([[int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()] for _slice in dataset.slices])
