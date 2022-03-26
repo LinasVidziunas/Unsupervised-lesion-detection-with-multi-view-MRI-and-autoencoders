@@ -225,8 +225,10 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
     number_of_patients = 300 #ish
 
     train = {"axial": [], "coronal": [], "sagittal": []}
+
     val = {"axial": [], "coronal": [], "sagittal": []}
     y_val = {"axial": [], "coronal": [], "sagittal": []}
+
     test = {"axial": [], "coronal": [], "sagittal": []}
     y_test = {"axial": [], "coronal": [], "sagittal": []}
 
@@ -234,10 +236,10 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         patient = Patient(patient_id, path.join(path_to_sets_folder, "train"))
         if not patient.exists:
             continue
-        normal_slices = patient.get_normal_slices(shape=image_dim, equal_amount=True)
-        train["axial"].append(normal_slices["axial"])
-        train["coronal"].append(normal_slices["sagittal"])
-        train["sagittal"].append(normal_slices["sagittal"])
+        _slices = patient.get_normal_slices(shape=image_dim, equal_amount=True)
+        train["axial"].append(_slices["axial"])
+        train["coronal"].append(_slices["coronal"])
+        train["sagittal"].append(_slices["sagittal"])
 
     val_patients = []
     for patient_id in range(number_of_patients+1):
@@ -247,10 +249,10 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         val_patients.append(patient)
 
     for patient in val_patients:
-        normal_slices = patient.get_slices(shape=image_dim, equal_amount=True)
-        val["axial"].append(normal_slices["axial"])
-        val["coronal"].append(normal_slices["sagittal"])
-        val["sagittal"].append(normal_slices["sagittal"])
+        _slices = patient.get_slices(shape=image_dim, equal_amount=True)
+        val["axial"].append(_slices["axial"])
+        val["coronal"].append(_slices["coronal"])
+        val["sagittal"].append(_slices["sagittal"])
 
     for patient in val_patients:
         for _slice in patient.axial.slices:
@@ -260,6 +262,12 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         for _slice in patient.sagittal.slices:
             y_val["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
+        minimum = min(len(y_val["axial"]), len(y_val["coronal"]), len(y_val["sagittal"]))
+        y_val["axial"] = y_val["axial"][:minimum-1]
+        y_val["coronal"] = y_val["coronal"][:minimum-1]
+        y_val["sagittal"] = y_val["sagittal"][:minimum-1]
+
+
     test_patients = []
     for patient_id in range(number_of_patients+1):
         patient = Patient(patient_id, path.join(path_to_sets_folder, "test"))
@@ -268,10 +276,10 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         test_patients.append(patient)
 
     for patient in test_patients:
-        normal_slices = patient.get_slices(shape=image_dim, equal_amount=True)
-        test["axial"].append(normal_slices["axial"])
-        test["coronal"].append(normal_slices["sagittal"])
-        test["sagittal"].append(normal_slices["sagittal"])
+        _slices = patient.get_slices(shape=image_dim, equal_amount=True)
+        test["axial"].append(_slices["axial"])
+        test["coronal"].append(_slices["coronal"])
+        test["sagittal"].append(_slices["sagittal"])
 
     for patient in test_patients:
         for _slice in patient.axial.slices:
@@ -280,6 +288,11 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
             y_test["coronal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
         for _slice in patient.sagittal.slices:
             y_test["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+
+        minimum = min(len(y_test["axial"]), len(y_test["coronal"]), len(y_test["sagittal"]))
+        y_test["axial"] = y_test["axial"][:minimum-1]
+        y_test["coronal"] = y_test["coronal"][:minimum-1]
+        y_test["sagittal"] = y_test["sagittal"][:minimum-1]
 
     train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
     print(f"\n\n---------------------------- Start: Dataset information ----------------------------\n\n")
@@ -297,7 +310,6 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
     print(f"\tAxial:{len(test['axial'])}")
     print(f"\tCoronal:{len(test['coronal'])}")
     print(f"\tSagittal:{len(test['sagittal'])}")
-    print(f"\n\n----------------------------  End: Dataset information  ----------------------------\n\n")
 
     return {
         "train": train,

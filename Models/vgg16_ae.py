@@ -271,4 +271,4 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
     cor_output = Conv2D(filters=1, kernel_size=(3, 3),
                        padding="same", activation="sigmoid")(cor_decoder)
 
-    return Model(inputs=[ax_input, sag_input, cor_input], outputs=[ax_output, sag_output, cor_output])
+    return ax_output, sag_output, cor_output, bottleneck
