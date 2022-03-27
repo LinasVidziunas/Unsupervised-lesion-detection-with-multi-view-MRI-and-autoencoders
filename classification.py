@@ -59,14 +59,13 @@ class Classification_using_transfer_learning(Classification):
             epochs=epochs,
             validation_data=(self.x_test, self.y_test))
 
-    def fine_tune(self, learning_rate: float = 1e-5, batch_size: int = 64, epochs: int = 10, num_layers: int = 5):
+    def fine_tune(self, learning_rate: float = 1e-5, batch_size: int = 64, epochs: int = 10, num_layers: int = 0):
         # Unfreeze the last 'num_layers' in the encoder
         if num_layers != 0:
             for layer_index in range(len(self.encoder.layers) - 1, -1 + len(self.encoder.layers) - num_layers, -1):
                 self.encoder.layers[layer_index].trainable = True
         elif num_layers == 0:
-            for layer in self.encoder.layers:
-                layer.trainable = True
+            self.encoder.trainable = True
 
         self.classif.compile(
             optimizer=Adam(learning_rate=learning_rate),

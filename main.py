@@ -49,8 +49,8 @@ ax_output, sag_output, cor_output, encoder = multi_view_VGG(ax_inputs, sag_input
 autoencoder = Model([ax_inputs, sag_inputs, cor_inputs], [ax_output, sag_output, cor_output])
 
 # Specific settings for transfer learning
-CLASSIF_TF_BS = 8  # Batch size for classification via transfer learning
-CLASSIF_TF_FT_BS = 8  # Batch size for fine tuning part of the classification via transfer learning
+CLASSIF_TF_BS = 16  # Batch size for classification via transfer learning
+CLASSIF_TF_FT_BS = 16  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
 # data = ProcessedData("../sets/")
@@ -193,11 +193,13 @@ classif_results = transfer_learning_classif.run(flatten_layer=True, learning_rat
                                                 batch_size=CLASSIF_TF_BS, epochs=20)
 
 fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_RATE * 1e-1, batch_size=CLASSIF_TF_FT_BS,
-                                                        epochs=10, num_layers=5)
+                                                        epochs=10, num_layers=0)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
 test_abnormal_pred = []
 test_normal_pred = []
+
+one_y_test = one_y_test.tolist()
 
 for i, pred in enumerate(predictions):
     if one_y_test[i] == [0, 1]:
