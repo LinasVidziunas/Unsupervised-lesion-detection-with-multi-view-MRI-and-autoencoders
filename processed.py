@@ -93,7 +93,7 @@ class Set:
 
 
 class View:
-    def __init__(self, path_to_view_in_set_folder: str, patient_id = None):
+    def __init__(self, path_to_view_in_set_folder: str, patient_id = None, sort_slices:bool = False):
         if not path.isdir(path_to_view_in_set_folder):
             raise ValueError(
                 f"Path to the view folder provided for the View class is not a valid directory: {path_to_view_in_set_folder}"
@@ -101,11 +101,15 @@ class View:
         self._path_to_view_in_set = path_to_view_in_set_folder
         self._patient_id = patient_id
         self._slices = []
+        self._sort_slices = sort_slices
 
     @property
     def slices(self):
         if not self._slices:
             dicoms = listdir(self._path_to_view_in_set)
+
+            if self._sort_slices:
+                dicoms.sort(key=lambda el: el[-2:])
 
             # convert patiend_id: 1 -> "0001"
             if self._patient_id != None:
@@ -184,21 +188,21 @@ class Patient:
     def axial(self):
         if self._axial is None:
             axial_path = path.join(self._path_to_set_folder, "Axial")
-            self._axial = View(axial_path, patient_id=self.patient_id)
+            self._axial = View(axial_path, patient_id=self.patient_id, sort_slices=True)
         return self._axial
 
     @property
     def coronal(self):
         if self._coronal is None:
             coronal_path = path.join(self._path_to_set_folder, "Coronal")
-            self._coronal = View(coronal_path, patient_id=self.patient_id)
+            self._coronal = View(coronal_path, patient_id=self.patient_id, sort_slices=True)
         return self._coronal
 
     @property
     def sagittal(self):
         if self._sagittal is None:
             sagittal_path = path.join(self._path_to_set_folder, "Sagittal")
-            self._sagittal = View(sagittal_path, patient_id=self.patient_id)
+            self._sagittal = View(sagittal_path, patient_id=self.patient_id, sort_slices=True)
         return self._sagittal
 
     def get_normal_slices(self, shape: tuple, equal_amount: bool = False):
