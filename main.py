@@ -15,7 +15,7 @@ from results import ModelResults, get_roc, get_auc
 from processed import get_data_by_patients
 from variational import VAE, Sampling
 from classification import Classification_using_transfer_learning
-from Models.vgg16_ae import multi_view_VGG
+from Models.unet import model_MV_cAE_UNET
 # from callbacks import ResultsCallback, AUCcallback
 
 from numpy import array
@@ -30,7 +30,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "multi_view_cae_test"
+MODEL_NAME = "multi_view_cae_test_unet"
 
 # Epochs for the base autoencoder
 EPOCHS = 25
@@ -39,21 +39,20 @@ EPOCHS = 25
 # and also for fine tuning classification via transfer learning,
 # but for fine tuning LEARNING_RATE * 1e-1
 LEARNING_RATE = 1e-4
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 
 # Autoencoder base
-ax_inputs, sag_inputs, cor_inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2])) for _ in range(3)]
-inputs = [ax_inputs, sag_inputs, cor_inputs]
+ax_inputs, cor_inputs, sag_inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2])) for _ in range(3)]
+inputs = [ax_inputs, cor_inputs, sag_inputs]
 
-ax_output, sag_output, cor_output, encoder = multi_view_VGG(ax_inputs, sag_inputs, cor_inputs)
-autoencoder = Model([ax_inputs, sag_inputs, cor_inputs], [ax_output, sag_output, cor_output])
+ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
+autoencoder = Model([ax_inputs, cor_inputs, sag_inputs], [ax_output, cor_output, sag_output])
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 16  # Batch size for classification via transfer learning
 CLASSIF_TF_FT_BS = 16  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
-# data = ProcessedData("../sets/")
 patients = get_data_by_patients(path_to_sets_folder="../sets/", image_dim=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 x_train = list(patients["train"].values())
@@ -113,10 +112,10 @@ predicted_images = autoencoder.predict(input_images)[0]
 results.input_vs_reconstructed_images(input_images[0], predicted_images, name="axial")
 
 predicted_images = autoencoder.predict(input_images)[1]
-results.input_vs_reconstructed_images(input_images[1], predicted_images, name="sagittal")
+results.input_vs_reconstructed_images(input_images[1], predicted_images, name="coronal")
 
 predicted_images = autoencoder.predict(input_images)[2]
-results.input_vs_reconstructed_images(input_images[2], predicted_images, name="coronal")
+results.input_vs_reconstructed_images(input_images[2], predicted_images, name="sagittal")
 
 # ------------------- Classification with IQR method ------------------- #
 # iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)

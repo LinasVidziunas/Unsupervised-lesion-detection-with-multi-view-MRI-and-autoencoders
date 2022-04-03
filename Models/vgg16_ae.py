@@ -165,7 +165,7 @@ def model_VAE_VGG16(inputs,
     return output, z_mean, z_log_var, z
 
 
-def multi_view_VGG(ax_input, sag_input, cor_input,
+def multi_view_VGG(ax_input, cor_input, sag_input,
                   encoder_filters=[64, 128, 256, 512, 512],
                   decoder_filters=[512, 512, 256, 128, 64],
                   latent_conv_filters = [32,16,4],
@@ -271,4 +271,4 @@ def multi_view_VGG(ax_input, sag_input, cor_input,
     cor_output = Conv2D(filters=1, kernel_size=(3, 3),
                         padding="same", activation="sigmoid", name="coronal")(cor_decoder)
 
-    return ax_output, sag_output, cor_output, bottleneck
+    return ax_output, cor_output, sag_output, bottleneck
