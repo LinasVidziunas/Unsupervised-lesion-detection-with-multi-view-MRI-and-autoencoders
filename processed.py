@@ -4,6 +4,18 @@ from tensorflow import image, newaxis, constant
 from numpy import array, concatenate
 
 from os import listdir, path
+from math import ceil
+
+def equal_length_views_middle(x, y , z):
+    minimum = min(len(x), len(y), len(z))
+
+    # Sick code. Retrieves slices in the middle with length equal to minimum.
+    x = x[(len(x)//2)-(minimum//2):len(x)-(ceil(len(x)/2)-ceil(minimum/2))]
+    y = y[(len(y)//2)-(minimum//2):len(y)-(ceil(len(y)/2)-ceil(minimum/2))]
+    z = z[(len(z)//2)-(minimum//2):len(z)-(ceil(len(z)/2)-ceil(minimum/2))]
+
+    return x, y, z
+
 
 class ProcessedData:
     """Import processed data with respect to the default folder structure"""
@@ -195,10 +207,7 @@ class Patient:
         sagittal = self.sagittal.get_normal_slices_as_normalized_pixel_arrays(shape)
 
         if equal_amount:
-            minimum = min(len(axial), len(coronal), len(sagittal))
-            axial = axial[:minimum-1]
-            coronal = coronal[:minimum-1]
-            sagittal = sagittal[:minimum-1]
+            axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
 
         return {"axial": axial, "coronal": coronal, "sagittal": sagittal}
 
@@ -208,10 +217,7 @@ class Patient:
         sagittal = self.sagittal.get_slices_as_normalized_pixel_arrays(shape)
 
         if equal_amount:
-            minimum = min(len(axial), len(coronal), len(sagittal))
-            axial = axial[:minimum-1]
-            coronal = coronal[:minimum-1]
-            sagittal = sagittal[:minimum-1]
+            axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
 
         return {"axial": axial, "coronal": coronal, "sagittal": sagittal}
 
@@ -262,11 +268,7 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         for _slice in patient.sagittal.slices:
             y_val["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
-        minimum = min(len(y_val["axial"]), len(y_val["coronal"]), len(y_val["sagittal"]))
-        y_val["axial"] = y_val["axial"][:minimum-1]
-        y_val["coronal"] = y_val["coronal"][:minimum-1]
-        y_val["sagittal"] = y_val["sagittal"][:minimum-1]
-
+        y_val["axial"], y_val["coronal"], y_val["sagittal"] = equal_length_views_middle(y_val["axial"], y_val["coronal"], y_val["sagittal"])
 
     test_patients = []
     for patient_id in range(number_of_patients+1):
@@ -289,10 +291,7 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         for _slice in patient.sagittal.slices:
             y_test["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
-        minimum = min(len(y_test["axial"]), len(y_test["coronal"]), len(y_test["sagittal"]))
-        y_test["axial"] = y_test["axial"][:minimum-1]
-        y_test["coronal"] = y_test["coronal"][:minimum-1]
-        y_test["sagittal"] = y_test["sagittal"][:minimum-1]
+        y_test["axial"], y_test["coronal"], y_test["sagittal"] = equal_length_views_middle(y_test["axial"], y_test["coronal"], y_test["sagittal"])
 
     train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
     print(f"\n\n---------------------------- Start: Dataset information ----------------------------\n\n")
