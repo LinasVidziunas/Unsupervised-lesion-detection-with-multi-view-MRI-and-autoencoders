@@ -11,14 +11,14 @@ from keras.layers import Input
 from keras.losses import BinaryCrossentropy
 from keras.metrics import MeanSquaredError
 
-from results import ModelResults, get_roc, get_auc
+from results import ModelResults, get_roc, get_auc, default_save_data
 from processed import get_data_by_patients
 from variational import VAE, Sampling
 from classification import Classification_using_transfer_learning
 from Models.unet import model_MV_cAE_UNET
 # from callbacks import ResultsCallback, AUCcallback
 
-from numpy import array
+from numpy import array, concatenate
 
 from os import path
 
@@ -39,7 +39,7 @@ EPOCHS = 25
 # and also for fine tuning classification via transfer learning,
 # but for fine tuning LEARNING_RATE * 1e-1
 LEARNING_RATE = 1e-4
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 
 # Autoencoder base
 ax_inputs, cor_inputs, sag_inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2])) for _ in range(3)]
@@ -49,8 +49,8 @@ ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
 autoencoder = Model([ax_inputs, cor_inputs, sag_inputs], [ax_output, cor_output, sag_output])
 
 # Specific settings for transfer learning
-CLASSIF_TF_BS = 16  # Batch size for classification via transfer learning
-CLASSIF_TF_FT_BS = 16  # Batch size for fine tuning part of the classification via transfer learning
+CLASSIF_TF_BS = 32  # Batch size for classification via transfer learning
+CLASSIF_TF_FT_BS = 32  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
 patients = get_data_by_patients(path_to_sets_folder="../sets/", image_dim=(IMAGE_DIM[0], IMAGE_DIM[1]))
@@ -60,6 +60,28 @@ x_val = list(patients["validation"]["x"].values())
 y_val = list(patients["validation"]["y"].values())
 x_test = list(patients["test"]["x"].values())
 y_test = list(patients["test"]["y"].values())
+
+x_val_abnormal = {
+    "axial": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[0][i] == [0, 1]], # abnormal for axial view
+              [x_val[1][i] for i in range(len(x_val[1])) if y_val[0][i] == [0, 1]],
+              [x_val[2][i] for i in range(len(x_val[2])) if y_val[0][i] == [0, 1]]],
+    "coronal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[1][i] == [0, 1]], # abnormal for coronal view
+                [x_val[1][i] for i in range(len(x_val[1])) if y_val[1][i] == [0, 1]],
+                [x_val[2][i] for i in range(len(x_val[2])) if y_val[1][i] == [0, 1]]],
+    "sagittal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[2][i] == [0, 1]], # abnormal for sagittal view
+                 [x_val[1][i] for i in range(len(x_val[1])) if y_val[2][i] == [0, 1]],
+                 [x_val[2][i] for i in range(len(x_val[2])) if y_val[2][i] == [0, 1]]]}
+
+x_val_normal = {
+    "axial": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[0][i] == [1, 0]], # normal for axial view
+              [x_val[1][i] for i in range(len(x_val[1])) if y_val[0][i] == [1, 0]],
+              [x_val[2][i] for i in range(len(x_val[2])) if y_val[0][i] == [1, 0]]],
+    "coronal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[1][i] == [1, 0]], # normal for coronal view
+                [x_val[1][i] for i in range(len(x_val[1])) if y_val[1][i] == [1, 0]],
+                [x_val[2][i] for i in range(len(x_val[2])) if y_val[1][i] == [1, 0]]],
+    "sagittal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[2][i] == [1, 0]], # normal for sagittal view
+                 [x_val[1][i] for i in range(len(x_val[1])) if y_val[2][i] == [1, 0]],
+                 [x_val[2][i] for i in range(len(x_val[2])) if y_val[2][i] == [1, 0]]]}
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
@@ -104,18 +126,15 @@ else:
     print(f"\n\n---------------------------- SAVING PRE-TRAINED MODEL to {model_path} ----------------------------\n\n")
     autoencoder.save(model_path, save_format='h5')
 
-    #default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM, validation_dataset)
-
-input_images = x_test[0][:20], x_test[1][:20], x_test[2][:20]
-
-predicted_images = autoencoder.predict(input_images)[0]
-results.input_vs_reconstructed_images(input_images[0], predicted_images, name="axial")
-
-predicted_images = autoencoder.predict(input_images)[1]
-results.input_vs_reconstructed_images(input_images[1], predicted_images, name="coronal")
-
-predicted_images = autoencoder.predict(input_images)[2]
-results.input_vs_reconstructed_images(input_images[2], predicted_images, name="sagittal")
+    default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM,
+                      x_val,
+                      list(x_val_abnormal.values()),
+                      list(x_val_normal.values()),
+                      mse_keys=["axial_mean_squared_error", "coronal_mean_squared_error", "sagittal_mean_squared_error"],
+                      val_mse_keys=["val_axial_mean_squared_error", "val_coronal_mean_squared_error", "val_sagittal_mean_squared_error"],
+                      loss_keys=["axial_loss", "coronal_loss", "sagittal_loss"],
+                      val_loss_keys=["val_axial_loss", "val_coronal_loss", "val_sagittal_loss"],
+                      views=["axial", "coronal", "sagittal"])
 
 # ------------------- Classification with IQR method ------------------- #
 # iqr_method = IQR_method(autoencoder, x_val, y_val, x_test, y_test, IMAGE_DIM)
