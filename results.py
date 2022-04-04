@@ -242,11 +242,11 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM,
                     val_loss_keys:list=["val_loss"],
                     views:list=["axial"]):
 
-    for mse in mse_keys:
-        results.save_raw_data(history.history[mse], mse)
+    for loss in mse_keys:
+        results.save_raw_data(history.history[loss], loss)
 
-    for mse in val_mse_keys:
-        results.save_raw_data(history.history[mse], mse)
+    for loss in val_mse_keys:
+        results.save_raw_data(history.history[loss], loss)
 
     for loss in loss_keys:
         results.save_raw_data(history.history[loss], loss)
@@ -273,21 +273,14 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM,
         if isinstance(decoded_abnormal, tuple):
             decoded_abnormal = decoded_abnormal[0]
 
-        loss_abnormal = mse(
-            decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
-            x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
+        loss_abnormal = mse(decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
+                            x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
         # Saving raw MSE loss of abnormal slices
         results.save_raw_data(loss_abnormal, "abnormal_mse_loss")
 
         # results.plot_mse_train_vs_val(history)
         # results.plot_loss_train_vs_val(history)
-
-        loss_normal = mse(decoded_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                          x_val_normal.reshape(len(x_val_normal), IMAGE_DIM[0] * IMAGE_DIM[1]))
-
-        loss_abnormal = mse(decoded_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                            x_val_abnormal.reshape(len(x_val_abnormal), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
         results.histogram_mse_loss(loss_normal, loss_abnormal)
         results.histogram_mse_loss_seperate(loss_normal, loss_abnormal)
@@ -301,20 +294,26 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM,
             [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images])
 
     elif len(views) == 3:
+        x_val_normal[0] = list(x_val_normal[0].values())
+        x_val_normal[1] = list(x_val_normal[1].values())
+        x_val_normal[2] = list(x_val_normal[2].values())
+        x_val_abnormal[0] = list(x_val_abnormal[0].values())
+        x_val_abnormal[1] = list(x_val_abnormal[1].values())
+        x_val_abnormal[2] = list(x_val_abnormal[2].values())
+
         for i, view in enumerate(views):
             decoded_normal = autoencoder.predict(x_val_normal[i])
 
             loss_normal = mse(decoded_normal[i].reshape(len(x_val_normal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                              x_val_normal[i].reshape(len(x_val_normal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
+                              x_val_normal[i][i].reshape(len(x_val_normal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
             # Saving raw MSE loss of normal slices
             results.save_raw_data(loss_normal, f"normal_mse_loss_{view}")
 
             decoded_abnormal = autoencoder.predict(x_val_abnormal[i])
 
-            loss_abnormal = mse(
-                decoded_abnormal[i].reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                x_val_abnormal[i].reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
+            loss_abnormal = mse(decoded_abnormal[i].reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]),
+                                x_val_abnormal[i][i].reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
 
             # Saving raw MSE loss of abnormal slices
             results.save_raw_data(loss_abnormal, f"abnormal_mse_loss_{view}")
@@ -322,19 +321,13 @@ def default_save_data(history, autoencoder, results: ModelResults, IMAGE_DIM,
             # results.plot_mse_train_vs_val(history)
             # results.plot_loss_train_vs_val(history)
 
-            loss_normal = mse(decoded_normal[i].reshape(len(x_val_normal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                              x_val_normal[i].reshape(len(x_val_normal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
-
-            loss_abnormal = mse(decoded_abnormal.reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]),
-                                x_val_abnormal.reshape(len(x_val_abnormal[i][i]), IMAGE_DIM[0] * IMAGE_DIM[1]))
-
             results.histogram_mse_loss(loss_normal, loss_abnormal, name=f"MSE_loss_hist_{view}")
             results.histogram_mse_loss_seperate(loss_normal, loss_abnormal, name=f"MSE_loss_hist_seperate_{view}")
 
-            reconstructed_images = autoencoder.predict(x_val)
+            reconstructed_images = autoencoder.predict(x_val)[i]
 
             results.input_vs_reconstructed_images(
-                [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val],
+                [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in x_val[i]],
                 [el.reshape(IMAGE_DIM[0], IMAGE_DIM[1]) for el in reconstructed_images],
                 name=f"input_and_reconstructed_images_{view}")
 

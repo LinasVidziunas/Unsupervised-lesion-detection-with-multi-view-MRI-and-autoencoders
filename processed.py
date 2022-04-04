@@ -237,9 +237,21 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
     train = {"axial": [], "coronal": [], "sagittal": []}
 
     val = {"axial": [], "coronal": [], "sagittal": []}
+    val_axial_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    val_coronal_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    val_sagittal_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    val_axial_normal = {"axial": [], "coronal": [], "sagittal": []}
+    val_coronal_normal = {"axial": [], "coronal": [], "sagittal": []}
+    val_sagittal_normal = {"axial": [], "coronal": [], "sagittal": []}
     y_val = {"axial": [], "coronal": [], "sagittal": []}
 
     test = {"axial": [], "coronal": [], "sagittal": []}
+    test_axial_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    test_coronal_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    test_sagittal_abnormal = {"axial": [], "coronal": [], "sagittal": []}
+    test_axial_normal = {"axial": [], "coronal": [], "sagittal": []}
+    test_coronal_normal = {"axial": [], "coronal": [], "sagittal": []}
+    test_sagittal_normal = {"axial": [], "coronal": [], "sagittal": []}
     y_test = {"axial": [], "coronal": [], "sagittal": []}
 
     for patient_id in range(number_of_patients+1):
@@ -265,19 +277,44 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         val["sagittal"].append(_slices["sagittal"])
 
     for patient in val_patients:
-        axial, coronal, sagittal = ([] for _ in range(3))
-        for _slice in patient.axial.slices:
-            axial.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
-        for _slice in patient.coronal.slices:
-            coronal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
-        for _slice in patient.sagittal.slices:
-            sagittal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        axial, coronal, sagittal = equal_length_views_middle(patient.axial.slices, patient.coronal.slices, patient.sagittal.slices)
 
-        axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
-        for i in range(len(axial)):
-            y_val["axial"].append(axial[i])
-            y_val["coronal"].append(coronal[i])
-            y_val["sagittal"].append(sagittal[i])
+        for _slice in axial:
+            y_val['axial'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in coronal:
+            y_val['coronal'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in sagittal:
+            y_val['sagittal'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+
+        for i, _slice in enumerate(axial):
+            if _slice.get_abnormality():
+                val_axial_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_axial_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_axial_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                val_axial_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_axial_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_axial_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+
+        for i, _slice in enumerate(coronal):
+            if _slice.get_abnormality():
+                val_coronal_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_coronal_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_coronal_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                val_coronal_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_coronal_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_coronal_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+
+        for i, _slice in enumerate(sagittal):
+            if _slice.get_abnormality():
+                val_sagittal_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_sagittal_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_sagittal_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                val_sagittal_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                val_sagittal_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                val_sagittal_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
 
     test_patients = []
     for patient_id in range(number_of_patients+1):
@@ -293,19 +330,45 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         test["sagittal"].append(_slices["sagittal"])
 
     for patient in test_patients:
-        axial, coronal, sagittal = ([] for _ in range(3))
-        for _slice in patient.axial.slices:
-            axial.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
-        for _slice in patient.coronal.slices:
-            coronal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
-        for _slice in patient.sagittal.slices:
-            sagittal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        axial, coronal, sagittal = equal_length_views_middle(patient.axial.slices, patient.coronal.slices, patient.sagittal.slices)
 
-        axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
-        for i in range(len(axial)):
-            y_test["axial"].append(axial[i])
-            y_test["coronal"].append(coronal[i])
-            y_test["sagittal"].append(sagittal[i])
+        for _slice in axial:
+            y_test['axial'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in coronal:
+            y_test['coronal'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+        for _slice in sagittal:
+            y_test['sagittal'].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+
+        for i, _slice in enumerate(axial):
+            if _slice.get_abnormality():
+                test_axial_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_axial_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_axial_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                test_axial_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_axial_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_axial_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+
+        for i, _slice in enumerate(coronal):
+            if _slice.get_abnormality():
+                test_coronal_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_coronal_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_coronal_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                test_coronal_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_coronal_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_coronal_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+
+        for i, _slice in enumerate(sagittal):
+            if _slice.get_abnormality():
+                test_sagittal_abnormal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_sagittal_abnormal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_sagittal_abnormal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+            else:
+                test_sagittal_normal["axial"].append(axial[i].normalized_reshaped_pixel_array(image_dim))
+                test_sagittal_normal["coronal"].append(coronal[i].normalized_reshaped_pixel_array(image_dim))
+                test_sagittal_normal["sagittal"].append(sagittal[i].normalized_reshaped_pixel_array(image_dim))
+
 
     train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
     print(f"\n\n---------------------------- Start: Dataset information ----------------------------\n\n")
@@ -315,19 +378,53 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
     print(f"\tSagittal:{len(train['sagittal'])}")
     val = {"axial": concatenate(val["axial"]), "coronal": concatenate(val["coronal"]), "sagittal": concatenate(val["sagittal"])}
     print(f"Validation dataset:")
-    print(f"\tAxial:{len(val['axial'])}")
-    print(f"\tCoronal:{len(val['coronal'])}")
-    print(f"\tSagittal:{len(val['sagittal'])}")
+    print(f"\tAxial:{len(val['axial'])} where {len(val_axial_normal['axial'])} are normal and {len(val_axial_abnormal['axial'])} abnormal")
+    print(f"\tCoronal:{len(val['coronal'])} where {len(val_coronal_normal['coronal'])} are normal and {len(val_coronal_abnormal['coronal'])} abnormal")
+    print(f"\tSagittal:{len(val['sagittal'])} where {len(val_sagittal_normal['sagittal'])} are normal and {len(val_sagittal_abnormal['sagittal'])} abnormal")
     test = {"axial": concatenate(test["axial"]), "coronal": concatenate(test["coronal"]), "sagittal": concatenate(test["sagittal"])}
     print(f"Test dataset:")
-    print(f"\tAxial:{len(test['axial'])}")
-    print(f"\tCoronal:{len(test['coronal'])}")
-    print(f"\tSagittal:{len(test['sagittal'])}")
+    print(f"\tAxial:{len(test['axial'])} where {len(test_axial_normal['axial'])} are normal and {len(test_axial_abnormal['axial'])} abnormal")
+    print(f"\tCoronal:{len(test['coronal'])} where {len(test_coronal_normal['coronal'])} are normal and {len(test_coronal_abnormal['coronal'])} abnormal")
+    print(f"\tSagittal:{len(test['sagittal'])} where {len(test_sagittal_normal['sagittal'])} are normal and {len(test_sagittal_abnormal['sagittal'])} abnormal")
+
+    val_axial_normal = {"axial": array(val_axial_normal["axial"]), "coronal": array(val_axial_normal["coronal"]), "sagittal": array(val_axial_normal["sagittal"])}
+    val_coronal_normal = {"axial": array(val_coronal_normal["axial"]), "coronal": array(val_coronal_normal["coronal"]), "sagittal": array(val_coronal_normal["sagittal"])}
+    val_sagittal_normal = {"axial": array(val_sagittal_normal["axial"]), "coronal": array(val_sagittal_normal["coronal"]), "sagittal": array(val_sagittal_normal["sagittal"])}
+    val_axial_abnormal = {"axial": array(val_axial_abnormal["axial"]), "coronal": array(val_axial_abnormal["coronal"]), "sagittal": array(val_axial_abnormal["sagittal"])}
+    val_coronal_abnormal = {"axial": array(val_coronal_abnormal["axial"]), "coronal": array(val_coronal_abnormal["coronal"]), "sagittal": array(val_coronal_abnormal["sagittal"])}
+    val_sagittal_abnormal = {"axial": array(val_sagittal_abnormal["axial"]), "coronal": array(val_sagittal_abnormal["coronal"]), "sagittal": array(val_sagittal_abnormal["sagittal"])}
+    test_axial_normal = {"axial": array(test_axial_normal["axial"]), "coronal": array(test_axial_normal["coronal"]), "sagittal": array(test_axial_normal["sagittal"])}
+    test_coronal_normal = {"axial": array(test_coronal_normal["axial"]), "coronal": array(test_coronal_normal["coronal"]), "sagittal": array(test_coronal_normal["sagittal"])}
+    test_sagittal_normal = {"axial": array(test_sagittal_normal["axial"]), "coronal": array(test_sagittal_normal["coronal"]), "sagittal": array(test_sagittal_normal["sagittal"])}
+    test_axial_abnormal = {"axial": array(test_axial_abnormal["axial"]), "coronal": array(test_axial_abnormal["coronal"]), "sagittal": array(test_axial_abnormal["sagittal"])}
+    test_coronal_abnormal = {"axial": array(test_coronal_abnormal["axial"]), "coronal": array(test_coronal_abnormal["coronal"]), "sagittal": array(test_coronal_abnormal["sagittal"])}
+    test_sagittal_abnormal = {"axial": array(test_sagittal_abnormal["axial"]), "coronal": array(test_sagittal_abnormal["coronal"]), "sagittal": array(test_sagittal_abnormal["sagittal"])}
+
+
+    # convert numpy arrays to tf.constants
+    # y_val = {
+    #     "axial": constant(y_val['axial'], shape=(len(y_val['axial']), 2)),
+    #     "coronal": constant(y_val['coronal'], shape=(len(y_val['coronal']), 2)),
+    #     "sagittal": constant(y_val['sagittal'], shape=(len(y_val['sagittal']), 2))
+    # }
+
+    # y_test = {
+    #     "axial": constant(y_test['axial'], shape=(len(y_test['axial']), 2)),
+    #     "coronal": constant(y_test['coronal'], shape=(len(y_test['coronal']), 2)),
+    #     "sagittal": constant(y_test['sagittal'], shape=(len(y_test['sagittal']), 2))
+    # }
+
+    y_val = {"axial": array(y_val['axial']), "coronal": array(y_val['coronal']), "sagittal": array(y_val['sagittal'])}
+    y_test = {"axial": array(y_test['axial']), "coronal": array(y_test['coronal']), "sagittal": array(y_test['sagittal'])}
 
     return {
         "train": train,
         "validation": {"x": val, "y": y_val},
-        "test": {"x": test, "y": y_test}
+        "val_normal": {"axial": val_axial_normal, "coronal": val_coronal_normal, "sagittal": val_sagittal_normal},
+        "val_abnormal": {"axial": val_axial_abnormal, "coronal": val_coronal_abnormal, "sagittal": val_sagittal_abnormal},
+        "test": {"x": test, "y": y_test},
+        "test_normal": {"axial": test_axial_normal, "coronal": test_coronal_normal, "sagittal": test_sagittal_normal},
+        "test_abnormal": {"axial": test_axial_abnormal, "coronal": test_coronal_abnormal, "sagittal": test_sagittal_abnormal},
     }
 
 def get_abnormality_tf_const(dataset):

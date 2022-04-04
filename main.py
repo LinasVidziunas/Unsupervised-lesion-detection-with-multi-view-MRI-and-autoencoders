@@ -60,28 +60,10 @@ x_val = list(patients["validation"]["x"].values())
 y_val = list(patients["validation"]["y"].values())
 x_test = list(patients["test"]["x"].values())
 y_test = list(patients["test"]["y"].values())
-
-x_val_abnormal = {
-    "axial": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[0][i] == [0, 1]], # abnormal for axial view
-              [x_val[1][i] for i in range(len(x_val[1])) if y_val[0][i] == [0, 1]],
-              [x_val[2][i] for i in range(len(x_val[2])) if y_val[0][i] == [0, 1]]],
-    "coronal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[1][i] == [0, 1]], # abnormal for coronal view
-                [x_val[1][i] for i in range(len(x_val[1])) if y_val[1][i] == [0, 1]],
-                [x_val[2][i] for i in range(len(x_val[2])) if y_val[1][i] == [0, 1]]],
-    "sagittal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[2][i] == [0, 1]], # abnormal for sagittal view
-                 [x_val[1][i] for i in range(len(x_val[1])) if y_val[2][i] == [0, 1]],
-                 [x_val[2][i] for i in range(len(x_val[2])) if y_val[2][i] == [0, 1]]]}
-
-x_val_normal = {
-    "axial": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[0][i] == [1, 0]], # normal for axial view
-              [x_val[1][i] for i in range(len(x_val[1])) if y_val[0][i] == [1, 0]],
-              [x_val[2][i] for i in range(len(x_val[2])) if y_val[0][i] == [1, 0]]],
-    "coronal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[1][i] == [1, 0]], # normal for coronal view
-                [x_val[1][i] for i in range(len(x_val[1])) if y_val[1][i] == [1, 0]],
-                [x_val[2][i] for i in range(len(x_val[2])) if y_val[1][i] == [1, 0]]],
-    "sagittal": [[x_val[0][i] for i in range(len(x_val[0])) if y_val[2][i] == [1, 0]], # normal for sagittal view
-                 [x_val[1][i] for i in range(len(x_val[1])) if y_val[2][i] == [1, 0]],
-                 [x_val[2][i] for i in range(len(x_val[2])) if y_val[2][i] == [1, 0]]]}
+x_val_normal = list(patients["val_normal"].values())
+x_val_abnormal = list(patients["val_abnormal"].values())
+x_test_normal = list(patients["test_normal"].values())
+x_test_abnormal = list(patients["test_abnormal"].values())
 
 # ---------------------- BASE MODEL ---------------------- #
 # Some constants used to name saved model
@@ -128,8 +110,8 @@ else:
 
     default_save_data(autoencoder_history, autoencoder, results, IMAGE_DIM,
                       x_val,
-                      list(x_val_abnormal.values()),
-                      list(x_val_normal.values()),
+                      x_val_abnormal,
+                      x_val_normal,
                       mse_keys=["axial_mean_squared_error", "coronal_mean_squared_error", "sagittal_mean_squared_error"],
                       val_mse_keys=["val_axial_mean_squared_error", "val_coronal_mean_squared_error", "val_sagittal_mean_squared_error"],
                       loss_keys=["axial_loss", "coronal_loss", "sagittal_loss"],

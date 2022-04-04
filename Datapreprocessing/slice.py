@@ -1,4 +1,5 @@
 from pydicom import read_file
+from tensorflow import image, newaxis, constant
 
 from os import path
 
@@ -31,3 +32,8 @@ class Slice:
     def normalized_pixel_array(self):
         pixel_array = self.dicom.pixel_array
         return pixel_array / self.dicom.LargestImagePixelValue
+
+    def normalized_reshaped_pixel_array(self, shape: tuple):
+        pixel_array = self.dicom.pixel_array / self.dicom.LargestImagePixelValue
+        pixel_array = pixel_array[newaxis, ..., newaxis]
+        return image.resize(pixel_array, shape)[0, ..., 0].numpy()
