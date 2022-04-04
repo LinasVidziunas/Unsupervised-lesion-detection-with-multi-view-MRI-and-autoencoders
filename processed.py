@@ -265,14 +265,19 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         val["sagittal"].append(_slices["sagittal"])
 
     for patient in val_patients:
+        axial, coronal, sagittal = ([] for _ in range(3))
         for _slice in patient.axial.slices:
-            y_val["axial"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            axial.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
         for _slice in patient.coronal.slices:
-            y_val["coronal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            coronal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
         for _slice in patient.sagittal.slices:
-            y_val["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            sagittal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
-        y_val["axial"], y_val["coronal"], y_val["sagittal"] = equal_length_views_middle(y_val["axial"], y_val["coronal"], y_val["sagittal"])
+        axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
+        for i in range(len(axial)):
+            y_val["axial"].append(axial[i])
+            y_val["coronal"].append(coronal[i])
+            y_val["sagittal"].append(sagittal[i])
 
     test_patients = []
     for patient_id in range(number_of_patients+1):
@@ -288,14 +293,19 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
         test["sagittal"].append(_slices["sagittal"])
 
     for patient in test_patients:
+        axial, coronal, sagittal = ([] for _ in range(3))
         for _slice in patient.axial.slices:
-            y_test["axial"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            axial.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
         for _slice in patient.coronal.slices:
-            y_test["coronal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            coronal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
         for _slice in patient.sagittal.slices:
-            y_test["sagittal"].append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
+            sagittal.append([int(not (bool(_slice.get_abnormality()))), _slice.get_abnormality()])
 
-        y_test["axial"], y_test["coronal"], y_test["sagittal"] = equal_length_views_middle(y_test["axial"], y_test["coronal"], y_test["sagittal"])
+        axial, coronal, sagittal = equal_length_views_middle(axial, coronal, sagittal)
+        for i in range(len(axial)):
+            y_test["axial"].append(axial[i])
+            y_test["coronal"].append(coronal[i])
+            y_test["sagittal"].append(sagittal[i])
 
     train = {"axial": concatenate(train["axial"]), "coronal": concatenate(train["coronal"]), "sagittal": concatenate(train["sagittal"])}
     print(f"\n\n---------------------------- Start: Dataset information ----------------------------\n\n")
