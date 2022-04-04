@@ -25,7 +25,7 @@ def unet_encoder(inputs, encoder_filters=[64, 64, 128, 128, 256, 256, 512, 512, 
     return bottleneck, c1skip, c2skip, c3skip, c4skip
 
 def unet_decoder(bottleneck, c1skip, c2skip, c3skip, c4skip,
-               decoder_filters=[512, 512, 512, 256, 256, 256, 128, 128, 128, 64, 64, 64],):
+               decoder_filters=[512, 512, 512, 256, 256, 256, 128, 128, 128, 64, 64, 64], name_output_layer="axial"):
     u6 = Conv2DTranspose(decoder_filters[0], (2, 2), strides=(2, 2), padding='same')(bottleneck)
     u6 = concatenate([u6, c4skip])
     c6 = Conv2D(decoder_filters[1], (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
@@ -46,7 +46,7 @@ def unet_decoder(bottleneck, c1skip, c2skip, c3skip, c4skip,
     c9 = Conv2D(decoder_filters[10], (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
     c9 = Conv2D(decoder_filters[11], (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
 
-    output = Conv2D(1, (3, 3), activation='sigmoid', kernel_initializer='he_normal', padding='same')(c9)
+    output = Conv2D(1, (3, 3), activation='sigmoid', kernel_initializer='he_normal', padding='same', name=name_output_layer)(c9)
 
     return output
 
@@ -62,9 +62,9 @@ def model_MV_cAE_UNET(inputs: list,
 
     bottleneck = concatenate([ax_bn, cor_bn, sag_bn], axis=3)
 
-    ax_output = unet_decoder(bottleneck, ax_c1skip, ax_c2skip, ax_c3skip, ax_c4skip, decoder_filters)
-    cor_output = unet_decoder(bottleneck, cor_c1skip, cor_c2skip, cor_c3skip, cor_c4skip, decoder_filters)
-    sag_output = unet_decoder(bottleneck, sag_c1skip, sag_c2skip, sag_c3skip, sag_c4skip, decoder_filters)
+    ax_output = unet_decoder(bottleneck, ax_c1skip, ax_c2skip, ax_c3skip, ax_c4skip, decoder_filters, name_output_layer="axial")
+    cor_output = unet_decoder(bottleneck, cor_c1skip, cor_c2skip, cor_c3skip, cor_c4skip, decoder_filters, name_output_layer="coronal")
+    sag_output = unet_decoder(bottleneck, sag_c1skip, sag_c2skip, sag_c3skip, sag_c4skip, decoder_filters, name_output_layer="sagittal")
 
     return ax_output, cor_output, sag_output, bottleneck
 
