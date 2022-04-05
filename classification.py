@@ -21,11 +21,12 @@ class Classification:
 
 
 class Classification_using_transfer_learning(Classification):
-    def __init__(self, autoencoder: Model, encoder: Model, inputs, x_val, y_val, x_test, y_test):
+    def __init__(self, autoencoder: Model, encoder: Model, inputs, x_val, y_val, x_test, y_test, views: int = 1):
         super().__init__(autoencoder, x_val, y_val, x_test, y_test)
 
         self.encoder = encoder
         self.inputs = inputs
+        self.views = views
 
     def copy_weights(self):
         for i, encoder_layer in enumerate(self.encoder.layers):
@@ -42,12 +43,20 @@ class Classification_using_transfer_learning(Classification):
             x = Flatten()(x)
 
         x = Dropout(dropout_rate)(x)
-        x = Dense(2, activation='softmax', name="classification")(x)
-        self.classif = Model(self.inputs, x)
+
+        if self.views == 1:
+            x = Dense(2, activation='softmax', name="classification")(x)
+            self.classif = Model(self.inputs, x)
+        else:
+            y = []
+            for i in range(self.views):
+                y.append(Dense(2, activation='softmax', name=f"classification_{i}")(x))
+
+            self.classif = Model(self.inputs, y)
 
         self.classif.compile(
             optimizer=Adam(learning_rate=learning_rate),
-            loss=CategoricalCrossentropy(),
+            loss=[CategoricalCrossentropy() for _ in range(self.views)],
             metrics=[CategoricalAccuracy()])
 
         self.classif.summary()
@@ -56,8 +65,7 @@ class Classification_using_transfer_learning(Classification):
             self.x_val,
             self.y_val,
             batch_size=batch_size,
-            epochs=epochs,
-            validation_data=(self.x_test, self.y_test))
+            epochs=epochs)
 
     def fine_tune(self, learning_rate: float = 1e-5, batch_size: int = 64, epochs: int = 10, num_layers: int = 0):
         # Unfreeze the last 'num_layers' in the encoder
@@ -69,7 +77,7 @@ class Classification_using_transfer_learning(Classification):
 
         self.classif.compile(
             optimizer=Adam(learning_rate=learning_rate),
-            loss=CategoricalCrossentropy(),
+            loss=[CategoricalCrossentropy() for _ in range(self.views)],
             metrics=[CategoricalAccuracy()])
 
         self.classif.summary()
@@ -78,8 +86,7 @@ class Classification_using_transfer_learning(Classification):
             self.x_val,
             self.y_val,
             batch_size=batch_size,
-            epochs=epochs,
-            validation_data=(self.x_test, self.y_test))
+            epochs=epochs)
 
 
 class IQR_method(Classification):

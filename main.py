@@ -165,26 +165,8 @@ else:
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
 
-one_y_val = []
-one_y_test = []
-
-for i in range(len(y_val[0])):
-    if y_val[0][i] == [0, 1] or y_val[1][i] == [0, 1] or y_val[2][i] == [0, 1]:
-        one_y_val.append([0, 1])
-    else:
-        one_y_val.append([1, 0])
-
-for i in range(len(y_test[0])):
-    if y_test[0][i] == [0, 1] or y_test[1][i] == [0, 1] or y_test[2][i] == [0, 1]:
-        one_y_test.append([0, 1])
-    else:
-        one_y_test.append([1, 0])
-
-one_y_val = array(one_y_val)
-one_y_test = array(one_y_test)
-
 transfer_learning_classif = Classification_using_transfer_learning(
-    autoencoder, encoder, inputs, x_val, one_y_val, x_test, one_y_test)
+    autoencoder, encoder, inputs, x_val, y_val, x_test, y_test, views=3)
 
 # Copy weights from autoencoder to encoder model
 transfer_learning_classif.copy_weights()
@@ -196,27 +178,27 @@ fine_tune_results = transfer_learning_classif.fine_tune(learning_rate=LEARNING_R
                                                         epochs=10, num_layers=0)
 
 predictions = transfer_learning_classif.classif.predict(x_test)
-test_abnormal_pred = []
-test_normal_pred = []
 
-one_y_test = one_y_test.tolist()
+for j, view in enumerate(['axial', 'coronal', 'sagittal']):
+    test_abnormal_pred = []
+    test_normal_pred = []
 
-for i, pred in enumerate(predictions):
-    if one_y_test[i] == [0, 1]:
-        test_abnormal_pred.append(pred)
-    elif one_y_test[i] == [1, 0]:
-        test_normal_pred.append(pred)
+    for i, pred in enumerate(predictions[j]):
+        if (y_test[j][i] == [0, 1]).all():
+            test_abnormal_pred.append(pred)
+        elif (y_test[j][i] == [1, 0]).all():
+            test_normal_pred.append(pred)
 
-# Save classification via transfer learning predictions
-results.save_raw_data(predictions, "classification_transfer_learning_predictions")
-results.save_raw_data(one_y_test, "classification_transfer_learning_labels")
+    # Save classification via transfer learning predictions
+    results.save_raw_data(predictions[j], f"classification_transfer_learning_predictions_{view}")
+    results.save_raw_data(y_test[j], f"classification_transfer_learning_labels_{view}")
 
-for i, prediction in enumerate(predictions, start=0):
-    print(f"Predicted: {prediction}. Correct: {one_y_test[i]}")
+    for i, prediction in enumerate(predictions[j], start=0):
+        print(f"Predicted: {prediction}. Correct: {y_test[j][i]}")
 
-# Getting ROC
-fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for el in test_normal_pred])
-auc_score = get_auc(fpr, tpr)
+    # Getting ROC
+    fpr, tpr, thresholds = get_roc([el[1] for el in test_abnormal_pred], [el[1] for el in test_normal_pred])
+    auc_score = get_auc(fpr, tpr)
 
-results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
-results.scatter_plot_of_predictions(predictions, y_test)
+    results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
+    results.scatter_plot_of_predictions(predictions[j], y_test[j])
