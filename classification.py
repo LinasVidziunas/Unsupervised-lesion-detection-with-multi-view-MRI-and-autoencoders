@@ -8,7 +8,7 @@ from tensorflow.keras.optimizers import Adam
 
 
 class Classification:
-    def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test):
+    def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test, views):
         self.autoencoder = autoencoder
 
         # Validation data
@@ -19,14 +19,15 @@ class Classification:
         self.x_test = x_test
         self.y_test = y_test
 
+        self.views = views
+
 
 class Classification_using_transfer_learning(Classification):
     def __init__(self, autoencoder: Model, encoder: Model, inputs, x_val, y_val, x_test, y_test, views: int = 1):
-        super().__init__(autoencoder, x_val, y_val, x_test, y_test)
+        super().__init__(autoencoder, x_val, y_val, x_test, y_test, views)
 
         self.encoder = encoder
         self.inputs = inputs
-        self.views = views
 
     def copy_weights(self):
         for i, encoder_layer in enumerate(self.encoder.layers):
@@ -90,20 +91,26 @@ class Classification_using_transfer_learning(Classification):
 
 
 class IQR_method(Classification):
-    def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test, image_dim):
-        super().__init__(autoencoder, x_val, y_val, x_test, y_test)
+    def __init__(self, autoencoder: Model, x_val, y_val, x_test, y_test, image_dim, view, views):
+        super().__init__(autoencoder, x_val, y_val, x_test, y_test, views)
 
         validation_decoded = self.autoencoder.predict(x_val)
-        if isinstance(validation_decoded, tuple):
+        if views == 1 and isinstance(validation_decoded, tuple):
             validation_decoded = validation_decoded[0]
+
+        test_decoded = self.autoencoder.predict(x_test)
+        if views == 1 and isinstance(test_decoded, tuple):
+            test_decoded = test_decoded[0]
+
+        if views != 1:
+            validation_decoded = validation_decoded[view]
+            x_val = x_val[view]
+            test_decoded = test_decoded[view]
+            x_test = x_test[view]
 
         self.validation_losses = mse(
             validation_decoded.reshape(len(validation_decoded), image_dim[0] * image_dim[1]),
             x_val.reshape(len(x_val), image_dim[0] * image_dim[1]))
-
-        test_decoded = self.autoencoder.predict(x_test)
-        if isinstance(test_decoded, tuple):
-            test_decoded = test_decoded[0]
 
         self.test_losses = mse(
             test_decoded.reshape(len(test_decoded), image_dim[0] * image_dim[1]),

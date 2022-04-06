@@ -62,9 +62,9 @@ def model_MV_cAE_UNET(inputs: list,
 
     bottleneck = concatenate([ax_bn, cor_bn, sag_bn], axis=3)
 
-    ax_output = unet_decoder(bottleneck, ax_c1skip, ax_c2skip, ax_c3skip, ax_c4skip, decoder_filters, name_output_layer="axial")
-    cor_output = unet_decoder(bottleneck, cor_c1skip, cor_c2skip, cor_c3skip, cor_c4skip, decoder_filters, name_output_layer="coronal")
-    sag_output = unet_decoder(bottleneck, sag_c1skip, sag_c2skip, sag_c3skip, sag_c4skip, decoder_filters, name_output_layer="sagittal")
+    ax_output = unet_decoder(bottleneck, ax_c1skip, ax_c2skip, ax_c3skip, ax_c4skip, decoder_filters, name_output_layer="axial_output")
+    cor_output = unet_decoder(bottleneck, cor_c1skip, cor_c2skip, cor_c3skip, cor_c4skip, decoder_filters, name_output_layer="coronal_output")
+    sag_output = unet_decoder(bottleneck, sag_c1skip, sag_c2skip, sag_c3skip, sag_c4skip, decoder_filters, name_output_layer="sagittal_output")
 
     return ax_output, cor_output, sag_output, bottleneck
 

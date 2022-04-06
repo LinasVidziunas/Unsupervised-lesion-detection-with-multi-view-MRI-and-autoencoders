@@ -124,7 +124,7 @@ class ModelResults:
         plt.savefig(self.__naming(name))
         plt.clf()
 
-    def scatter_plot_of_predictions(self, predictions, truth):
+    def scatter_plot_of_predictions(self, predictions, truth, name="scatter_plot_classification"):
         """
         Saves a scatter plot of predicted class. Arguments need to be categorical,
         where the first value in the list is normal rate and the second is abnormal
@@ -155,10 +155,10 @@ class ModelResults:
         plt.xlabel("Normal slice")
         plt.ylabel("Abnormal slice")
         plt.legend(loc='best')
-        plt.savefig(self.__naming("Scatter_plot_classification"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
-    def plot_accuracy(self, thresholds, results_thresholds):
+    def plot_accuracy(self, thresholds, results_thresholds, name="accuracy_for_thresholds"):
         accuracies = []
         for instance in results_thresholds:
             accuracies.append(instance.get_accuracy())
@@ -167,10 +167,10 @@ class ModelResults:
         plt.xlabel("Threshold")
         plt.ylabel("Accuracy")
         plt.grid()
-        plt.savefig(self.__naming("Accuracy_for_thresholds"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
-    def plot_sensitivity(self, thresholds, results_thresholds):
+    def plot_sensitivity(self, thresholds, results_thresholds, name="sensitivity_for_thresholds"):
         sensitivities = []
         for instance in results_thresholds:
             sensitivities.append(instance.get_sensitivity())
@@ -179,10 +179,10 @@ class ModelResults:
         plt.xlabel("Threshold")
         plt.ylabel("Sensitivity")
         plt.grid()
-        plt.savefig(self.__naming("Sensitivity_for_thresholds"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
-    def plot_specificity(self, thresholds, results_thresholds):
+    def plot_specificity(self, thresholds, results_thresholds, name="specificity_for_thresholds"):
         specificities = []
         for instance in results_thresholds:
             specificities.append(instance.get_specificity())
@@ -191,10 +191,10 @@ class ModelResults:
         plt.xlabel("Threshold")
         plt.ylabel("Specificity")
         plt.grid()
-        plt.savefig(self.__naming("Specificity_for_thresholds"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
-    def plot_f1(self, thresholds, results_thresholds):
+    def plot_f1(self, thresholds, results_thresholds, name="F1_for_thresholds"):
         f1s = []
         for instance in results_thresholds:
             f1s.append(instance.get_specificity())
@@ -203,7 +203,7 @@ class ModelResults:
         plt.xlabel("Threshold")
         plt.ylabel("F1")
         plt.grid()
-        plt.savefig(self.__naming("F1_for_thresholds"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
     def plot_roc_curve(self, fpr, tpr, roc_auc, name="ROC_curve"):
