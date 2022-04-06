@@ -3,7 +3,6 @@ seed(420)
 from tensorflow.random import set_seed
 set_seed(420)
 
-from tensorflow import constant
 from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
@@ -17,8 +16,6 @@ from variational import VAE, Sampling
 from classification import Classification_using_transfer_learning
 from Models.unet import model_MV_cAE_UNET
 # from callbacks import ResultsCallback, AUCcallback
-
-from numpy import array, concatenate
 
 from os import path
 

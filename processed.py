@@ -400,20 +400,7 @@ def get_data_by_patients(path_to_sets_folder: str = "../sets/", image_dim: tuple
     test_coronal_abnormal = {"axial": array(test_coronal_abnormal["axial"]), "coronal": array(test_coronal_abnormal["coronal"]), "sagittal": array(test_coronal_abnormal["sagittal"])}
     test_sagittal_abnormal = {"axial": array(test_sagittal_abnormal["axial"]), "coronal": array(test_sagittal_abnormal["coronal"]), "sagittal": array(test_sagittal_abnormal["sagittal"])}
 
-
-    # convert numpy arrays to tf.constants
-    # y_val = {
-    #     "axial": constant(y_val['axial'], shape=(len(y_val['axial']), 2)),
-    #     "coronal": constant(y_val['coronal'], shape=(len(y_val['coronal']), 2)),
-    #     "sagittal": constant(y_val['sagittal'], shape=(len(y_val['sagittal']), 2))
-    # }
-
-    # y_test = {
-    #     "axial": constant(y_test['axial'], shape=(len(y_test['axial']), 2)),
-    #     "coronal": constant(y_test['coronal'], shape=(len(y_test['coronal']), 2)),
-    #     "sagittal": constant(y_test['sagittal'], shape=(len(y_test['sagittal']), 2))
-    # }
-
+    # convert lists to numpy arrays
     y_val = {"axial": array(y_val['axial']), "coronal": array(y_val['coronal']), "sagittal": array(y_val['sagittal'])}
     y_test = {"axial": array(y_test['axial']), "coronal": array(y_test['coronal']), "sagittal": array(y_test['sagittal'])}
 
