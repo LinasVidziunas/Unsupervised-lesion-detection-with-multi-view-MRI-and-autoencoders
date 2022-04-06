@@ -3,11 +3,24 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.utils import resample
 import statistics
 
+import time
+
+# https://www.geeksforgeeks.org/python-program-to-convert-seconds-into-hours-minutes-and-seconds/
+def convert(seconds):
+    seconds = seconds % (24 * 3600)
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+
+    return "%d:%02d:%02d" % (hour, minutes, seconds)
+
 def bootstrapping_multiview_mse(model, test_data, test_labels, n_iterations, IMAGE_DIM):
     aucs = {"axial": [], "coronal": [], "sagittal": []}
 
     for iteration in range(n_iterations):
-        print(f"Iteration {iteration}")
+        print(f"Iteration {iteration}", end=" ")
+        iteration_start = time.time()
 
         for i, view in enumerate(aucs.keys()):
             axial, coronal, sagittal, i_labels = resample(test_data[0], test_data[1], test_data[2], test_labels[i],
@@ -28,6 +41,9 @@ def bootstrapping_multiview_mse(model, test_data, test_labels, n_iterations, IMA
 
             aucs[view].append(auc_score)       
 
+        elapsed_iteration_time = (time.time()-iteration_start)
+        print(f"spent {convert(elapsed_iteration_time)}. ETA: {convert(elapsed_iteration_time*(n_iterations-iteration-1))}.")
+
     average_auc = {
         "axial": sum(aucs['axial']) / len(aucs['axial']),
         "coronal": sum(aucs['coronal']) / len(aucs['coronal']),
@@ -47,7 +63,8 @@ def bootstrapping_multiview_TL(model, test_data, test_labels, n_iterations):
     aucs = {"axial": [], "coronal": [], "sagittal": []}
 
     for iteration in range(n_iterations):
-        print("Iteration", str(iteration))
+        print(f"Iteration {iteration}", end=" ")
+        iteration_start = time.time()
 
         for i, view in enumerate(aucs.keys()):
             axial, coronal, sagittal, i_labels = resample(test_data[0], test_data[1], test_data[2], test_labels[i],
@@ -66,6 +83,9 @@ def bootstrapping_multiview_TL(model, test_data, test_labels, n_iterations):
             auc_score = auc(fpr, tpr)
 
             aucs[view].append(auc_score)       
+
+        elapsed_iteration_time = (time.time()-iteration_start)
+        print(f"spent {convert(elapsed_iteration_time)}. ETA: {convert(elapsed_iteration_time*(n_iterations-iteration-1))}.")
 
     average_auc = {
         "axial": sum(aucs['axial']) / len(aucs['axial']),
