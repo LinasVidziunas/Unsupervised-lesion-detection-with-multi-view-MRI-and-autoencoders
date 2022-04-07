@@ -23,6 +23,7 @@ from os import path
 # Configure these for each autoencoder!
 # This will get used to save and load weights, and saving results.
 views = ['axial', 'coronal', 'sagittal']
+bootstrap_n_iterations = 2
 
 IMAGE_DIM = [384, 384, 1]
 
@@ -152,9 +153,10 @@ for i, view in enumerate(views):
     results.plot_accuracy(thresholds, results_thresholds, name="accuracy_for_thresholds_{view}")
     results.plot_f1(thresholds, results_thresholds, name="F1_for_thresholds_{view}")
 
-mean_auc, std_auc = bootstrapping_multiview_mse(autoencoder, x_test, y_test, 2, IMAGE_DIM[0])
-print("Mean auc MSE", mean_auc)
-print("Std auc MSE", std_auc)
+if bootstrap_n_iterations:
+    mean_auc, std_auc = bootstrapping_multiview_mse(autoencoder, x_test, y_test, bootstrap_n_iterations, IMAGE_DIM[0])
+    print("Mean auc MSE", mean_auc)
+    print("Std auc MSE", std_auc)
 
 # ------------------- TRANSFER LEARNING ------------------- #
 encoder = Model(inputs, encoder)
@@ -197,7 +199,8 @@ for j, view in enumerate(views):
     results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
     results.scatter_plot_of_predictions(predictions[j], y_test[j], name="scatter_plot_classification_{view}")
 
-# Get results with bootstrapping
-mean_auc_TL, std_auc_TL = bootstrapping_multiview_TL(transfer_learning_classif, x_test, y_test, 100)
-print("Mean auc TL", mean_auc_TL)
-print("Std auc TL", std_auc_TL)
+if bootstrap_n_iterations:
+    # Get results with bootstrapping
+    mean_auc_TL, std_auc_TL = bootstrapping_multiview_TL(transfer_learning_classif, x_test, y_test, bootstrap_n_iterations)
+    print("Mean auc TL", mean_auc_TL)
+    print("Std auc TL", std_auc_TL)

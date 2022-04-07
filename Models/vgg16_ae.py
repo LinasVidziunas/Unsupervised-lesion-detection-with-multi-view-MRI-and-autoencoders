@@ -5,9 +5,9 @@ from keras.layers import BatchNormalization, Dropout
 from variational import Sampling
 
 
-def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool, name=None):
+def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool):
     x = Conv2D(filters=filters, kernel_size=(3, 3),
-               padding="same", activation="relu", name=name)(previous_layer)
+               padding="same", activation="relu")(previous_layer)
     if batchNorm:
         x = BatchNormalization()(x)
 
@@ -183,7 +183,7 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
     a5 = own_vgg16_encoder_block(
         previous_layer=a4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
         max_pool=False)
-    ax_encoder = own_vgg16_conv2d_block(previous_layer=a5, filters=latent_conv_filters[0], batchNorm=batchNorm, name="axial")
+    ax_encoder = own_vgg16_conv2d_block(previous_layer=a5, filters=latent_conv_filters[0], batchNorm=batchNorm)
 
     # Coronal_encoder
     c1 = own_vgg16_encoder_block(
@@ -198,7 +198,7 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
     c5 = own_vgg16_encoder_block(
         previous_layer=c4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
         max_pool=False)
-    cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm, name="coronal")
+    cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm)
 
     # Sagittal_encoder
     b1 = own_vgg16_encoder_block(
@@ -213,7 +213,7 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
     b5 = own_vgg16_encoder_block(
         previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
         max_pool=False)
-    sag_encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters[1], batchNorm=batchNorm, name="sagittal")
+    sag_encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters[1], batchNorm=batchNorm)
 
     # Shared_bottleneck
     bottleneck = concatenate([ax_encoder, cor_encoder, sag_encoder])
