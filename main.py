@@ -14,6 +14,7 @@ from results import ModelResults, get_roc, get_auc, default_save_data, Metrics
 from processed import get_data_by_patients
 from variational import VAE, Sampling
 from Models.unet import model_MV_cAE_UNET
+from Models.vgg16_ae import multi_view_VGG
 from classification import Classification_using_transfer_learning, IQR_method
 from bootstrapping import bootstrapping_multiview_mse, bootstrapping_multiview_TL
 
@@ -29,7 +30,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "multi_view_cAE_UNET"
+MODEL_NAME = "multi_view_cAE_VGG16"
 
 # Epochs for the base autoencoder
 EPOCHS = 5
@@ -43,7 +44,8 @@ BATCH_SIZE = 8
 # Autoencoder base
 inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]), name=view) for view in views]
 
-ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
+# ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
+ax_output, cor_output, sag_output, encoder = multi_view_VGG(inputs[0], inputs[1], inputs[2])
 autoencoder = Model(inputs, [ax_output, cor_output, sag_output])
 
 # Specific settings for transfer learning
