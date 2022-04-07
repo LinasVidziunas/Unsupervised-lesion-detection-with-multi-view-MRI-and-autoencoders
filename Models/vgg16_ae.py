@@ -1,19 +1,17 @@
 from keras.layers import Conv2D, Reshape, Flatten, Dense, concatenate
 from keras.layers import UpSampling2D, MaxPool2D
 from keras.layers import BatchNormalization, Dropout
-from keras.models import Model
 
 from variational import Sampling
 
 
-def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool):
+def own_vgg16_conv2d_block(previous_layer, filters, batchNorm: bool, name=None):
     x = Conv2D(filters=filters, kernel_size=(3, 3),
-               padding="same", activation="relu")(previous_layer)
+               padding="same", activation="relu", name=name)(previous_layer)
     if batchNorm:
         x = BatchNormalization()(x)
 
     return x
-
 
 def own_vgg16_encoder_block(previous_layer, filters: int,
                           conv2d_layers: int = 2,
@@ -182,27 +180,10 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
         previous_layer=a2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
     a4 = own_vgg16_encoder_block(
         previous_layer=a3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-
     a5 = own_vgg16_encoder_block(
         previous_layer=a4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
         max_pool=False)
-    ax_encoder = own_vgg16_conv2d_block(previous_layer=a5, filters=latent_conv_filters[0], batchNorm=batchNorm)
-
-    # Sagittal_encoder
-    b1 = own_vgg16_encoder_block(
-        previous_layer=sag_input, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm,
-        dropout_rate=dropout_rate)
-    b2 = own_vgg16_encoder_block(
-        previous_layer=b1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    b3 = own_vgg16_encoder_block(
-        previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    b4 = own_vgg16_encoder_block(
-        previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-
-    b5 = own_vgg16_encoder_block(
-        previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
-        max_pool=False)
-    sag_encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters[1], batchNorm=batchNorm)
+    ax_encoder = own_vgg16_conv2d_block(previous_layer=a5, filters=latent_conv_filters[0], batchNorm=batchNorm, name="axial")
 
     # Coronal_encoder
     c1 = own_vgg16_encoder_block(
@@ -214,14 +195,28 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
         previous_layer=c2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
     c4 = own_vgg16_encoder_block(
         previous_layer=c3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-
     c5 = own_vgg16_encoder_block(
         previous_layer=c4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
         max_pool=False)
-    cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm)
+    cor_encoder = own_vgg16_conv2d_block(previous_layer=c5, filters=latent_conv_filters[2], batchNorm=batchNorm, name="coronal")
+
+    # Sagittal_encoder
+    b1 = own_vgg16_encoder_block(
+        previous_layer=sag_input, filters=encoder_filters[0], conv2d_layers=2, batchNorm=batchNorm,
+        dropout_rate=dropout_rate)
+    b2 = own_vgg16_encoder_block(
+        previous_layer=b1, filters=encoder_filters[1], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b3 = own_vgg16_encoder_block(
+        previous_layer=b2, filters=encoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b4 = own_vgg16_encoder_block(
+        previous_layer=b3, filters=encoder_filters[3], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b5 = own_vgg16_encoder_block(
+        previous_layer=b4, filters=encoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate,
+        max_pool=False)
+    sag_encoder = own_vgg16_conv2d_block(previous_layer=b5, filters=latent_conv_filters[1], batchNorm=batchNorm, name="sagittal")
 
     # Shared_bottleneck
-    bottleneck = concatenate([ax_encoder, sag_encoder, cor_encoder])
+    bottleneck = concatenate([ax_encoder, cor_encoder, sag_encoder])
 
     # Axial decoder
     a5 = own_vgg16_decoder_block(
@@ -235,25 +230,8 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
         previous_layer=a7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
     ax_decoder = own_vgg16_decoder_block(
         previous_layer=a8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
-
     ax_output = Conv2D(filters=1, kernel_size=(3, 3),
-                       padding="same", activation="sigmoid", name="axial")(ax_decoder)
-
-    # Sagittal decoder
-    b5 = own_vgg16_decoder_block(
-        previous_layer=bottleneck, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm,
-        dropout_rate=dropout_rate, up_sampling=False)
-    b6 = own_vgg16_decoder_block(
-        previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    b7 = own_vgg16_decoder_block(
-        previous_layer=b6, filters=decoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    b8 = own_vgg16_decoder_block(
-        previous_layer=b7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
-    sag_decoder = own_vgg16_decoder_block(
-        previous_layer=b8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
-
-    sag_output = Conv2D(filters=1, kernel_size=(3, 3),
-                        padding="same", activation="sigmoid", name="sagittal")(sag_decoder)
+                       padding="same", activation="sigmoid", name="axial_output")(ax_decoder)
 
     # Coronal decoder
     c5 = own_vgg16_decoder_block(
@@ -269,6 +247,22 @@ def multi_view_VGG(ax_input, cor_input, sag_input,
         previous_layer=c8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
 
     cor_output = Conv2D(filters=1, kernel_size=(3, 3),
-                        padding="same", activation="sigmoid", name="coronal")(cor_decoder)
+                        padding="same", activation="sigmoid", name="coronal_output")(cor_decoder)
+
+    # Sagittal decoder
+    b5 = own_vgg16_decoder_block(
+        previous_layer=bottleneck, filters=decoder_filters[0], conv2d_layers=3, batchNorm=batchNorm,
+        dropout_rate=dropout_rate, up_sampling=False)
+    b6 = own_vgg16_decoder_block(
+        previous_layer=b5, filters=decoder_filters[1], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b7 = own_vgg16_decoder_block(
+        previous_layer=b6, filters=decoder_filters[2], conv2d_layers=3, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    b8 = own_vgg16_decoder_block(
+        previous_layer=b7, filters=decoder_filters[3], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+    sag_decoder = own_vgg16_decoder_block(
+        previous_layer=b8, filters=decoder_filters[4], conv2d_layers=2, batchNorm=batchNorm, dropout_rate=dropout_rate)
+
+    sag_output = Conv2D(filters=1, kernel_size=(3, 3),
+                        padding="same", activation="sigmoid", name="sagittal_output")(sag_decoder)
 
     return ax_output, cor_output, sag_output, bottleneck
