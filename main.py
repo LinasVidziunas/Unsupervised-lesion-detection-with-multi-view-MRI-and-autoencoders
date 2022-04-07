@@ -44,8 +44,8 @@ BATCH_SIZE = 8
 # Autoencoder base
 inputs = [Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]), name=view) for view in views]
 
-# ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
-ax_output, cor_output, sag_output, encoder = multi_view_VGG(inputs[0], inputs[1], inputs[2])
+ax_output, cor_output, sag_output, encoder = model_MV_cAE_UNET(inputs)
+# ax_output, cor_output, sag_output, encoder = multi_view_VGG(inputs[0], inputs[1], inputs[2])
 autoencoder = Model(inputs, [ax_output, cor_output, sag_output])
 
 # Specific settings for transfer learning
