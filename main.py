@@ -24,7 +24,7 @@ from os import path
 # Configure these for each autoencoder!
 # This will get used to save and load weights, and saving results.
 views = ['axial', 'coronal', 'sagittal']
-bootstrap_n_iterations = 2
+bootstrap_n_iterations = 0
 
 IMAGE_DIM = [384, 384, 1]
 
@@ -33,7 +33,7 @@ IMAGE_DIM = [384, 384, 1]
 MODEL_NAME = "multi_view_cAE_VGG16"
 
 # Epochs for the base autoencoder
-EPOCHS = 5
+EPOCHS = 100
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -53,7 +53,7 @@ CLASSIF_TF_BS = 32  # Batch size for classification via transfer learning
 CLASSIF_TF_FT_BS = 32  # Batch size for fine tuning part of the classification via transfer learning
 
 # ------------------------ Data path ----------------------- #
-patients = get_data_by_patients(path_to_sets_folder="../sets/", image_dim=(IMAGE_DIM[0], IMAGE_DIM[1]))
+patients = get_data_by_patients(path_to_sets_folder="../../../sets/", image_dim=(IMAGE_DIM[0], IMAGE_DIM[1]))
 
 x_train = list(patients["train"].values())
 x_val = list(patients["validation"]["x"].values())
