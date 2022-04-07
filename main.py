@@ -15,6 +15,7 @@ from processed import get_data_by_patients
 from variational import VAE, Sampling
 from Models.unet import model_MV_cAE_UNET
 from classification import Classification_using_transfer_learning, IQR_method
+from bootstrapping import bootstrapping_multiview_mse, bootstrapping_multiview_TL
 
 from os import path
 
@@ -30,7 +31,7 @@ IMAGE_DIM = [384, 384, 1]
 MODEL_NAME = "multi_view_cAE_UNET"
 
 # Epochs for the base autoencoder
-EPOCHS = 100
+EPOCHS = 5
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -151,12 +152,7 @@ for i, view in enumerate(views):
     results.plot_accuracy(thresholds, results_thresholds, name="accuracy_for_thresholds_{view}")
     results.plot_f1(thresholds, results_thresholds, name="F1_for_thresholds_{view}")
 
-#Getting bootstrapping results with MSE losses
-test_data = test_dataset.get_slices_as_normalized_pixel_arrays(
-    shape=(IMAGE_DIM[0], IMAGE_DIM[1]))
-test_labels = [_slice.get_abnormality() for _slice in test_dataset.slices]
-
-mean_auc, std_auc = bootstrapping_mse(autoencoder, test_data, test_labels, 100, IMAGE_DIM[0])
+mean_auc, std_auc = bootstrapping_multiview_mse(autoencoder, x_test, y_test, 2, IMAGE_DIM[0])
 print("Mean auc MSE", mean_auc)
 print("Std auc MSE", std_auc)
 
@@ -201,10 +197,7 @@ for j, view in enumerate(views):
     results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
     results.scatter_plot_of_predictions(predictions[j], y_test[j], name="scatter_plot_classification_{view}")
 
-results.plot_roc_curve(fpr, tpr, auc_score, "classification_transfer_learning_ROC_curve")
-results.scatter_plot_of_predictions(predictions, y_test)
-
 # Get results with bootstrapping
-mean_auc_TL, std_auc_TL = bootstrapping_TL(transfer_learning_classif, test_data, test_labels, 100)
+mean_auc_TL, std_auc_TL = bootstrapping_multiview_TL(transfer_learning_classif, x_test, y_test, 100)
 print("Mean auc TL", mean_auc_TL)
 print("Std auc TL", std_auc_TL)
