@@ -123,8 +123,8 @@ for i, view in enumerate(views):
 
     metr = Metrics([x[1] for x in y_test[i]], predicted)
     threshold_results = metr.get_results()
-    results.plot_confusion_matrix(metr.get_confusionmatrix())
-    results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, "iqr_method_results_{view}")
+    results.plot_confusion_matrix(metr.get_confusionmatrix(), name=f"confusion_matrix_{view}")
+    results.save_raw_data([f"Threshold: {threshold}"] + threshold_results, f"iqr_method_results_{view}")
 
     test_abnormal_decoded = autoencoder.predict(x_test_abnormal[i])[i]
     if len(views) == 1 and isinstance(test_abnormal_decoded, tuple):
@@ -149,11 +149,11 @@ for i, view in enumerate(views):
         results_thresholds.append(Metrics([x[1] for x in y_test[i]], iqr_method.classify(threshold)))
 
     # Saving the figures for each metric for each treshold
-    results.plot_roc_curve(fpr, tpr, auc_score, name="ROC_curve_{view}")
-    results.plot_specificity(thresholds, results_thresholds, name="specificity_for_thresholds_{view}")
-    results.plot_sensitivity(thresholds, results_thresholds, name="sensitivity_for_thresholds_{view}")
-    results.plot_accuracy(thresholds, results_thresholds, name="accuracy_for_thresholds_{view}")
-    results.plot_f1(thresholds, results_thresholds, name="F1_for_thresholds_{view}")
+    results.plot_roc_curve(fpr, tpr, auc_score, name=f"ROC_curve_{view}")
+    results.plot_specificity(thresholds, results_thresholds, name=f"specificity_for_thresholds_{view}")
+    results.plot_sensitivity(thresholds, results_thresholds, name=f"sensitivity_for_thresholds_{view}")
+    results.plot_accuracy(thresholds, results_thresholds, name=f"accuracy_for_thresholds_{view}")
+    results.plot_f1(thresholds, results_thresholds, name=f"F1_for_thresholds_{view}")
 
 if bootstrap_n_iterations:
     mean_auc, std_auc = bootstrapping_multiview_mse(autoencoder, x_test, y_test, bootstrap_n_iterations, IMAGE_DIM[0])
@@ -199,7 +199,7 @@ for j, view in enumerate(views):
     auc_score = get_auc(fpr, tpr)
 
     results.plot_roc_curve(fpr, tpr, auc_score, f"classification_transfer_learning_ROC_curve_{view}")
-    results.scatter_plot_of_predictions(predictions[j], y_test[j], name="scatter_plot_classification_{view}")
+    results.scatter_plot_of_predictions(predictions[j], y_test[j], name=f"scatter_plot_classification_{view}")
 
 if bootstrap_n_iterations:
     # Get results with bootstrapping

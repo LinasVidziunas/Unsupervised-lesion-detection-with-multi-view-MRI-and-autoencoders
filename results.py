@@ -73,6 +73,8 @@ class ModelResults:
                          losses_abnormal,
                          name="MSE_loss_hist"):
         """Plot MSE loss for normal and abnormal in the same histogram"""
+
+        plt.clf()
         # Changes done my Mr. Thoresen 18.02.2022
         plt.hist([losses_normal[:]], bins=int(len(losses_normal)), alpha=0.4)
         plt.hist([losses_abnormal[:]], bins=len(losses_abnormal), alpha=0.4)
@@ -87,7 +89,7 @@ class ModelResults:
                                   name="MSE_loss_hist_seperate"):
         """Plot MSE loss for normal and abnormal in seperate histograms"""
 
-        fig, axs = plt.subplots(1, 2, tight_layout=True)
+        _, axs = plt.subplots(1, 2, tight_layout=True)
 
         axs[0].hist([losses_normal[:]], bins=n_bins)
         axs[0].set_title("Normal")
@@ -214,10 +216,10 @@ class ModelResults:
         plt.savefig(self.__naming(name))
         plt.clf()
 
-    def plot_confusion_matrix(self, confusion_matrix):
+    def plot_confusion_matrix(self, confusion_matrix, name="confusion_matrix"):
         display = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix)
         display.plot(cmap='Greys')
-        plt.savefig(self.__naming("confusion_matrix"))
+        plt.savefig(self.__naming(name))
         plt.clf()
 
     def save_raw_data(self, data, name="raw_data"):
