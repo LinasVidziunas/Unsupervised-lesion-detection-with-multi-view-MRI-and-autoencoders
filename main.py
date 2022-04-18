@@ -7,9 +7,10 @@ import tensorflow
 from tensorflow.keras.optimizers import Adam
 from keras import Model
 from keras.models import load_model
-from keras.layers import Input
+from keras.layers import Input, Conv2D
 from keras.losses import BinaryCrossentropy, mse
 from keras.metrics import MeanSquaredError
+from keras.applications import vgg16
 
 from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
@@ -17,7 +18,7 @@ from processed import ProcessedData
 from callbacks import ResultsCallback, AUCcallback
 from variational import VAE, Sampling
 from classification import Classification_using_transfer_learning, IQR_method
-from Models.vgg16_ae import model_VAE_VGG16
+from Models.vgg16_ae import own_vgg16
 
 from os import path
 
@@ -32,7 +33,7 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "VAE_test"
+MODEL_NAME = "cAE_VGG16_ImageNet_test"
 
 # Epochs for the base autoencoder
 EPOCHS = 1
@@ -45,13 +46,32 @@ BATCH_SIZE = 32
 
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
-outputs, z_mean, z_log_var, encoder = model_VAE_VGG16(inputs)
-autoencoder = VAE(inputs, (outputs, z_mean, z_log_var, encoder), name=MODEL_NAME)
+outputs, encoder = own_vgg16(inputs, dropout_rate=0.0, batchNorm=False, include_top=False, dense_size=0, latent_filters=512)
+autoencoder = Model(inputs, outputs, name="cAE_VGG16_ImageNet_test")
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
 CLASSIF_TF_FT_BS = 32 # Batch size for fine tuning part of the classification via transfer learning
 
+
+# ------------------------ ImageNet ----------------------- #
+
+pretrained_model = vgg16.VGG16(include_top=False, weights='imagenet', input_tensor=Input((IMAGE_DIM[0], IMAGE_DIM[1], 3)))
+
+# Transfer pretrained weights to the autoencoder model
+for i, pretrained_layer in enumerate(pretrained_model.layers):
+    if not isinstance(pretrained_layer, Conv2D):
+        continue
+
+    pretrained_weights = pretrained_layer.get_weights()
+
+    try:
+        autoencoder.layers[i].set_weights(pretrained_weights)
+    except ValueError:
+        print(f"Weights not transfered for {autoencoder.layers[i].name} most likely due to different shapes.")
+        continue
+    
+del pretrained_model
 
 # ------------------------ Data path ----------------------- #
 data = ProcessedData("../sets/")
