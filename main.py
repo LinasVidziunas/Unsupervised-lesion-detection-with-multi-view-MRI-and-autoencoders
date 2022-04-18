@@ -33,10 +33,10 @@ IMAGE_DIM = [384, 384, 1]
 
 # Change this to the desired name of your model.
 # Used to identify the model!
-MODEL_NAME = "cAE_VGG16_ImageNet_test"
+MODEL_NAME = "cAE_VGG16_ImageNet_16lf"
 
 # Epochs for the base autoencoder
-EPOCHS = 1
+EPOCHS = 100
 
 # For all; autoencoder, classification via transfer learning,
 # and also for fine tuning classification via transfer learning,
@@ -47,7 +47,7 @@ BATCH_SIZE = 32
 # Autoencoder base
 inputs = Input((IMAGE_DIM[0], IMAGE_DIM[1], IMAGE_DIM[2]))
 outputs, encoder = own_vgg16(inputs, dropout_rate=0.0, batchNorm=False, include_top=False, dense_size=0, latent_filters=512)
-autoencoder = Model(inputs, outputs, name="cAE_VGG16_ImageNet_test")
+autoencoder = Model(inputs, outputs, name="axial_cAE_VGG16_ImageNet_16lf")
 
 # Specific settings for transfer learning
 CLASSIF_TF_BS = 32 # Batch size for classification via transfer learning
@@ -74,7 +74,7 @@ for i, pretrained_layer in enumerate(pretrained_model.layers):
 del pretrained_model
 
 # ------------------------ Data path ----------------------- #
-data = ProcessedData("../sets/")
+data = ProcessedData("../../../../sets/")
 
 
 # ----------------------- Define view -----------------------#
