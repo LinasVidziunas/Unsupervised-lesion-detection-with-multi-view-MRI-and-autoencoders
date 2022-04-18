@@ -16,7 +16,7 @@ from results import ModelResults, default_save_data
 from results import Metrics, get_roc, get_auc
 from processed import ProcessedData
 from callbacks import ResultsCallback, AUCcallback
-from variational import VAE, Sampling
+# from variational import VAE, Sampling
 from classification import Classification_using_transfer_learning, IQR_method
 from Models.vgg16_ae import own_vgg16
 
@@ -113,7 +113,8 @@ results = ModelResults(f"{MODEL_NAME}_{BATCH_SIZE}bs_{EPOCHS}e")
 
 if path.exists(model_path):
     print(f"\n\n-------------------------- LOADING PRE-TRAINED MODEL from {model_path} --------------------------\n\n")
-    autoencoder = load_model(model_path, custom_objects={"VAE": VAE, "Sampling": Sampling}, compile=False)
+    autoencoder = load_model(model_path, compile=False)
+    # autoencoder = load_model(model_path, custom_objects={"VAE": VAE, "Sampling": Sampling}, compile=False)
 else:
     autoencoder.compile(optimizer=Adam(learning_rate=LEARNING_RATE),
                         loss=BinaryCrossentropy(),
