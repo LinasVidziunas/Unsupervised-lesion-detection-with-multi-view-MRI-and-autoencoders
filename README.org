@@ -5,19 +5,6 @@
 #+KEYWORDS: tensorflow, lesion detection, autoencoder
 #+LANGUAGE: en
 
-** Models
-Different model architectures.
-*** UNET
-UNET implementation with dense layer as bottleneck and without. Inspiration for implementation in keras from [1]. Original paper from [2].
-*** VGG16
-Using the encoder part from VGG16 from keras.applications.vgg16. Decoder from [3], modified to with and without dense layer as bottleneck. Original paper from [4].
-*** our
-Our best implementation without regulizers, skip-connections or learning rate scheduler.
-*** Resources
-[1] - https://github.com/zhixuhao/unet
-[2] - https://arxiv.org/abs/1505.04597
-[3] - https://github.com/tykiww/VGG16_AE/blob/master/utilities/model.py
-[4] - https://arxiv.org/abs/1409.1556
 ** Running on GPU cluster using SLURM
 *** Files
 **** ~setup.sh~
